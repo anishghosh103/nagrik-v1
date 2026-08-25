@@ -6,6 +6,69 @@ Implement Nagrik as dependency-ordered vertical journeys built on shared identit
 
 The source precedence and requirement language defined in the documentation index apply throughout. Tax rules and official validations must be independently verified before enabling a filing outcome.
 
+### Current implementation status
+
+Last reviewed: **August 25, 2026**. This tracker describes repository state, not just design intent. Update it when a task crosses its documented exit gate.
+
+Status meanings:
+
+- **Done:** implemented and verified for the currently implemented Identity-to-PF boundary.
+- **Partial:** useful implementation exists, but one or more requirements or release gates in the section remain open.
+- **Not started:** no functional implementation exists beyond navigation copy or a disabled placeholder.
+
+| Section | Status | Completed work | Remaining work |
+|---|---|---|---|
+| 1. Target platform architecture | **Done** | React routes → Zustand controllers → identity/EPFO rules → `APIService` → LocalStorage is implemented. | Extend the same layering to future domains. |
+| 2. Technology and dependency setup | **Partial** | Documented runtime and test dependencies, pnpm 11 pinning, Vitest, Playwright, and axe are configured. | Move feature styling to CSS Modules where appropriate. |
+| 3. Source organization and module boundaries | **Partial** | `app`, `components`, `features`, `rules`, `services`, `data`, `i18n`, `styles`, and `types` boundaries exist for the current slice. | Add tax, grievance, notice, passbook, transfer, and nomination modules only with their journeys. |
+| 4. Foundation workstream | **Partial** | Session hydration, persona state, schema-versioned LocalStorage, online detection, deterministic reset, first-slice Zod contracts, and identical-shaped fictional persona seeds are implemented. | Add draft recovery, migrations, queued writes, richer failure states, and contracts/seeds for later domains. |
+| 5. Design-system workstream | **Partial** | Warm civic-editorial tokens, global shell, desktop navigation, mobile bottom navigation, context rail, sticky actions, source markers, statuses, responsive identity layouts, and reduced motion are implemented. | Complete reusable sheets/dialogs, all seven templates, and explicit validation at 768, 1024, and 1440 px. |
+| 6. Shared platform workstream | **Partial** | Prototype disclosure, persona choice, fictional credentials, OTP expiry/resend, session restoration, sign-out, Home, derived Action Centre, and Identity/PF Activity are implemented. | Add restore/recovery dialogs, action deadlines/detail states, notifications/search, and future-domain Activity sources. |
+| 7. Financial Identity workstream | **Partial** | Desktop source matrix, mobile field-first comparison, mismatch explanation, canonical selection, destination review, simulated propagation, dependent PF revalidation, receipt, Home/action update, and Activity update are implemented. | Add requirements capture, partial propagation, queued/failed destination results, retry, source detail, connected records, and full change history screens. |
+| 8.1 EPFO Home, profile, KYC, and employment | **Partial** | Task-first EPFO landing, cached balance timestamp, fictional UAN, KYC summary, bank destination, and seeded employment data are implemented. | Add separate profile, KYC, employment history, and service-history experiences. |
+| 8.2 PF withdrawal and Claim Doctor | **Partial** | Seven named rules, blocking correction link, claim amount, bank confirmation, readiness checklist, review, declaration, mock OTP, idempotent submission, confirmation, timeline, and Activity handoff are implemented. | Add dedicated eligibility/type steps, issue-detail sheet, submission failure/retry variants, and rejected-claim explanation (C15). |
+| 8.3–8.5 Passbook, transfer, nomination | **Not started** | Only disabled task placeholders identify future scope. | Implement after the withdrawal journey passes every release gate. |
+| 9. Income Tax workstream | **Not started** | Home only shows a derived identity/bank summary; no tax filing outcome is enabled. | Verify official AY rules before implementing routes, computation, filing, or verification. |
+| 10. Post-filing and notices | **Not started** | — | Implement after accurate supported filing exists. |
+| 11. Unified grievances | **Not started** | — | Implement shared case creation and tracking after source journeys exist. |
+| 12. Localization | **Partial** | i18next, English/Hindi/Bengali resources, language persistence, locale-aware dates/currency, and flexible layouts are implemented. | Move remaining inline English copy and all rule explanations into complete Hindi and Bengali resources; perform visual review in each language. |
+| 13. Accessibility | **Partial** | Semantic landmarks/headings, labelled controls, status text with icons, comparison semantics, live regions, contrast, reflow, reduced motion, and automated axe smoke coverage are implemented. | Add skip navigation, route-focus handling, full error summaries, masked-value accessible names, and manual keyboard/screen-reader/zoom verification. |
+| 14. Testing | **Partial** | Nine unit/service tests cover schemas, seed isolation, actions, identity/PF rules, reset, propagation, persona isolation, session verification, and duplicate claims. Four Playwright runs cover Rajesh and Ananya on mobile/desktop, including an axe scan. | Add component/visual coverage at all four target widths and recovery, partial propagation, offline, switch, reset, reload, keyboard, and all future-domain E2E journeys. |
+| 15. CI/CD and release operations | **Partial** | Type-check, lint, unit, build, and E2E scripts exist and pass locally; direct routes are supported by the SPA build. | Add pull-request CI, hosted preview, incognito/direct-link validation on the host, and stable demo deployment. |
+| 16–18. Milestones and release gates | **Partial** | The core M0 Rajesh journey and Ananya healthy state run end to end locally. | Close the Partial items above before declaring M0 released or the definition of done satisfied. |
+
+#### Completed Identity-to-PF vertical slice
+
+- [x] Install documented runtime and verification dependencies.
+- [x] Replace the Vite starter with routing, providers, error boundary, session hydration, and responsive application shell.
+- [x] Add warm civic-editorial design tokens and source/status primitives.
+- [x] Define first-slice Zod contracts for sessions, personas, identity, EPFO, actions, activity, rules, propagation, and claims.
+- [x] Seed identical-shaped fictional Ananya and Rajesh profiles.
+- [x] Persist persona state behind asynchronous `APIService` methods with simulated latency and deterministic per-persona reset.
+- [x] Restore verified sessions and isolate persona data.
+- [x] Implement visible fictional credentials, mock Aadhaar login, OTP expiry/resend, and OTP `123456` verification.
+- [x] Derive Home priority, identity health, service summaries, actions, and Activity from domain state.
+- [x] Render desktop identity source matrix and mobile field-first comparisons.
+- [x] Correct Rajesh's name, propagate it to five simulated sources, create a receipt, rerun PF rules, and update Home and Activity without reload.
+- [x] Implement `NAME_MATCH`, `PAN_KYC_VALID`, `AADHAAR_KYC_VALID`, `BANK_KYC_MATCH`, `SERVICE_EXIT_PRESENT`, `DATE_OVERLAP`, and `CLAIM_ELIGIBILITY`.
+- [x] Block Rajesh's claim before correction and make the readiness checklist pass after correction.
+- [x] Collect claim amount, confirm the validated bank destination, review the declaration, and mock-verify with OTP `123456`.
+- [x] Prevent duplicate claim submission and create a reference, confirmation, status timeline, and Unified Activity event.
+- [x] Preserve Ananya's healthy scenario without adding an artificial warning.
+- [x] Add English, Hindi, and Bengali switching with persisted language preference and locale-aware financial formatting.
+- [x] Add offline disclosure, cached timestamps, loading/skeleton states, safe submission retry messaging, and reduced-motion behavior.
+- [x] Configure and pass TypeScript, ESLint, Vitest, production build, Playwright mobile/desktop journeys, and axe serious/critical checks.
+
+#### Open work before M0 release
+
+- [ ] Add partial/queued/failed identity propagation with safe retry.
+- [ ] Complete every submitted-path string and rule explanation in Hindi and Bengali.
+- [ ] Finish route focus, skip navigation, error summaries, accessible masked values, and manual keyboard/screen-reader verification.
+- [ ] Add component and visual checks at 390, 768, 1024, and 1440 px.
+- [ ] Add reload-during-correction, offline recovery, persona switch, reset, and duplicate-click browser scenarios.
+- [ ] Add dedicated rejected-claim and service-unavailable recovery experiences.
+- [ ] Add CI and deploy a preview; verify credentials, reset, direct links, and incognito access on the deployed host.
+
 ### Required references
 
 | File and section | Why it is required |
@@ -685,23 +748,26 @@ Because the repository remains a starter and tax accuracy cannot be compressed s
 
 ### August 25
 
-- Install dependencies and create application infrastructure.
-- Implement shell, tokens, shared components, types, seeds, service, login, and Home.
+- [x] Install dependencies and create application infrastructure.
+- [x] Implement shell, tokens, shared components, first-slice types, seeds, service, login, and Home.
 
 ### August 26
 
-- Implement Identity Health Check, correction, propagation, Action Centre, and Activity.
+- [x] Implement the successful Identity Health Check, correction, propagation, Action Centre, and Activity path.
+- [ ] Add partial propagation and retry behavior.
 
 ### August 27
 
-- Implement PF Claim Doctor, bank confirmation, readiness, mock OTP, submission, and tracking.
-- Complete responsive, accessibility, English, Hindi, and Bengali behavior for the submitted path.
+- [x] Implement PF Claim Doctor, bank confirmation, readiness, mock OTP, submission, and tracking.
+- [x] Implement responsive mobile and desktop behavior and automated accessibility smoke coverage.
+- [ ] Complete every submitted-path string in Hindi and Bengali and finish manual accessibility verification.
 
 ### August 28
 
-- Fix only blocking defects.
-- Validate hosting, incognito access, reset, credentials, links, and both personas.
-- Record and submit; add no new feature scope.
+- [x] Pass local type-check, lint, unit, production build, mobile/desktop E2E, and axe checks.
+- [ ] Fix remaining M0 release-gate defects only.
+- [ ] Validate hosting, incognito access, reset, credentials, links, and both personas.
+- [ ] Record and submit; add no new feature scope.
 
 ### Required references
 
