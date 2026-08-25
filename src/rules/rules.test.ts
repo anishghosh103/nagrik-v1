@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { cloneSeed, PERSONA_SEEDS } from '../data/personas'
 import { deriveActions, identityHealth } from './identity'
-import { validatePFClaim } from './epfo'
+import { validateNomineeAllocation, validatePFClaim, validatePFTransfer } from './epfo'
 import { personaSeedSchema } from '../types/domain'
 
 describe('persona contracts', () => {
@@ -44,5 +44,18 @@ describe('identity and PF rules', () => {
     const validation = validatePFClaim(rajesh)
     expect(validation.ready).toBe(true)
     expect(validation.results.every((result) => result.passed)).toBe(true)
+  })
+
+  it('detects overlapping transfer service dates', () => {
+    rajesh.mismatches[0].status = 'RESOLVED'
+    const validation = validatePFTransfer(rajesh, 'emp-r-1', 'emp-r-2')
+    expect(validation.ready).toBe(false)
+    expect(validation.results.find((rule) => rule.code === 'DATE_OVERLAP')?.passed).toBe(false)
+  })
+
+  it('requires nominee shares to total exactly 100%', () => {
+    expect(validateNomineeAllocation([50, 50])).toEqual({ total: 100, valid: true })
+    expect(validateNomineeAllocation([60, 30])).toEqual({ total: 90, valid: false })
+    expect(validateNomineeAllocation([])).toEqual({ total: 0, valid: false })
   })
 })

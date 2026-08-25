@@ -20,20 +20,20 @@ Status meanings:
 |---|---|---|---|
 | 1. Target platform architecture | **Done** | React routes → Zustand controllers → identity/EPFO rules → `APIService` → LocalStorage is implemented. | Extend the same layering to future domains. |
 | 2. Technology and dependency setup | **Partial** | Documented runtime and test dependencies, pnpm 11 pinning, Vitest, Playwright, and axe are configured. | Move feature styling to CSS Modules where appropriate. |
-| 3. Source organization and module boundaries | **Partial** | `app`, `components`, `features`, `rules`, `services`, `data`, `i18n`, `styles`, and `types` boundaries exist for the current slice. | Add tax, grievance, notice, passbook, transfer, and nomination modules only with their journeys. |
+| 3. Source organization and module boundaries | **Partial** | `app`, `components`, `features`, `rules`, `services`, `data`, `i18n`, `styles`, and `types` boundaries exist for identity and EPFO journeys. | Add tax, grievance, and notice modules only with their journeys. |
 | 4. Foundation workstream | **Partial** | Session hydration, persona state, schema-versioned LocalStorage, online detection, deterministic reset, first-slice Zod contracts, and identical-shaped fictional persona seeds are implemented. | Add draft recovery, migrations, queued writes, richer failure states, and contracts/seeds for later domains. |
 | 5. Design-system workstream | **Partial** | Warm civic-editorial tokens, global shell, desktop navigation, mobile bottom navigation, context rail, sticky actions, source markers, statuses, responsive identity layouts, and reduced motion are implemented. | Complete reusable sheets/dialogs, all seven templates, and explicit validation at 768, 1024, and 1440 px. |
 | 6. Shared platform workstream | **Partial** | Prototype disclosure, persona choice, fictional credentials, OTP expiry/resend, session restoration, sign-out, Home, derived Action Centre, and Identity/PF Activity are implemented. | Add restore/recovery dialogs, action deadlines/detail states, notifications/search, and future-domain Activity sources. |
 | 7. Financial Identity workstream | **Partial** | Desktop source matrix, mobile field-first comparison, mismatch explanation, canonical selection, destination review, simulated propagation, dependent PF revalidation, receipt, Home/action update, and Activity update are implemented. | Add requirements capture, partial propagation, queued/failed destination results, retry, source detail, connected records, and full change history screens. |
-| 8.1 EPFO Home, profile, KYC, and employment | **Partial** | Task-first EPFO landing, cached balance timestamp, fictional UAN, KYC summary, bank destination, and seeded employment data are implemented. | Add separate profile, KYC, employment history, and service-history experiences. |
-| 8.2 PF withdrawal and Claim Doctor | **Partial** | Seven named rules, blocking correction link, claim amount, bank confirmation, readiness checklist, review, declaration, mock OTP, idempotent submission, confirmation, timeline, and Activity handoff are implemented. | Add dedicated eligibility/type steps, issue-detail sheet, submission failure/retry variants, and rejected-claim explanation (C15). |
-| 8.3–8.5 Passbook, transfer, nomination | **Not started** | Only disabled task placeholders identify future scope. | Implement after the withdrawal journey passes every release gate. |
+| 8.1 EPFO Home, profile, KYC, and employment | **Done** | Task-first EPFO landing, fictional UAN, structured KYC and bank records, employment history with service-date correction, and combined service history are implemented. | — |
+| 8.2 PF withdrawal and Claim Doctor | **Done** | Dedicated claim type and eligibility, seven named rules, issue-detail sheet, correction link, claim details, bank confirmation, readiness, review, mock OTP, safe retry, idempotent submission, confirmation, tracking, Activity handoff, and C15 rejection explanation are implemented. | — |
+| 8.3–8.5 Passbook, transfer, nomination | **Done** | Cached employer/monthly passbook with background refresh and preserved-data failure, contribution-resolution handoff, validated/idempotent transfer with employer/EPFO timeline, and exact-100% nomination with mock verification are implemented. | Formal contribution-grievance submission remains owned by section 11. |
 | 9. Income Tax workstream | **Not started** | Home only shows a derived identity/bank summary; no tax filing outcome is enabled. | Verify official AY rules before implementing routes, computation, filing, or verification. |
 | 10. Post-filing and notices | **Not started** | — | Implement after accurate supported filing exists. |
 | 11. Unified grievances | **Not started** | — | Implement shared case creation and tracking after source journeys exist. |
 | 12. Localization | **Partial** | i18next, English/Hindi/Bengali resources, language persistence, locale-aware dates/currency, and flexible layouts are implemented. | Move remaining inline English copy and all rule explanations into complete Hindi and Bengali resources; perform visual review in each language. |
 | 13. Accessibility | **Partial** | Semantic landmarks/headings, labelled controls, status text with icons, comparison semantics, live regions, contrast, reflow, reduced motion, and automated axe smoke coverage are implemented. | Add skip navigation, route-focus handling, full error summaries, masked-value accessible names, and manual keyboard/screen-reader/zoom verification. |
-| 14. Testing | **Partial** | Nine unit/service tests cover schemas, seed isolation, actions, identity/PF rules, reset, propagation, persona isolation, session verification, and duplicate claims. Four Playwright runs cover Rajesh and Ananya on mobile/desktop, including an axe scan. | Add component/visual coverage at all four target widths and recovery, partial propagation, offline, switch, reset, reload, keyboard, and all future-domain E2E journeys. |
+| 14. Testing | **Partial** | Fifteen unit/service tests cover schemas, seed isolation and migration, actions, identity/PF rules, passbook cache preservation, transfer overlap and idempotency, nomination allocation, reset, propagation, persona isolation, session verification, and duplicate claims. Twenty Playwright runs cover claim, EPFO records/passbook, transfer, and nomination at 390, 768, 1024, and 1440 px, including direct reload and axe scans. | Add component/visual baselines and recovery, partial propagation, offline, switch, reset, keyboard, and all future-domain E2E journeys. |
 | 15. CI/CD and release operations | **Partial** | Type-check, lint, unit, build, and E2E scripts exist and pass locally; direct routes are supported by the SPA build. | Add pull-request CI, hosted preview, incognito/direct-link validation on the host, and stable demo deployment. |
 | 16–18. Milestones and release gates | **Partial** | The core M0 Rajesh journey and Ananya healthy state run end to end locally. | Close the Partial items above before declaring M0 released or the definition of done satisfied. |
 
@@ -55,6 +55,10 @@ Status meanings:
 - [x] Collect claim amount, confirm the validated bank destination, review the declaration, and mock-verify with OTP `123456`.
 - [x] Prevent duplicate claim submission and create a reference, confirmation, status timeline, and Unified Activity event.
 - [x] Preserve Ananya's healthy scenario without adding an artificial warning.
+- [x] Complete EPFO profile, KYC, employment, service history, rejected-claim, passbook, transfer, and nomination experiences.
+- [x] Preserve cached passbook data during offline or failed refresh and prepare a categorized contribution-resolution handoff.
+- [x] Detect and correct transfer date overlap, validate identity/KYC, and track an idempotent mock transfer.
+- [x] Enforce exact 100% nominee allocation and mock-verify an effective nomination.
 - [x] Add English, Hindi, and Bengali switching with persisted language preference and locale-aware financial formatting.
 - [x] Add offline disclosure, cached timestamps, loading/skeleton states, safe submission retry messaging, and reduced-motion behavior.
 - [x] Configure and pass TypeScript, ESLint, Vitest, production build, Playwright mobile/desktop journeys, and axe serious/critical checks.
@@ -66,7 +70,7 @@ Status meanings:
 - [ ] Finish route focus, skip navigation, error summaries, accessible masked values, and manual keyboard/screen-reader verification.
 - [ ] Add component and visual checks at 390, 768, 1024, and 1440 px.
 - [ ] Add reload-during-correction, offline recovery, persona switch, reset, and duplicate-click browser scenarios.
-- [ ] Add dedicated rejected-claim and service-unavailable recovery experiences.
+- [x] Add dedicated rejected-claim and service-unavailable claim recovery experiences.
 - [ ] Add CI and deploy a preview; verify credentials, reset, direct links, and incognito access on the deployed host.
 
 ### Required references
