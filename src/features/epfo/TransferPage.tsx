@@ -1,4 +1,3 @@
-import { tw } from '../../styles/recipes';
 import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
@@ -6,7 +5,6 @@ import {
   Check,
   CircleDot,
   Clock3,
-  LoaderCircle,
   MoveRight,
   ShieldCheck,
 } from 'lucide-react';
@@ -16,10 +14,34 @@ import { formatDate, formatMoney } from '../../components/formatters';
 import {
   Button,
   ButtonLink,
+  LargeGlyph,
+  Page,
   PageHeader,
   SourceMarker,
   Status,
 } from '../../components/ui';
+import {
+  ChoiceCard,
+  ChoiceGroup,
+  DeclarationCheck,
+  FieldLabel,
+  OtpInput,
+  ValidationAlert,
+} from '../../components/forms';
+import {
+  AmountContext,
+  OutcomeMark,
+  ProgressState,
+  ReadinessBanner,
+  ReferenceBand,
+  RuleGroup,
+  RuleList,
+  RuleRow,
+  StatusCard,
+  StatusTimeline,
+  StatusTimelineItem,
+  StickyActions,
+} from '../../components/patterns';
 import type { PFTransfer, TransferValidation } from '../../types/domain';
 
 type TransferStep =
@@ -116,7 +138,10 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
   }
 
   return (
-    <div className={tw('page narrow journey-page')}>
+    <Page
+      width="narrow"
+      mode="journey"
+    >
       <PageHeader
         eyebrow={t('epfo.transfer.eyebrow')}
         title={t('epfo.transfer.title')}
@@ -124,46 +149,38 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
         back="/epfo"
       />
       {step === 'intro' && (
-        <section className={tw('journey-intro')}>
-          <span className={tw('large-glyph')}>
-            <MoveRight />
-          </span>
+        <section className="text-left">
+          <LargeGlyph
+            className="mb-5"
+            icon={<MoveRight />}
+          />
           <h2>{t('epfo.transfer.introTitle')}</h2>
           <p>{t('epfo.transfer.introHelp')}</p>
-          <ul>
+          <ul className="my-5.5 grid gap-2.5 pl-5.5">
             <li>{t('epfo.transfer.introOne')}</li>
             <li>{t('epfo.transfer.introTwo')}</li>
             <li>{t('epfo.transfer.introThree')}</li>
           </ul>
-          <div className={tw('sticky-action')}>
-            <span>{t('common.saved')}</span>
+          <StickyActions status={t('common.saved')}>
             <Button onClick={() => setStep('employments')}>
               {t('epfo.transfer.start')}
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'employments' && (
         <section>
           <h2>{t('epfo.transfer.choose')}</h2>
-          <p className={tw('section-intro')}>{t('epfo.transfer.chooseHelp')}</p>
-          {error && (
-            <div
-              className={tw('validation-error')}
-              role="alert"
-            >
-              {error}
-            </div>
-          )}
-          <fieldset className={tw('choice-list')}>
-            <legend>{t('epfo.transfer.previous')}</legend>
+          <p className="text-ink-muted">{t('epfo.transfer.chooseHelp')}</p>
+          {error && <ValidationAlert>{error}</ValidationAlert>}
+          <ChoiceGroup legend={t('epfo.transfer.previous')}>
             {persona.epfo.employment
               .filter((item) => !item.current)
               .map((item) => (
-                <label
-                  className={tw('choice', sourceId === item.id && 'selected')}
+                <ChoiceCard
                   key={item.id}
+                  selected={sourceId === item.id}
                 >
                   <input
                     type="radio"
@@ -181,20 +198,16 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
                     </small>
                   </span>
                   <Check />
-                </label>
+                </ChoiceCard>
               ))}
-          </fieldset>
-          <fieldset className={tw('choice-list')}>
-            <legend>{t('epfo.transfer.current')}</legend>
+          </ChoiceGroup>
+          <ChoiceGroup legend={t('epfo.transfer.current')}>
             {persona.epfo.employment
               .filter((item) => item.current)
               .map((item) => (
-                <label
-                  className={tw(
-                    'choice',
-                    destinationId === item.id && 'selected',
-                  )}
+                <ChoiceCard
                   key={item.id}
+                  selected={destinationId === item.id}
                 >
                   <input
                     type="radio"
@@ -210,10 +223,10 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
                     </small>
                   </span>
                   <Check />
-                </label>
+                </ChoiceCard>
               ))}
-          </fieldset>
-          <div className={tw('sticky-action')}>
+          </ChoiceGroup>
+          <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('intro')}
@@ -227,29 +240,21 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
               {t('epfo.transfer.runChecks')}
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'checking' && (
-        <section
-          className={tw('checking-state')}
-          aria-live="polite"
-        >
-          <LoaderCircle className={tw('spinner')} />
-          <h2>{t('epfo.transfer.checking')}</h2>
-          <p>{t('epfo.transfer.checkingHelp')}</p>
-        </section>
+        <ProgressState
+          title={t('epfo.transfer.checking')}
+          description={t('epfo.transfer.checkingHelp')}
+        />
       )}
       {step === 'validation' && validation && (
         <section>
-          <div
-            className={tw(
-              'readiness-banner',
-              validation.ready ? 'ready' : 'blocked',
-            )}
-          >
-            {validation.ready ? <ShieldCheck /> : <AlertTriangle />}
-            <div>
+          <ReadinessBanner
+            state={validation.ready ? 'ready' : 'blocked'}
+            icon={validation.ready ? <ShieldCheck /> : <AlertTriangle />}
+            status={
               <Status kind={validation.ready ? 'success' : 'danger'}>
                 {t(
                   validation.ready
@@ -257,41 +262,38 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
                     : 'epfo.transfer.blocked',
                 )}
               </Status>
-              <h2>
-                {t(
-                  validation.ready
-                    ? 'epfo.transfer.readyTitle'
-                    : 'epfo.transfer.blockedTitle',
-                )}
-              </h2>
-              <p>{t('epfo.transfer.notGuarantee')}</p>
-            </div>
-          </div>
-          <div className={tw('rule-groups')}>
-            <section>
-              <h3>{t('epfo.transfer.checks')}</h3>
+            }
+            title={t(
+              validation.ready
+                ? 'epfo.transfer.readyTitle'
+                : 'epfo.transfer.blockedTitle',
+            )}
+            description={t('epfo.transfer.notGuarantee')}
+          />
+          <RuleList>
+            <RuleGroup title={t('epfo.transfer.checks')}>
               {validation.results.map((rule) => (
-                <div
-                  className={tw('rule-row', !rule.passed && 'failed')}
+                <RuleRow
                   key={rule.code}
+                  passed={rule.passed}
+                  icon={rule.passed ? <Check /> : <AlertTriangle />}
+                  status={
+                    <Status kind={rule.passed ? 'success' : 'danger'}>
+                      {t(
+                        rule.passed
+                          ? 'epfo.claim.passed'
+                          : 'epfo.claim.blocking',
+                      )}
+                    </Status>
+                  }
                 >
-                  <span className={tw('rule-icon')}>
-                    {rule.passed ? <Check /> : <AlertTriangle />}
-                  </span>
-                  <div>
-                    <strong>{t(rule.messageKey)}</strong>
-                    <SourceMarker>{rule.sourceRefs.join(' + ')}</SourceMarker>
-                  </div>
-                  <Status kind={rule.passed ? 'success' : 'danger'}>
-                    {t(
-                      rule.passed ? 'epfo.claim.passed' : 'epfo.claim.blocking',
-                    )}
-                  </Status>
-                </div>
+                  <strong>{t(rule.messageKey)}</strong>
+                  <SourceMarker>{rule.sourceRefs.join(' + ')}</SourceMarker>
+                </RuleRow>
               ))}
-            </section>
-          </div>
-          <div className={tw('sticky-action')}>
+            </RuleGroup>
+          </RuleList>
+          <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('employments')}
@@ -314,61 +316,49 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
                 <ArrowRight />
               </ButtonLink>
             )}
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'review' && source && destination && (
         <section>
           <h2>{t('epfo.transfer.reviewTitle')}</h2>
-          <div className={tw('transfer-route')}>
-            <article>
-              <span>{t('epfo.transfer.from')}</span>
+          <div className="my-5.5 grid grid-cols-[1fr_46px_1fr] items-center gap-3 max-[599px]:grid-cols-1">
+            <article className="grid min-h-32.5 content-center gap-1.75 rounded-[var(--radius-sheet)] border border-border bg-surface p-4.25">
+              <span className="text-ink-muted">{t('epfo.transfer.from')}</span>
               <strong>{source.employer}</strong>
-              <small>{source.memberId}</small>
+              <small className="text-ink-muted">{source.memberId}</small>
             </article>
-            <MoveRight />
-            <article>
-              <span>{t('epfo.transfer.to')}</span>
+            <MoveRight className="justify-self-center text-primary max-[599px]:rotate-90" />
+            <article className="grid min-h-32.5 content-center gap-1.75 rounded-[var(--radius-sheet)] border border-border bg-surface p-4.25">
+              <span className="text-ink-muted">{t('epfo.transfer.to')}</span>
               <strong>{destination.employer}</strong>
-              <small>{destination.memberId}</small>
+              <small className="text-ink-muted">{destination.memberId}</small>
             </article>
           </div>
-          <div className={tw('amount-context')}>
-            <span>{t('epfo.transfer.transferable')}</span>
-            <strong>{formatMoney(source.balance, i18n.language)}</strong>
-            <small>{t('epfo.transfer.estimate')}</small>
-          </div>
-          <label className={tw('declaration')}>
-            <input
-              type="checkbox"
-              checked={declared}
-              onChange={(event) => setDeclared(event.target.checked)}
-            />
-            <span>{t('epfo.transfer.declaration')}</span>
-          </label>
-          <label
-            className={tw('field-label')}
-            htmlFor="transfer-otp"
-          >
-            {t('epfo.otp')} <small>{t('epfo.otpHint')}</small>
-          </label>
-          <input
-            id="transfer-otp"
-            className={tw('otp-input')}
-            maxLength={6}
-            inputMode="numeric"
-            value={otp}
-            onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
+          <AmountContext
+            label={t('epfo.transfer.transferable')}
+            amount={formatMoney(source.balance, i18n.language)}
+            meta={t('epfo.transfer.estimate')}
           />
-          {error && (
-            <div
-              className={tw('validation-error')}
-              role="alert"
-            >
-              {error}
-            </div>
-          )}
-          <div className={tw('sticky-action')}>
+          <DeclarationCheck
+            checked={declared}
+            onChange={setDeclared}
+          >
+            {t('epfo.transfer.declaration')}
+          </DeclarationCheck>
+          <FieldLabel
+            htmlFor="transfer-otp"
+            hint={t('epfo.otpHint')}
+          >
+            {t('epfo.otp')}
+          </FieldLabel>
+          <OtpInput
+            id="transfer-otp"
+            value={otp}
+            onChange={setOtp}
+          />
+          {error && <ValidationAlert>{error}</ValidationAlert>}
+          <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('validation')}
@@ -382,88 +372,75 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
               {t('epfo.transfer.submit')}
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'submitting' && (
-        <section
-          className={tw('propagation-progress')}
-          aria-live="polite"
-        >
-          <LoaderCircle className={tw('spinner')} />
-          <h2>{t('epfo.transfer.submitting')}</h2>
-          <p>{t('epfo.transfer.submittingHelp')}</p>
-        </section>
+        <ProgressState
+          title={t('epfo.transfer.submitting')}
+          description={t('epfo.transfer.submittingHelp')}
+        />
       )}
-    </div>
+    </Page>
   );
 }
 
 function TransferStatus({ transfer }: { transfer: PFTransfer }) {
   const { t, i18n } = useTranslation();
   return (
-    <div className={tw('page narrow completion-page')}>
+    <Page
+      width="narrow"
+      mode="completion"
+    >
       <PageHeader
         eyebrow={t('epfo.transfer.statusEyebrow')}
         title={t('epfo.transfer.received')}
         subtitle={t('epfo.transfer.receivedHelp')}
         back="/epfo"
       />
-      <div className={tw('outcome-mark pending-mark')}>
-        <Clock3 />
-      </div>
-      <div className={tw('reference-band')}>
-        <span>{t('epfo.transfer.reference')}</span>
-        <strong>{transfer.reference}</strong>
-        <small>
-          {t('epfo.transfer.submitted', {
-            date: formatDate(transfer.submittedAt, i18n.language),
-          })}
-        </small>
-      </div>
-      <section className={tw('status-now')}>
-        <Status kind="info">{t('epfo.transfer.statusEmployer')}</Status>
-        <h2>{t('epfo.transfer.statusEmployerTitle')}</h2>
-        <p>{t('epfo.transfer.statusEmployerHelp')}</p>
-      </section>
-      <ol className={tw('status-timeline')}>
-        <li className={tw('complete')}>
-          <span>
-            <Check />
-          </span>
-          <div>
-            <strong>{t('epfo.transfer.received')}</strong>
-            <small>{formatDate(transfer.submittedAt, i18n.language)}</small>
-          </div>
-        </li>
-        <li className={tw('current')}>
-          <span>
-            <Clock3 />
-          </span>
-          <div>
-            <strong>{t('epfo.transfer.employerReview')}</strong>
-            <small>{t('epfo.transfer.expectedEmployer')}</small>
-          </div>
-        </li>
-        <li>
-          <span>
-            <CircleDot />
-          </span>
-          <div>
-            <strong>{t('epfo.transfer.epfoProcessing')}</strong>
-            <small>{t('epfo.transfer.notStarted')}</small>
-          </div>
-        </li>
-        <li>
-          <span>
-            <CircleDot />
-          </span>
-          <div>
-            <strong>{t('epfo.transfer.complete')}</strong>
-            <small>{t('epfo.transfer.notStarted')}</small>
-          </div>
-        </li>
-      </ol>
+      <OutcomeMark
+        variant="pending"
+        icon={<Clock3 />}
+      />
+      <ReferenceBand
+        label={t('epfo.transfer.reference')}
+        reference={transfer.reference}
+        meta={t('epfo.transfer.submitted', {
+          date: formatDate(transfer.submittedAt, i18n.language),
+        })}
+      />
+      <StatusCard
+        status={
+          <Status kind="info">{t('epfo.transfer.statusEmployer')}</Status>
+        }
+        title={t('epfo.transfer.statusEmployerTitle')}
+      >
+        {t('epfo.transfer.statusEmployerHelp')}
+      </StatusCard>
+      <StatusTimeline>
+        <StatusTimelineItem
+          state="complete"
+          icon={<Check />}
+          title={t('epfo.transfer.received')}
+          meta={formatDate(transfer.submittedAt, i18n.language)}
+        />
+        <StatusTimelineItem
+          state="current"
+          icon={<Clock3 />}
+          title={t('epfo.transfer.employerReview')}
+          meta={t('epfo.transfer.expectedEmployer')}
+        />
+        <StatusTimelineItem
+          icon={<CircleDot />}
+          title={t('epfo.transfer.epfoProcessing')}
+          meta={t('epfo.transfer.notStarted')}
+        />
+        <StatusTimelineItem
+          icon={<CircleDot />}
+          title={t('epfo.transfer.complete')}
+          meta={t('epfo.transfer.notStarted')}
+        />
+      </StatusTimeline>
       <ButtonLink
         wide
         to="/activity"
@@ -471,6 +448,6 @@ function TransferStatus({ transfer }: { transfer: PFTransfer }) {
         {t('epfo.transfer.track')}
         <ArrowRight />
       </ButtonLink>
-    </div>
+    </Page>
   );
 }

@@ -1,8 +1,8 @@
-import { tw } from './styles/recipes';
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './app/AppShell';
 import { useAppStore } from './app/store';
+import { BrandMark } from './components/ui';
 import { AuthPage } from './features/auth/AuthPage';
 import { ActivityPage } from './features/activity/ActivityPage';
 import { HomePage } from './features/home/HomePage';
@@ -29,17 +29,12 @@ import { ProfilePage } from './features/profile/ProfilePage';
 function HydrationScreen() {
   return (
     <main
-      className={tw('hydration')}
+      className="grid min-h-screen place-content-center justify-items-center gap-3.5"
       aria-live="polite"
     >
-      <div
-        className={tw('brand-mark')}
-        aria-hidden="true"
-      >
-        न
-      </div>
-      <p>Restoring your private demo workspace…</p>
-      <div className={tw('loading-line')} />
+      <BrandMark />
+      <p className="text-ink-muted">Restoring your private demo workspace…</p>
+      <div className="h-0.75 w-55 overflow-hidden bg-border after:block after:h-full after:w-[45%] after:animate-[loading_1s_ease-in-out_infinite_alternate] after:bg-primary" />
     </main>
   );
 }

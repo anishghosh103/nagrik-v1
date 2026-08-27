@@ -1,18 +1,15 @@
-import { tw } from '../../styles/recipes';
-import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
   BadgeIndianRupee,
   Banknote,
   Check,
-  CheckCircle2,
   CircleDot,
   Clock3,
   FileWarning,
-  LoaderCircle,
   ShieldCheck,
-  X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -20,10 +17,40 @@ import { useAppStore } from '../../app/store';
 import {
   Button,
   ButtonLink,
+  Page,
   PageHeader,
+  SectionHeading,
   SourceMarker,
   Status,
 } from '../../components/ui';
+import {
+  ChoiceCard,
+  ChoiceGroup,
+  FieldLabel,
+  OtpInput,
+} from '../../components/forms';
+import {
+  AmountContext,
+  DetailSheet,
+  OutcomeMark,
+  ProgressState,
+  ReadinessBanner,
+  ReferenceBand,
+  ReviewList,
+  ReviewRow,
+  RuleGroup,
+  RuleList,
+  RuleRow,
+  SkeletonLines,
+  StatusCard,
+  StatusTimeline,
+  StatusTimelineItem,
+  StepProgress,
+  StickyActions,
+  SubmissionStage,
+  SubmissionStages,
+  BalanceSummary,
+} from '../../components/patterns';
 import { formatDate, formatMoney } from '../../components/formatters';
 import type { ClaimSubmission, ClaimValidation } from '../../types/domain';
 
@@ -32,72 +59,66 @@ export function EPFOPage() {
   const persona = useAppStore((state) => state.persona);
   if (!persona) return null;
   return (
-    <div className={tw('page')}>
+    <Page>
       <PageHeader
         eyebrow={t('epfo.home.eyebrow')}
         title={t('epfo.home.title')}
         subtitle={t('epfo.home.subtitle')}
       />
-      <Link
-        className={tw('balance-band balance-link')}
+      <BalanceSummary
         to="/epfo/passbook"
-      >
-        <div>
-          <p>{t('epfo.home.balance')}</p>
-          <strong>{formatMoney(persona.epfo.balance, i18n.language)}</strong>
-          <small>
-            {t('epfo.home.cached', {
-              date: formatDate(persona.epfo.passbook.capturedAt, i18n.language),
-            })}
-          </small>
-        </div>
-        <BadgeIndianRupee />
-      </Link>
-      <div className={tw('task-list')}>
-        <Link to="/epfo/claim">
-          <span className={tw('task-number')}>01</span>
-          <span>
-            <strong>{t('epfo.home.withdraw')}</strong>
-            <small>{t('epfo.home.withdrawHelp')}</small>
-          </span>
-          <ArrowRight />
-        </Link>
-        <Link to="/epfo/transfer">
-          <span className={tw('task-number')}>02</span>
-          <span>
-            <strong>{t('epfo.home.transfer')}</strong>
-            <small>{t('epfo.home.transferHelp')}</small>
-          </span>
-          <ArrowRight />
-        </Link>
-        <Link to="/epfo/passbook">
-          <span className={tw('task-number')}>03</span>
-          <span>
-            <strong>{t('epfo.home.passbook')}</strong>
-            <small>{t('epfo.home.passbookHelp')}</small>
-          </span>
-          <ArrowRight />
-        </Link>
-        <Link to="/epfo/nomination">
-          <span className={tw('task-number')}>04</span>
-          <span>
-            <strong>{t('epfo.home.nomination')}</strong>
-            <small>{t('epfo.home.nominationHelp')}</small>
-          </span>
-          <ArrowRight />
-        </Link>
-      </div>
-      <section className={tw('kyc-strip')}>
-        <div className={tw('section-title-row')}>
-          <h2>{t('epfo.home.profile')}</h2>
-          <Link to="/epfo/profile">
-            {t('common.details')}
-            <ArrowRight size={17} />
-          </Link>
-        </div>
-        <div>
+        icon={<BadgeIndianRupee />}
+        label={t('epfo.home.balance')}
+        amount={formatMoney(persona.epfo.balance, i18n.language)}
+        meta={t('epfo.home.cached', {
+          date: formatDate(persona.epfo.passbook.capturedAt, i18n.language),
+        })}
+      />
+      <TaskList>
+        <TaskItem
+          to="/epfo/claim"
+          number="01"
+          title={t('epfo.home.withdraw')}
+          detail={t('epfo.home.withdrawHelp')}
+        />
+        <TaskItem
+          to="/epfo/transfer"
+          number="02"
+          title={t('epfo.home.transfer')}
+          detail={t('epfo.home.transferHelp')}
+        />
+        <TaskItem
+          to="/epfo/passbook"
+          number="03"
+          title={t('epfo.home.passbook')}
+          detail={t('epfo.home.passbookHelp')}
+        />
+        <TaskItem
+          to="/epfo/nomination"
+          number="04"
+          title={t('epfo.home.nomination')}
+          detail={t('epfo.home.nominationHelp')}
+        />
+      </TaskList>
+      <section className="rounded-[var(--radius-sheet)] bg-surface-muted p-5">
+        <SectionHeading
+          title={t('epfo.home.profile')}
+          action={
+            <Link
+              to="/epfo/profile"
+              className="flex items-center gap-1.25 font-[650] text-primary no-underline"
+            >
+              {t('common.details')}
+              <ArrowRight size={17} />
+            </Link>
+          }
+        />
+        <div className="mb-3.5 flex flex-wrap gap-5 max-[599px]:grid max-[599px]:gap-2">
           {persona.epfo.kyc.map((record) => (
-            <span key={record.kind}>
+            <span
+              key={record.kind}
+              className="flex items-center gap-1.5 text-[0.86rem] font-[650] [&>svg]:size-4.25 [&>svg]:text-success"
+            >
               <Check />
               {record.kind} KYC
             </span>
@@ -113,6 +134,64 @@ export function EPFOPage() {
           </span>
         </SourceMarker>
       </section>
+    </Page>
+  );
+}
+
+function TaskList({ children }: { children: ReactNode }) {
+  return <div className="my-7 grid">{children}</div>;
+}
+
+function TaskItem({
+  to,
+  number,
+  title,
+  detail,
+}: {
+  to: string;
+  number: ReactNode;
+  title: ReactNode;
+  detail: ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      className="grid min-h-23 grid-cols-[42px_1fr_24px] items-center gap-3.75 border-b border-border px-0 py-2.5 text-left no-underline hover:text-primary"
+    >
+      <span className="font-[750] text-primary [font-variant-numeric:tabular-nums]">
+        {number}
+      </span>
+      <span className="grid">
+        <strong>{title}</strong>
+        <small className="text-ink-muted">{detail}</small>
+      </span>
+      <ArrowRight />
+    </Link>
+  );
+}
+
+function BankConfirmation({
+  icon,
+  label,
+  value,
+  meta,
+  status,
+}: {
+  icon: ReactNode;
+  label: ReactNode;
+  value: ReactNode;
+  meta: ReactNode;
+  status: ReactNode;
+}) {
+  return (
+    <div className="mt-7 grid grid-cols-[42px_1fr_auto] items-center gap-3.5 border-y border-border py-5 max-[599px]:grid-cols-[36px_1fr]">
+      <span className="text-primary">{icon}</span>
+      <div className="grid gap-1">
+        <span className="text-[0.82rem] text-ink-muted">{label}</span>
+        <strong>{value}</strong>
+        {meta}
+      </div>
+      <div className="max-[599px]:col-start-2">{status}</div>
     </div>
   );
 }
@@ -195,31 +274,26 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
   }
 
   return (
-    <div className={tw('page narrow journey-page')}>
+    <Page
+      width="narrow"
+      mode="journey"
+    >
       <PageHeader
         eyebrow="PF & EPFO · Final settlement"
         title={t('epfo.title')}
         subtitle={t('epfo.subtitle')}
         back="/epfo"
       />
-      <div className={tw('journey-progress')}>
-        <span>Step {currentNumber} of 4</span>
-        <div>
-          <i className={tw('on')} />
-          <i className={tw(currentNumber >= 2 && 'on')} />
-          <i className={tw(currentNumber >= 3 && 'on')} />
-          <i className={tw(currentNumber >= 4 && 'on')} />
-        </div>
-      </div>
+      <StepProgress
+        current={currentNumber}
+        total={4}
+      />
       {step === 'type' && (
         <section>
           <h2>{t('epfo.claim.chooseType')}</h2>
-          <p className={tw('section-intro')}>
-            {t('epfo.claim.chooseTypeHelp')}
-          </p>
-          <fieldset className={tw('choice-list')}>
-            <legend>{t('epfo.claim.supportedType')}</legend>
-            <label className={tw('choice selected')}>
+          <p className="text-ink-muted">{t('epfo.claim.chooseTypeHelp')}</p>
+          <ChoiceGroup legend={t('epfo.claim.supportedType')}>
+            <ChoiceCard selected>
               <input
                 type="radio"
                 checked
@@ -231,35 +305,38 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
                 <small>{t('epfo.claim.finalSettlementHelp')}</small>
               </span>
               <Check />
-            </label>
-            <div className={tw('unavailable-choice')}>
+            </ChoiceCard>
+            <div className="grid gap-0.75 rounded-[9px] border border-dashed border-border p-4 text-ink-muted">
               <span>{t('epfo.claim.otherTypes')}</span>
-              <small>{t('epfo.claim.otherTypesHelp')}</small>
+              <small className="max-w-155">
+                {t('epfo.claim.otherTypesHelp')}
+              </small>
             </div>
-          </fieldset>
-          <div className={tw('sticky-action')}>
-            <span>{t('common.saved')}</span>
+          </ChoiceGroup>
+          <StickyActions status={t('common.saved')}>
             <Button onClick={() => setStep('eligibility')}>
               {t('epfo.claim.checkEligibility')}
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'eligibility' && (
-        <section className={tw('eligibility-card')}>
-          <ShieldCheck />
+        <section>
+          <ShieldCheck className="mb-4.5 size-13.5 text-primary" />
           <div>
             <Status kind="info">{t('epfo.claim.eligibility')}</Status>
-            <h2>{t('epfo.claim.eligibilityTitle')}</h2>
-            <p>{t('epfo.claim.eligibilityHelp')}</p>
-            <ul>
+            <h2 className="mt-2.25 mb-1.25">
+              {t('epfo.claim.eligibilityTitle')}
+            </h2>
+            <p className="text-ink-muted">{t('epfo.claim.eligibilityHelp')}</p>
+            <ul className="my-5.5 grid gap-2.5 pl-5.5">
               <li>{t('epfo.claim.exitPresent')}</li>
               <li>{t('epfo.claim.kycChecked')}</li>
               <li>{t('epfo.claim.identityChecked')}</li>
             </ul>
           </div>
-          <div className={tw('sticky-action')}>
+          <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('type')}
@@ -270,24 +347,21 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               {t('epfo.run')}
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'checking' && (
-        <section
-          className={tw('checking-state')}
-          aria-live="polite"
+        <ProgressState
+          variant="scan"
+          icon={<ShieldCheck />}
+          title="Checking seven claim rules"
+          description="Identity, KYC, bank and service history are being checked together."
         >
-          <div className={tw('scan-icon')}>
-            <ShieldCheck />
-            <span />
-          </div>
-          <h2>Checking seven claim rules</h2>
-          <p>
-            Identity, KYC, bank and service history are being checked together.
-          </p>
           {formError && (
-            <div className={tw('validation-error')}>
+            <div
+              role="alert"
+              className="my-3.5 border-l-4 border-danger bg-[#fff3ef] px-3.5 py-3 font-semibold text-danger"
+            >
               {formError}
               <Button
                 variant="secondary"
@@ -297,50 +371,40 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               </Button>
             </div>
           )}
-          <div className={tw('skeleton-lines')}>
-            <i />
-            <i />
-            <i />
-          </div>
-        </section>
+          <SkeletonLines />
+        </ProgressState>
       )}
       {step === 'checks' && validation && (
         <section>
-          <div
-            className={tw(
-              'readiness-banner',
-              validation.ready ? 'ready' : 'blocked',
-            )}
-          >
-            {validation.ready ? <CheckCircle2 /> : <AlertTriangle />}
-            <div>
+          <ReadinessBanner
+            state={validation.ready ? 'ready' : 'blocked'}
+            status={
               <Status kind={validation.ready ? 'success' : 'danger'}>
                 {validation.ready
                   ? t('epfo.claim.allPassed')
                   : t('epfo.claim.oneFailed')}
               </Status>
-              <h2>{validation.ready ? t('epfo.ready') : t('epfo.blocked')}</h2>
-              <p>{t('epfo.notGuarantee')}</p>
-            </div>
-          </div>
+            }
+            title={validation.ready ? t('epfo.ready') : t('epfo.blocked')}
+            description={t('epfo.notGuarantee')}
+          />
           <RuleChecklist
             validation={validation}
             onIssue={() => setIssueOpen(true)}
           />
           {validation.ready ? (
-            <div className={tw('sticky-action')}>
-              <span>
-                {t('epfo.claim.checked', {
-                  date: formatDate(validation.checkedAt, i18n.language),
-                })}
-              </span>
+            <StickyActions
+              status={t('epfo.claim.checked', {
+                date: formatDate(validation.checkedAt, i18n.language),
+              })}
+            >
               <Button onClick={() => setStep('details')}>
                 {t('epfo.claim.enterDetails')}
                 <ArrowRight />
               </Button>
-            </div>
+            </StickyActions>
           ) : (
-            <div className={tw('sticky-action')}>
+            <StickyActions>
               <Button
                 variant="secondary"
                 onClick={() => setIssueOpen(true)}
@@ -356,7 +420,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
                 {t('epfo.claim.fixMismatch')}
                 <ArrowRight />
               </ButtonLink>
-            </div>
+            </StickyActions>
           )}
           {issueOpen && (
             <ClaimIssueSheet
@@ -368,19 +432,18 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
       )}
       {step === 'details' && (
         <section>
-          <div className={tw('amount-context')}>
-            <span>{t('epfo.balance')}</span>
-            <strong>{formatMoney(persona.epfo.balance, i18n.language)}</strong>
-            <small>This is a cached estimate, not a settlement quote.</small>
-          </div>
-          <label
-            className={tw('field-label')}
-            htmlFor="claim-amount"
-          >
+          <AmountContext
+            label={t('epfo.balance')}
+            amount={formatMoney(persona.epfo.balance, i18n.language)}
+            meta="This is a cached estimate, not a settlement quote."
+          />
+          <FieldLabel htmlFor="claim-amount">
             {t('epfo.claimAmount')}
-          </label>
-          <div className={tw('money-input')}>
-            <span>₹</span>
+          </FieldLabel>
+          <div className="grid h-15 grid-cols-[48px_1fr] overflow-hidden rounded-[9px] border border-border bg-surface">
+            <span className="grid place-items-center border-r border-border text-[1.3rem]">
+              ₹
+            </span>
             <input
               id="claim-amount"
               type="number"
@@ -388,18 +451,17 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               max={persona.epfo.balance}
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
+              className="min-w-0 border-0 bg-transparent px-3.5 py-2.5 text-[1.35rem] [font-variant-numeric:tabular-nums]"
             />
           </div>
-          <div className={tw('bank-confirm')}>
-            <Banknote />
-            <div>
-              <span>{t('epfo.bank')}</span>
-              <strong>Account {persona.epfo.bankAccount}</strong>
-              <SourceMarker>EPFO bank KYC</SourceMarker>
-            </div>
-            <Status kind="success">Validated</Status>
-          </div>
-          <div className={tw('sticky-action')}>
+          <BankConfirmation
+            icon={<Banknote />}
+            label={t('epfo.bank')}
+            value={`Account ${persona.epfo.bankAccount}`}
+            meta={<SourceMarker>EPFO bank KYC</SourceMarker>}
+            status={<Status kind="success">Validated</Status>}
+          />
+          <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('checks')}
@@ -413,61 +475,59 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               Review claim
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'review' && (
         <section>
           <h2>Review and mock verify</h2>
-          <div className={tw('claim-review')}>
-            <div>
-              <span>Claim type</span>
-              <strong>Final PF settlement</strong>
-            </div>
-            <div>
-              <span>Amount requested</span>
-              <strong>{formatMoney(amount, i18n.language)}</strong>
-            </div>
-            <div>
-              <span>Bank account</span>
-              <strong>{persona.epfo.bankAccount}</strong>
-            </div>
-            <div>
-              <span>Readiness</span>
-              <Status kind="success">7 checks passed</Status>
-            </div>
-          </div>
-          <label className={tw('declaration')}>
+          <ReviewList>
+            <ReviewRow
+              label="Claim type"
+              value="Final PF settlement"
+            />
+            <ReviewRow
+              label="Amount requested"
+              value={formatMoney(amount, i18n.language)}
+            />
+            <ReviewRow
+              label="Bank account"
+              value={persona.epfo.bankAccount}
+            />
+            <ReviewRow
+              label="Readiness"
+              value={<Status kind="success">7 checks passed</Status>}
+            />
+          </ReviewList>
+          <label className="grid cursor-pointer grid-cols-[22px_1fr] gap-3 rounded-lg bg-surface-muted p-4">
             <input
               type="checkbox"
               checked={declared}
               onChange={(e) => setDeclared(e.target.checked)}
+              className="mt-0.75 size-4.75 accent-primary"
             />
             <span>{t('epfo.declaration')}</span>
           </label>
-          <label
-            className={tw('field-label')}
+          <FieldLabel
             htmlFor="claim-otp"
+            hint={t('epfo.otpHint')}
           >
-            {t('epfo.otp')} <small>{t('epfo.otpHint')}</small>
-          </label>
-          <input
+            {t('epfo.otp')}
+          </FieldLabel>
+          <OtpInput
             id="claim-otp"
-            className={tw('otp-input')}
-            maxLength={6}
-            inputMode="numeric"
             value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+            onChange={setOtp}
           />
           {formError && (
             <div
-              className={tw('validation-error')}
               role="alert"
+              className="my-3.5 border-l-4 border-danger bg-[#fff3ef] px-3.5 py-3 font-semibold text-danger"
             >
               {formError}
             </div>
           )}
-          <div className={tw('sticky-action')}>
+          <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('details')}
@@ -481,33 +541,34 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               {t('epfo.submit')}
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'submitting' && (
-        <section className={tw('propagation-progress')}>
-          <LoaderCircle className={tw('spinner')} />
-          <h2>Sending your mock claim</h2>
-          <p>
-            Duplicate submission is prevented while this request is in progress.
-          </p>
-          <div className={tw('submission-stages')}>
-            <span className={tw('done')}>
-              <Check />
+        <ProgressState
+          title="Sending your mock claim"
+          description="Duplicate submission is prevented while this request is in progress."
+        >
+          <SubmissionStages>
+            <SubmissionStage
+              status="done"
+              icon={<Check />}
+            >
               Details sealed
-            </span>
-            <span className={tw('active')}>
-              <LoaderCircle />
+            </SubmissionStage>
+            <SubmissionStage
+              status="active"
+              icon={<Clock3 />}
+            >
               Reference being created
-            </span>
-            <span>
-              <CircleDot />
+            </SubmissionStage>
+            <SubmissionStage icon={<CircleDot />}>
               Activity awaiting update
-            </span>
-          </div>
-        </section>
+            </SubmissionStage>
+          </SubmissionStages>
+        </ProgressState>
       )}
-    </div>
+    </Page>
   );
 }
 
@@ -522,52 +583,44 @@ function RuleChecklist({
   const failed = validation.results.filter((rule) => !rule.passed);
   const passed = validation.results.filter((rule) => rule.passed);
   return (
-    <div className={tw('rule-groups')}>
+    <RuleList>
       {failed.length > 0 && (
-        <section>
-          <h3>{t('epfo.failed')}</h3>
+        <RuleGroup title={t('epfo.failed')}>
           {failed.map((rule) => (
-            <button
-              className={tw('rule-row failed rule-button')}
+            <RuleRow
               key={rule.code}
+              passed={false}
+              icon={<AlertTriangle />}
+              status={<Status kind="danger">{t('epfo.claim.blocking')}</Status>}
               onClick={onIssue}
             >
-              <span className={tw('rule-icon')}>
-                <AlertTriangle />
-              </span>
-              <span className={tw('rule-copy')}>
-                <strong>{t(rule.messageKey)}</strong>
-                <SourceMarker>{rule.sourceRefs.join(' + ')}</SourceMarker>
-                <small>{t('common.details')}</small>
-              </span>
-              <Status kind="danger">{t('epfo.claim.blocking')}</Status>
-            </button>
-          ))}
-        </section>
-      )}
-      <section>
-        <h3>{t('epfo.passed')}</h3>
-        {passed.map((rule) => (
-          <div
-            className={tw('rule-row')}
-            key={rule.code}
-          >
-            <span className={tw('rule-icon')}>
-              <Check />
-            </span>
-            <div>
               <strong>{t(rule.messageKey)}</strong>
               <SourceMarker>{rule.sourceRefs.join(' + ')}</SourceMarker>
-              <details>
-                <summary>{t('epfo.claim.technicalDetail')}</summary>
-                <code>{rule.code}</code>
-              </details>
-            </div>
-            <Status kind="success">{t('epfo.claim.passed')}</Status>
-          </div>
+              <small className="font-bold text-primary">
+                {t('common.details')}
+              </small>
+            </RuleRow>
+          ))}
+        </RuleGroup>
+      )}
+      <RuleGroup title={t('epfo.passed')}>
+        {passed.map((rule) => (
+          <RuleRow
+            key={rule.code}
+            passed
+            icon={<Check />}
+            status={<Status kind="success">{t('epfo.claim.passed')}</Status>}
+          >
+            <strong>{t(rule.messageKey)}</strong>
+            <SourceMarker>{rule.sourceRefs.join(' + ')}</SourceMarker>
+            <details className="text-[0.73rem] text-ink-muted">
+              <summary>{t('epfo.claim.technicalDetail')}</summary>
+              <code className="text-ink">{rule.code}</code>
+            </details>
+          </RuleRow>
         ))}
-      </section>
-    </div>
+      </RuleGroup>
+    </RuleList>
   );
 }
 
@@ -579,51 +632,32 @@ function ClaimIssueSheet({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const closeRef = useRef<HTMLButtonElement>(null);
   const failed = validation.results.find((rule) => !rule.passed);
-  useEffect(() => {
-    closeRef.current?.focus();
-  }, []);
   if (!failed) return null;
   return (
-    <div
-      className={tw('sheet-backdrop')}
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
+    <DetailSheet
+      onClose={onClose}
+      labelledBy="claim-issue-title"
+      eyebrow={t('epfo.claim.issueEyebrow')}
+      title={t(failed.messageKey)}
     >
-      <section
-        className={tw('detail-sheet')}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="claim-issue-title"
+      <p className="text-ink-muted">{t('epfo.claim.issueConsequence')}</p>
+      <SourceMarker>{failed.sourceRefs.join(' + ')}</SourceMarker>
+      <details
+        open
+        className="my-6 border-y border-border py-3.5"
       >
-        <button
-          ref={closeRef}
-          className={tw('icon-button sheet-close')}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
-          <X />
-        </button>
-        <p className={tw('eyebrow')}>{t('epfo.claim.issueEyebrow')}</p>
-        <h2 id="claim-issue-title">{t(failed.messageKey)}</h2>
-        <p>{t('epfo.claim.issueConsequence')}</p>
-        <SourceMarker>{failed.sourceRefs.join(' + ')}</SourceMarker>
-        <details open>
-          <summary>{t('epfo.claim.technicalDetail')}</summary>
-          <code>{failed.code}</code>
-        </details>
-        <ButtonLink
-          wide
-          to={failed.fixTarget ?? '/identity'}
-        >
-          {t('epfo.claim.fixMismatch')}
-          <ArrowRight />
-        </ButtonLink>
-      </section>
-    </div>
+        <summary>{t('epfo.claim.technicalDetail')}</summary>
+        <code>{failed.code}</code>
+      </details>
+      <ButtonLink
+        wide
+        to={failed.fixTarget ?? '/identity'}
+      >
+        {t('epfo.claim.fixMismatch')}
+        <ArrowRight />
+      </ButtonLink>
+    </DetailSheet>
   );
 }
 
@@ -635,123 +669,109 @@ export function RejectedClaimPage() {
   );
   if (!claim)
     return (
-      <div className={tw('page narrow')}>
+      <Page width="narrow">
         <PageHeader
           eyebrow={t('epfo.history.eyebrow')}
           title={t('epfo.history.none')}
           subtitle={t('epfo.history.noneHelp')}
           back="/epfo/history"
         />
-      </div>
+      </Page>
     );
   return (
-    <div className={tw('page narrow')}>
+    <Page width="narrow">
       <PageHeader
         eyebrow={t('epfo.history.eyebrow')}
         title={t('epfo.history.rejected')}
         subtitle={t('epfo.history.rejectedHelp')}
         back="/epfo/history"
       />
-      <section className={tw('rejection-panel')}>
+      <section className="grid grid-cols-[52px_1fr] gap-4.5 rounded-[var(--radius-sheet)] border border-[#ddb9ad] bg-[#fff3ef] p-5.5 [&>svg]:size-10.5 [&>svg]:text-danger">
         <FileWarning />
         <div>
           <Status kind="danger">{t('epfo.history.decision')}</Status>
-          <h2>{t(claim.reasonKey ?? 'epfo.history.c15Reason')}</h2>
-          <p>{t('epfo.history.c15Help')}</p>
+          <h2 className="mt-2.25 mb-1.25">
+            {t(claim.reasonKey ?? 'epfo.history.c15Reason')}
+          </h2>
+          <p className="m-0 text-ink-muted">{t('epfo.history.c15Help')}</p>
         </div>
       </section>
-      <div className={tw('claim-review')}>
-        <div>
-          <span>{t('epfo.reference')}</span>
-          <strong>{claim.reference}</strong>
-        </div>
-        <div>
-          <span>{t('epfo.history.decided')}</span>
-          <strong>{formatDate(claim.decidedAt, i18n.language)}</strong>
-        </div>
-        <div>
-          <span>{t('epfo.claimAmount')}</span>
-          <strong>{formatMoney(claim.amount, i18n.language)}</strong>
-        </div>
-        <div>
-          <span>{t('epfo.history.code')}</span>
-          <strong>{claim.reasonCode}</strong>
-        </div>
-      </div>
+      <ReviewList>
+        <ReviewRow
+          label={t('epfo.reference')}
+          value={claim.reference}
+        />
+        <ReviewRow
+          label={t('epfo.history.decided')}
+          value={formatDate(claim.decidedAt, i18n.language)}
+        />
+        <ReviewRow
+          label={t('epfo.claimAmount')}
+          value={formatMoney(claim.amount, i18n.language)}
+        />
+        <ReviewRow
+          label={t('epfo.history.code')}
+          value={claim.reasonCode}
+        />
+      </ReviewList>
       <ButtonLink to="/identity">
         {t('epfo.history.fix')}
         <ArrowRight />
       </ButtonLink>
-    </div>
+    </Page>
   );
 }
 
 function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
   const { t, i18n } = useTranslation();
   return (
-    <div className={tw('page narrow completion-page')}>
+    <Page
+      width="narrow"
+      mode="completion"
+    >
       <PageHeader
         eyebrow="PF & EPFO · Claim status"
         title={t('epfo.received')}
         subtitle={t('epfo.expected')}
         back="/epfo"
       />
-      <div className={tw('outcome-mark')}>
-        <Check />
-      </div>
-      <div className={tw('reference-band')}>
-        <span>{t('epfo.reference')}</span>
-        <strong>{submission.reference}</strong>
-        <small>
-          Submitted {formatDate(submission.submittedAt, i18n.language)}
-        </small>
-      </div>
-      <section className={tw('status-now')}>
-        <Status kind="info">Claim received</Status>
-        <h2>EPFO validation is next</h2>
-        <p>
-          The prototype has recorded your claim once. No real EPFO system was
-          contacted.
-        </p>
-      </section>
-      <ol className={tw('status-timeline')}>
-        <li className={tw('complete')}>
-          <span>
-            <Check />
-          </span>
-          <div>
-            <strong>Claim received</strong>
-            <small>{formatDate(submission.submittedAt, i18n.language)}</small>
-          </div>
-        </li>
-        <li className={tw('current')}>
-          <span>
-            <Clock3 />
-          </span>
-          <div>
-            <strong>Validation</strong>
-            <small>Expected next · about 9 days</small>
-          </div>
-        </li>
-        <li>
-          <span>
-            <CircleDot />
-          </span>
-          <div>
-            <strong>Decision</strong>
-            <small>Not started</small>
-          </div>
-        </li>
-        <li>
-          <span>
-            <CircleDot />
-          </span>
-          <div>
-            <strong>Payment</strong>
-            <small>Not started</small>
-          </div>
-        </li>
-      </ol>
+      <OutcomeMark icon={<Check />} />
+      <ReferenceBand
+        label={t('epfo.reference')}
+        reference={submission.reference}
+        meta={`Submitted ${formatDate(submission.submittedAt, i18n.language)}`}
+      />
+      <StatusCard
+        status={<Status kind="info">Claim received</Status>}
+        title="EPFO validation is next"
+      >
+        The prototype has recorded your claim once. No real EPFO system was
+        contacted.
+      </StatusCard>
+      <StatusTimeline>
+        <StatusTimelineItem
+          state="complete"
+          icon={<Check />}
+          title="Claim received"
+          meta={formatDate(submission.submittedAt, i18n.language)}
+        />
+        <StatusTimelineItem
+          state="current"
+          icon={<Clock3 />}
+          title="Validation"
+          meta="Expected next · about 9 days"
+        />
+        <StatusTimelineItem
+          icon={<CircleDot />}
+          title="Decision"
+          meta="Not started"
+        />
+        <StatusTimelineItem
+          icon={<CircleDot />}
+          title="Payment"
+          meta="Not started"
+        />
+      </StatusTimeline>
       <ButtonLink
         wide
         to="/activity"
@@ -759,6 +779,6 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
         View in Unified Activity
         <ArrowRight />
       </ButtonLink>
-    </div>
+    </Page>
   );
 }

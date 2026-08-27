@@ -1,5 +1,4 @@
-import { tw } from '../../styles/recipes';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ArrowRight,
   Check,
@@ -13,13 +12,25 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
+import { cn } from '../../components/cn';
 import {
+  ArrowLink,
   Button,
   ButtonLink,
+  Page,
   PageHeader,
   SourceMarker,
   Status,
 } from '../../components/ui';
+import { ChoiceGroup, ChoiceCard } from '../../components/forms';
+import {
+  IssueExplanation,
+  Notice,
+  OutcomeMark,
+  ProgressState,
+  StepProgress,
+  StickyActions,
+} from '../../components/patterns';
 import { formatDate } from '../../components/formatters';
 import { identityHealth } from '../../rules/identity';
 import type { IdentityField, IdentitySource } from '../../types/domain';
@@ -54,27 +65,29 @@ export function IdentityPage() {
   );
   const health = identityHealth(persona);
   return (
-    <div className={tw('page wide-page')}>
+    <Page width="wide">
       <PageHeader
         eyebrow="Financial identity · Health check"
         title={t('identity.title')}
         subtitle={t('identity.subtitle')}
       />
-      <section className={tw('identity-summary')}>
+      <section className="mb-7 grid grid-cols-[140px_1fr_auto] items-center gap-6 border-y border-border py-5 max-[599px]:grid-cols-[1fr_auto]">
         <div>
-          <div className={tw('score-inline')}>
-            <strong>{health}</strong>
-            <span>/ 100</span>
+          <div className="flex items-baseline gap-0.75">
+            <strong className="text-[2.4rem] leading-none [font-variant-numeric:tabular-nums]">
+              {health}
+            </strong>
+            <span className="text-ink-muted">/ 100</span>
           </div>
-          <p>{t('identity.score')}</p>
+          <p className="mt-1.25 mb-0 text-ink-muted">{t('identity.score')}</p>
         </div>
-        <div className={tw('connection-summary')}>
-          <span>
+        <div className="flex items-center gap-3 max-[599px]:col-span-full max-[599px]:order-3 max-[599px]:justify-center max-[599px]:border-t max-[599px]:border-border max-[599px]:pt-3.5">
+          <span className="grid justify-items-center gap-1.25 text-[0.75rem] [&>svg]:text-primary">
             <Fingerprint />
             <b>Aadhaar-led identity</b>
           </span>
-          <span className={tw('connection-line')} />
-          <span>
+          <span className="relative h-px min-w-15 bg-border after:absolute after:top-[-3px] after:right-[45%] after:size-1.75 after:rounded-full after:bg-accent" />
+          <span className="grid justify-items-center gap-1.25 text-[0.75rem] [&>svg]:text-primary">
             <Landmark />
             <b>5 connected records</b>
           </span>
@@ -84,20 +97,25 @@ export function IdentityPage() {
         </Status>
       </section>
       <div
-        className={tw('comparison-desktop')}
+        className="overflow-x-auto rounded-[var(--radius-sheet)] border border-border bg-surface max-[599px]:hidden"
         role="region"
         aria-label="Identity source comparison"
         tabIndex={0}
       >
-        <table>
-          <caption className={tw('sr-only')}>
+        <table className="w-full border-collapse [min-width:780px]">
+          <caption className="absolute -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap [clip:rect(0,_0,_0,_0)]">
             Values held by each connected identity source
           </caption>
           <thead>
             <tr>
-              <th>{t('identity.field')}</th>
+              <th className="border-b border-border bg-surface-muted px-3.5 py-4.5 text-left align-top text-[0.78rem]">
+                {t('identity.field')}
+              </th>
               {sources.map((source) => (
-                <th key={source}>
+                <th
+                  key={source}
+                  className="border-b border-border bg-surface-muted px-3.5 py-4.5 text-left align-top text-[0.78rem]"
+                >
                   <SourceMarker>{sourceNames[source]}</SourceMarker>
                 </th>
               ))}
@@ -111,16 +129,24 @@ export function IdentityPage() {
               return (
                 <tr
                   key={field}
-                  className={tw(mismatch && 'mismatch-row')}
+                  className={cn(mismatch && 'bg-[#fff7ef]')}
                 >
-                  <th>
+                  <th className="w-37.5 border-b border-border px-3.5 py-4.5 text-left align-top">
                     {fieldNames[field]}
                     {mismatch && (
-                      <Status kind="danger">{t('identity.attention')}</Status>
+                      <div className="mt-1">
+                        <Status kind="danger">{t('identity.attention')}</Status>
+                      </div>
                     )}
                   </th>
                   {sources.map((source) => (
-                    <td key={source}>
+                    <td
+                      key={source}
+                      className={cn(
+                        'border-b border-border px-3.5 py-4.5 text-left align-top',
+                        mismatch && 'font-[650] text-danger',
+                      )}
+                    >
                       {persona.identity.valuesBySource[source][field] ?? (
                         <span aria-label="Not available">—</span>
                       )}
@@ -132,91 +158,138 @@ export function IdentityPage() {
           </tbody>
         </table>
       </div>
-      <div className={tw('comparison-mobile')}>
+      <div className="hidden max-[599px]:grid max-[599px]:gap-3">
         {fields.map((field) => {
           const mismatch = persona.mismatches.find(
             (item) => item.field === field && item.status !== 'RESOLVED',
           );
           return (
-            <section
-              className={tw('field-card', mismatch && 'mismatch-row')}
+            <ComparisonCard
               key={field}
-            >
-              <div className={tw('field-card-head')}>
-                <h2>{fieldNames[field]}</h2>
+              mismatch={Boolean(mismatch)}
+              title={fieldNames[field]}
+              status={
                 <Status kind={mismatch ? 'danger' : 'success'}>
                   {mismatch
                     ? t('identity.attention')
                     : t('identity.consistent')}
                 </Status>
-              </div>
+              }
+              action={
+                mismatch && (
+                  <ArrowLink
+                    className="mt-4"
+                    to={`/identity/mismatch/${mismatch.id}`}
+                  >
+                    {t('common.review')}
+                  </ArrowLink>
+                )
+              }
+            >
               {sources.map(
                 (source) =>
                   persona.identity.valuesBySource[source][field] && (
-                    <div
-                      className={tw('field-value')}
+                    <ComparisonRow
                       key={source}
-                    >
-                      <SourceMarker>{sourceNames[source]}</SourceMarker>
-                      <span>
-                        {persona.identity.valuesBySource[source][field]}
-                      </span>
-                    </div>
+                      source={
+                        <SourceMarker>{sourceNames[source]}</SourceMarker>
+                      }
+                      value={persona.identity.valuesBySource[source][field]}
+                    />
                   ),
               )}
-              {mismatch && (
-                <Link
-                  className={tw('arrow-link')}
-                  to={`/identity/mismatch/${mismatch.id}`}
-                >
-                  {t('common.review')}
-                  <ArrowRight />
-                </Link>
-              )}
-            </section>
+            </ComparisonCard>
           );
         })}
       </div>
       {openMismatch ? (
         <Link
-          className={tw('mismatch-callout')}
+          className="mt-6.5 grid grid-cols-[160px_1fr_auto] items-center gap-4.5 border-b border-danger py-5.5 px-1 no-underline max-[599px]:grid-cols-1 max-[599px]:gap-2.25"
           to={`/identity/mismatch/${openMismatch.id}`}
         >
-          <span>
+          <span className="flex items-center gap-2 text-danger">
             <CircleDot />
             <b>Name mismatch</b>
           </span>
-          <p>May block your PF claim and delay Income Tax bank validation.</p>
-          <span className={tw('arrow-link')}>
+          <p className="m-0 text-ink-muted">
+            May block your PF claim and delay Income Tax bank validation.
+          </p>
+          <span className="inline-flex items-center gap-2 font-bold whitespace-nowrap text-primary">
             {t('common.review')}
-            <ArrowRight />
+            <ArrowRight size={18} />
           </span>
         </Link>
       ) : (
-        <section className={tw('success-callout')}>
-          <CheckCircle2 />
-          <div>
-            <h2>{t('identity.success')}</h2>
-            <p>{t('identity.successBody')}</p>
-            {persona.identityChanges[0] && (
-              <small>
-                {t('common.lastUpdated')}{' '}
-                {formatDate(
-                  persona.identityChanges[0].changedAt,
-                  i18n.language,
-                )}
-              </small>
-            )}
-          </div>
-          <ButtonLink
-            variant="secondary"
-            to="/epfo/claim"
-          >
-            {t('identity.viewPf')}
-            <ArrowRight />
-          </ButtonLink>
-        </section>
+        <Notice
+          tone="success"
+          icon={<CheckCircle2 />}
+          title={t('identity.success')}
+          actions={
+            <ButtonLink
+              variant="secondary"
+              to="/epfo/claim"
+            >
+              {t('identity.viewPf')}
+              <ArrowRight />
+            </ButtonLink>
+          }
+        >
+          <p className="m-0">{t('identity.successBody')}</p>
+          {persona.identityChanges[0] && (
+            <small className="text-ink-muted">
+              {t('common.lastUpdated')}{' '}
+              {formatDate(persona.identityChanges[0].changedAt, i18n.language)}
+            </small>
+          )}
+        </Notice>
       )}
+    </Page>
+  );
+}
+
+function ComparisonCard({
+  mismatch,
+  title,
+  status,
+  children,
+  action,
+}: {
+  mismatch: boolean;
+  title: ReactNode;
+  status: ReactNode;
+  children: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <section
+      className={cn(
+        'rounded-[var(--radius-sheet)] border-t border-r border-b border-border bg-surface p-4',
+        mismatch
+          ? 'border-l-4 border-l-danger bg-[#fff8f1]'
+          : 'border-l border-l-border',
+      )}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="m-0 text-[1.1rem]">{title}</h2>
+        {status}
+      </div>
+      {children}
+      {action}
+    </section>
+  );
+}
+
+function ComparisonRow({
+  source,
+  value,
+}: {
+  source: ReactNode;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex justify-between gap-3 border-b border-border py-2.25">
+      {source}
+      <span>{value}</span>
     </div>
   );
 }
@@ -246,14 +319,14 @@ export function MismatchPage() {
   );
   if (!persona || !mismatch)
     return (
-      <div className={tw('page narrow')}>
+      <Page width="narrow">
         <PageHeader
           eyebrow="Financial identity"
           title="This difference is no longer open"
           subtitle="Return to the health check to see current values."
           back="/identity"
         />
-      </div>
+      </Page>
     );
 
   async function propagate() {
@@ -269,7 +342,10 @@ export function MismatchPage() {
   const stepNumber =
     step === 'choose' ? 1 : step === 'review' ? 2 : step === 'progress' ? 3 : 4;
   return (
-    <div className={tw('page narrow journey-page')}>
+    <Page
+      width="narrow"
+      mode="journey"
+    >
       <PageHeader
         eyebrow="Financial identity · Correct and propagate"
         title={
@@ -284,31 +360,24 @@ export function MismatchPage() {
         }
         back="/identity"
       />
-      <div className={tw('journey-progress')}>
-        <span>Step {stepNumber} of 4</span>
-        <div>
-          <i className={tw('on')} />
-          <i className={tw(stepNumber >= 2 && 'on')} />
-          <i className={tw(stepNumber >= 3 && 'on')} />
-          <i className={tw(stepNumber >= 4 && 'on')} />
-        </div>
-      </div>
+      <StepProgress
+        current={stepNumber}
+        total={4}
+      />
       {step === 'choose' && (
         <section>
-          <div className={tw('issue-explanation')}>
-            <Status kind="danger">Blocking</Status>
-            <h2>Connected records use four different versions</h2>
-            <p>
-              Nagrik will treat your choice as canonical and send it to each
-              simulated destination.
-            </p>
-          </div>
-          <fieldset className={tw('choice-list')}>
-            <legend>{t('identity.canonical')}</legend>
+          <IssueExplanation
+            status={<Status kind="danger">Blocking</Status>}
+            title="Connected records use four different versions"
+          >
+            Nagrik will treat your choice as canonical and send it to each
+            simulated destination.
+          </IssueExplanation>
+          <ChoiceGroup legend={t('identity.canonical')}>
             {choices.map((choice) => (
-              <label
-                className={tw('choice', value === choice && 'selected')}
+              <ChoiceCard
                 key={choice}
+                selected={value === choice}
               >
                 <input
                   type="radio"
@@ -331,51 +400,51 @@ export function MismatchPage() {
                   </small>
                 </span>
                 <Check />
-              </label>
+              </ChoiceCard>
             ))}
-          </fieldset>
-          <div className={tw('sticky-action')}>
-            <span>{t('common.saved')}</span>
+          </ChoiceGroup>
+          <StickyActions status={t('common.saved')}>
             <Button onClick={() => setStep('review')}>
               Review destinations
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'review' && (
         <section>
-          <div className={tw('review-value')}>
-            <span>Canonical name</span>
-            <strong>{value}</strong>
+          <div className="mb-7.5 grid grid-cols-[1fr_auto_auto] items-center gap-4 border-y border-border py-3.5 max-[599px]:grid-cols-[1fr_auto]">
+            <span className="text-ink-muted">Canonical name</span>
+            <strong className="text-[1.25rem]">{value}</strong>
             <Button
               variant="text"
+              className="max-[599px]:col-span-full max-[599px]:justify-self-start"
               onClick={() => setStep('choose')}
             >
               Change
             </Button>
           </div>
           <h2>{t('identity.propagation')}</h2>
-          <div className={tw('destination-list')}>
+          <DestinationList>
             {sources.map((source, index) => (
-              <div key={source}>
-                <span className={tw('destination-index')}>0{index + 1}</span>
-                <span>
-                  <strong>{sourceNames[source]}</strong>
-                  <small>
-                    Replace “{mismatch.valuesBySource[source]}” with “{value}”
-                  </small>
-                </span>
-                <Status kind="info">Will update</Status>
-              </div>
+              <DestinationRow
+                key={source}
+                index={`0${index + 1}`}
+                title={sourceNames[source]}
+                detail={`Replace “${mismatch.valuesBySource[source]}” with “${value}”`}
+                status={<Status kind="info">Will update</Status>}
+              />
             ))}
-          </div>
-          <div className={tw('simulation-note')}>
-            <FileCheck2 />
+          </DestinationList>
+          <Notice
+            variant="inline"
+            tone="info"
+            icon={<FileCheck2 />}
+          >
             This creates a local change receipt. No real system will be
             contacted.
-          </div>
-          <div className={tw('sticky-action')}>
+          </Notice>
+          <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('choose')}
@@ -389,74 +458,68 @@ export function MismatchPage() {
               {t('identity.confirm')}
               <ArrowRight />
             </Button>
-          </div>
+          </StickyActions>
         </section>
       )}
       {step === 'progress' && (
-        <section
-          className={tw('propagation-progress')}
-          aria-live="polite"
+        <ProgressState
+          title="Updating connected records"
+          description="Keeping the chosen name traceable across each destination."
         >
-          <LoaderCircle className={tw('spinner')} />
-          <h2>Updating connected records</h2>
-          <p>Keeping the chosen name traceable across each destination.</p>
-          <div className={tw('destination-list animating')}>
+          <DestinationList animating>
             {sources.map((source, index) => (
-              <div
-                style={{ animationDelay: `${index * 90}ms` }}
+              <DestinationRow
                 key={source}
-              >
-                <span className={tw('destination-index')}>
-                  <LoaderCircle />
-                </span>
-                <span>
-                  <strong>{sourceNames[source]}</strong>
-                  <small>Propagation in progress</small>
-                </span>
-              </div>
+                style={{ animationDelay: `${index * 90}ms` }}
+                animating
+                icon={
+                  <LoaderCircle
+                    size={18}
+                    className="animate-spin"
+                  />
+                }
+                title={sourceNames[source]}
+                detail="Propagation in progress"
+              />
             ))}
-          </div>
-        </section>
+          </DestinationList>
+        </ProgressState>
       )}
       {step === 'result' && (
-        <section className={tw('result-panel')}>
-          <div className={tw('outcome-mark')}>
-            <Check />
-          </div>
+        <section className="text-center">
+          <OutcomeMark icon={<Check />} />
           <Status kind="success">5 records updated</Status>
-          <div className={tw('receipt')}>
-            <div className={tw('receipt-head')}>
-              <span>{t('identity.receipt')}</span>
-              <strong>{change?.id ?? 'Saved change'}</strong>
-            </div>
-            <dl>
-              <div>
-                <dt>{t('identity.changedFrom')}</dt>
-                <dd>{change?.fromValues.join(' · ')}</dd>
-              </div>
-              <div>
-                <dt>{t('identity.changedTo')}</dt>
-                <dd>{change?.toValue ?? value}</dd>
-              </div>
-              <div>
-                <dt>Completed</dt>
-                <dd>
-                  {change
+          <ReceiptCard>
+            <ReceiptHead
+              label={t('identity.receipt')}
+              value={change?.id ?? 'Saved change'}
+            />
+            <ReceiptDetails
+              rows={[
+                {
+                  label: t('identity.changedFrom'),
+                  value: change?.fromValues.join(' · '),
+                },
+                {
+                  label: t('identity.changedTo'),
+                  value: change?.toValue ?? value,
+                },
+                {
+                  label: 'Completed',
+                  value: change
                     ? formatDate(change.changedAt, i18n.language)
-                    : 'Saved'}
-                </dd>
-              </div>
-            </dl>
+                    : 'Saved',
+                },
+              ]}
+            />
             {sources.map((source) => (
-              <div
-                className={tw('receipt-row')}
+              <ReceiptRow
                 key={source}
-              >
-                <SourceMarker>{sourceNames[source]}</SourceMarker>
-                <Status kind="success">Updated</Status>
-              </div>
+                label={<SourceMarker>{sourceNames[source]}</SourceMarker>}
+                status={<Status kind="success">Updated</Status>}
+              />
             ))}
-          </div>
+          </ReceiptCard>
           <ButtonLink
             wide
             to="/epfo/claim"
@@ -473,6 +536,120 @@ export function MismatchPage() {
           </ButtonLink>
         </section>
       )}
+    </Page>
+  );
+}
+
+function DestinationList({
+  animating,
+  children,
+}: {
+  animating?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        'mt-3 mb-5 border-t border-border',
+        animating && 'text-left',
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DestinationRow({
+  index,
+  icon,
+  title,
+  detail,
+  status,
+  style,
+  animating,
+}: {
+  index?: ReactNode;
+  icon?: ReactNode;
+  title: ReactNode;
+  detail: ReactNode;
+  status?: ReactNode;
+  style?: CSSProperties;
+  animating?: boolean;
+}) {
+  return (
+    <div
+      style={style}
+      className={cn(
+        'grid min-h-18 grid-cols-[44px_1fr_auto] items-center gap-3 border-b border-border max-[599px]:grid-cols-[34px_1fr] max-[599px]:py-2.5',
+        animating && 'animate-[row-in_0.4s_ease_forwards] opacity-0',
+      )}
+    >
+      {icon ?? (
+        <span className="font-[750] text-primary [font-variant-numeric:tabular-nums]">
+          {index}
+        </span>
+      )}
+      <span className="grid">
+        <strong>{title}</strong>
+        <small className="text-ink-muted">{detail}</small>
+      </span>
+      {status && <div className="max-[599px]:col-start-2">{status}</div>}
+    </div>
+  );
+}
+
+function ReceiptCard({ children }: { children: ReactNode }) {
+  return (
+    <div className="my-6.5 overflow-hidden rounded-[var(--radius-sheet)] border border-border bg-surface text-left">
+      {children}
+    </div>
+  );
+}
+
+function ReceiptHead({ label, value }: { label: ReactNode; value: ReactNode }) {
+  return (
+    <div className="flex justify-between border-b border-border bg-surface-muted px-4.5 py-3.75 max-[599px]:grid max-[599px]:gap-0.75">
+      <span className="text-[0.75rem] tracking-[0.1em] uppercase">{label}</span>
+      <strong className="text-[0.8rem] [font-variant-numeric:tabular-nums]">
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function ReceiptDetails({
+  rows,
+}: {
+  rows: { label: ReactNode; value: ReactNode }[];
+}) {
+  return (
+    <dl className="m-0 px-4.5 py-1">
+      {rows.map((row, index) => (
+        <div
+          key={index}
+          className="grid grid-cols-[1fr_1.5fr] gap-3.75 border-b border-border py-3.25 max-[599px]:grid-cols-1 max-[599px]:gap-0.75"
+        >
+          <dt className="text-ink-muted">{row.label}</dt>
+          <dd className="m-0 text-right font-[650] max-[599px]:text-left">
+            {row.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ReceiptRow({
+  label,
+  status,
+}: {
+  label: ReactNode;
+  status: ReactNode;
+}) {
+  return (
+    <div className="flex justify-between border-b border-border px-4.5 py-2.5">
+      {label}
+      {status}
     </div>
   );
 }

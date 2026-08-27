@@ -1,4 +1,4 @@
-import { tw } from '../../styles/recipes';
+import type { ReactNode } from 'react';
 import {
   Activity,
   ArrowRight,
@@ -12,7 +12,16 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
-import { PageHeader, SourceMarker, Status } from '../../components/ui';
+import { cn } from '../../components/cn';
+import {
+  Eyebrow,
+  Page,
+  PageHeader,
+  SectionHeading,
+  SectionKicker,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 import { formatDate, formatMoney } from '../../components/formatters';
 import { identityHealth } from '../../rules/identity';
 
@@ -24,7 +33,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
   const action = persona.actions[0];
   if (actionsOnly)
     return (
-      <div className={tw('page narrow')}>
+      <Page width="narrow">
         <PageHeader
           eyebrow="Across your services"
           title={t('nav.actions')}
@@ -33,7 +42,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
         {action ? (
           <ActionCard action={action} />
         ) : (
-          <section className={tw('empty-ledger')}>
+          <section className="border-y border-border py-12 text-center [&>svg]:mx-auto [&>svg]:size-10.5 [&>svg]:text-success">
             <CheckCircle2 />
             <h2>Nothing needs your attention</h2>
             <p>
@@ -42,10 +51,10 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
             </p>
           </section>
         )}
-      </div>
+      </Page>
     );
   return (
-    <div className={tw('page dashboard-page')}>
+    <Page mode="dashboard">
       <PageHeader
         eyebrow={`${t('home.eyebrow')}, ${persona.profile.firstName}`}
         title={t('home.title')}
@@ -53,114 +62,183 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
       />
       {action && (
         <section aria-labelledby="priority-title">
-          <div className={tw('section-kicker')}>
-            <Flag size={16} />
-            <span>{t('home.priority')}</span>
-            <span className={tw('rule')} />
-          </div>
+          <SectionKicker icon={<Flag size={16} />}>
+            {t('home.priority')}
+          </SectionKicker>
           <ActionCard action={action} />
         </section>
       )}
-      <div className={tw('dashboard-grid')}>
+      <div className="mt-2 mb-10.5 grid grid-cols-[0.9fr_1.1fr] border-y border-border max-[599px]:block max-[599px]:border-0">
         <Link
           to="/identity"
-          className={tw('identity-score-card')}
+          className="grid grid-cols-[112px_1fr_auto] items-center gap-4.5 border-r border-border py-7 pr-6 no-underline max-[599px]:mb-3.5 max-[599px]:grid-cols-[92px_1fr_auto] max-[599px]:rounded-[var(--radius-sheet)] max-[599px]:border max-[599px]:bg-surface max-[599px]:px-3.5 max-[599px]:py-4.5 [&>svg]:text-primary"
         >
-          <div
-            className={tw('score-ring')}
-            style={{ '--score': `${health * 3.6}deg` } as React.CSSProperties}
-          >
-            <span>{health}</span>
-            <small>/ 100</small>
-          </div>
+          <ScoreRing score={health} />
           <div>
-            <p className={tw('card-eyebrow')}>{t('home.identity')}</p>
-            <h2>{health === 100 ? t('home.healthy') : t('home.issue')}</h2>
-            <p>5 {t('home.connected')}</p>
+            <Eyebrow>{t('home.identity')}</Eyebrow>
+            <h2 className="my-1 text-[1.2rem]">
+              {health === 100 ? t('home.healthy') : t('home.issue')}
+            </h2>
+            <p className="m-0 text-ink-muted">5 {t('home.connected')}</p>
           </div>
           <ArrowRight />
         </Link>
-        <section className={tw('service-ledger')}>
-          <div className={tw('service-row')}>
-            <span className={tw('service-icon tax')}>
-              <Landmark />
-            </span>
-            <div>
-              <p className={tw('card-eyebrow')}>Income Tax</p>
-              <h3>
-                {health === 100
-                  ? 'Bank record ready'
-                  : 'Bank validation may be delayed'}
-              </h3>
-              <SourceMarker>Income Tax profile</SourceMarker>
-            </div>
-            <Status kind={health === 100 ? 'success' : 'warning'}>
-              {health === 100 ? 'Ready' : 'Review'}
-            </Status>
-          </div>
-          <div className={tw('service-row')}>
-            <span className={tw('service-icon pf')}>
-              <BadgeIndianRupee />
-            </span>
-            <div>
-              <p className={tw('card-eyebrow')}>EPFO</p>
-              <h3>
-                {persona.epfo.claim
-                  ? 'Claim received'
-                  : health === 100
-                    ? 'Claim checks ready'
-                    : 'Claim is blocked'}
-              </h3>
-              <p className={tw('money-small')}>
+        <section className="pl-6 max-[599px]:border max-[599px]:border-border max-[599px]:bg-surface max-[599px]:px-3.5 max-[599px]:pl-3.5">
+          <ServiceRow
+            icon={<Landmark />}
+            tone="tax"
+            label="Income Tax"
+            title={
+              health === 100
+                ? 'Bank record ready'
+                : 'Bank validation may be delayed'
+            }
+            meta={<SourceMarker>Income Tax profile</SourceMarker>}
+            status={
+              <Status kind={health === 100 ? 'success' : 'warning'}>
+                {health === 100 ? 'Ready' : 'Review'}
+              </Status>
+            }
+          />
+          <ServiceRow
+            icon={<BadgeIndianRupee />}
+            tone="pf"
+            label="EPFO"
+            title={
+              persona.epfo.claim
+                ? 'Claim received'
+                : health === 100
+                  ? 'Claim checks ready'
+                  : 'Claim is blocked'
+            }
+            meta={
+              <p className="m-0 text-ink-muted [font-variant-numeric:tabular-nums]">
                 {formatMoney(persona.epfo.balance, i18n.language)}
               </p>
-            </div>
-            <Status
-              kind={
-                persona.epfo.claim
-                  ? 'info'
+            }
+            status={
+              <Status
+                kind={
+                  persona.epfo.claim
+                    ? 'info'
+                    : health === 100
+                      ? 'success'
+                      : 'danger'
+                }
+              >
+                {persona.epfo.claim
+                  ? 'Tracking'
                   : health === 100
-                    ? 'success'
-                    : 'danger'
-              }
-            >
-              {persona.epfo.claim
-                ? 'Tracking'
-                : health === 100
-                  ? 'Ready'
-                  : 'Blocked'}
-            </Status>
-          </div>
+                    ? 'Ready'
+                    : 'Blocked'}
+              </Status>
+            }
+          />
         </section>
       </div>
-      <section className={tw('recent-section')}>
-        <div className={tw('section-title-row')}>
-          <div>
-            <p className={tw('eyebrow')}>Traceable by design</p>
-            <h2>{t('home.recent')}</h2>
-          </div>
-          <Link to="/activity">
-            View all <ArrowRight size={17} />
-          </Link>
-        </div>
-        <div className={tw('mini-timeline')}>
-          {persona.activity.slice(0, 3).map((event) => (
-            <div
-              key={event.id}
-              className={tw('timeline-row')}
+      <section>
+        <SectionHeading
+          eyebrow="Traceable by design"
+          title={t('home.recent')}
+          action={
+            <Link
+              to="/activity"
+              className="flex items-center gap-1.25 font-[650] text-primary no-underline"
             >
-              <span className={tw('timeline-icon')}>
-                {event.kind === 'IDENTITY' ? <Fingerprint /> : <Activity />}
-              </span>
-              <div>
-                <h3>{event.title}</h3>
-                <p>{event.detail}</p>
-                <time>{formatDate(event.occurredAt, i18n.language)}</time>
-              </div>
-            </div>
+              View all <ArrowRight size={17} />
+            </Link>
+          }
+        />
+        <div className="border-t border-border">
+          {persona.activity.slice(0, 3).map((event) => (
+            <ActivityPreviewRow
+              key={event.id}
+              icon={event.kind === 'IDENTITY' ? <Fingerprint /> : <Activity />}
+              title={event.title}
+              detail={event.detail}
+              time={formatDate(event.occurredAt, i18n.language)}
+            />
           ))}
         </div>
       </section>
+    </Page>
+  );
+}
+
+function ScoreRing({ score }: { score: number }) {
+  return (
+    <div
+      className="grid size-26 place-content-center rounded-full text-center max-[599px]:size-21"
+      style={{
+        background: `radial-gradient(circle closest-side, var(--color-canvas) 76%, transparent 77% 100%), conic-gradient(var(--color-primary) ${score * 3.6}deg, var(--color-surface-muted) 0)`,
+      }}
+    >
+      <span className="text-[2rem] leading-none font-[720] max-[599px]:text-[1.6rem]">
+        {score}
+      </span>
+      <small className="text-ink-muted">/ 100</small>
+    </div>
+  );
+}
+
+function ServiceRow({
+  icon,
+  tone,
+  label,
+  title,
+  meta,
+  status,
+}: {
+  icon: ReactNode;
+  tone: 'tax' | 'pf';
+  label: ReactNode;
+  title: ReactNode;
+  meta: ReactNode;
+  status: ReactNode;
+}) {
+  return (
+    <div className="grid min-h-30.5 grid-cols-[42px_1fr_auto] items-center gap-3.25 py-4.5 max-[599px]:min-h-28 max-[599px]:grid-cols-[38px_1fr]">
+      <span
+        className={cn(
+          'grid size-10 place-items-center rounded-[9px] [&>svg]:size-5.25',
+          tone === 'tax'
+            ? 'bg-[#e6eef1] text-info'
+            : 'bg-[#e5efe8] text-success',
+        )}
+      >
+        {icon}
+      </span>
+      <div>
+        <Eyebrow>{label}</Eyebrow>
+        <h3 className="mt-0.75 mb-1.75">{title}</h3>
+        {meta}
+      </div>
+      <div className="max-[599px]:col-start-2">{status}</div>
+    </div>
+  );
+}
+
+function ActivityPreviewRow({
+  icon,
+  title,
+  detail,
+  time,
+}: {
+  icon: ReactNode;
+  title: ReactNode;
+  detail: ReactNode;
+  time: ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-[44px_1fr] gap-4 border-b border-border py-5">
+      <span className="grid size-10 place-items-center rounded-full border border-border bg-surface text-primary [&>svg]:size-4.75">
+        {icon}
+      </span>
+      <div>
+        <h3 className="mt-0 mb-0.5">{title}</h3>
+        <p className="m-0 text-ink-muted">{detail}</p>
+        <time className="text-[0.75rem] text-ink-muted">{time}</time>
+      </div>
     </div>
   );
 }
@@ -175,9 +253,9 @@ function ActionCard({
   return (
     <Link
       to={action.fixTarget}
-      className={tw('priority-card')}
+      className="mb-8 grid grid-cols-[48px_1fr_auto] items-center gap-4.5 rounded-[var(--radius-sheet)] border border-border border-l-5 border-l-danger bg-surface p-5.5 text-inherit no-underline transition-[border-color,transform] duration-180 hover:border-danger hover:-translate-y-0.5 max-[599px]:grid-cols-[42px_1fr] max-[599px]:gap-3 max-[599px]:px-3.75 max-[599px]:py-4.5"
     >
-      <span className={tw('priority-icon')}>
+      <span className="grid size-11.5 place-items-center rounded-full bg-[#f7e7e2] text-danger max-[599px]:size-10">
         <ShieldAlert />
       </span>
       <div>
@@ -186,11 +264,11 @@ function ActionCard({
             ? 'Affects 2 services'
             : 'Ready to review'}
         </Status>
-        <h2>{action.title}</h2>
-        <p>{action.consequence}</p>
+        <h2 className="mt-1.75 mb-1.25">{action.title}</h2>
+        <p className="mb-2.5 text-ink-muted">{action.consequence}</p>
         <SourceMarker>{action.source}</SourceMarker>
       </div>
-      <span className={tw('priority-action')}>
+      <span className="flex items-center gap-2 font-bold whitespace-nowrap text-primary max-[599px]:col-start-2">
         Open task
         <ArrowRight />
       </span>

@@ -1,9 +1,10 @@
-import { tw } from '../../styles/recipes';
+import type { ReactNode } from 'react';
 import { Activity, Check, CircleDot, Clock3, Fingerprint } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
-import { PageHeader, SourceMarker, Status } from '../../components/ui';
+import { cn } from '../../components/cn';
 import { formatDate } from '../../components/formatters';
+import { Page, PageHeader, SourceMarker, Status } from '../../components/ui';
 
 export function ActivityPage() {
   const { t, i18n } = useTranslation();
@@ -17,22 +18,26 @@ export function ActivityPage() {
         ? t('activity.currentStates.identity')
         : t('activity.currentStates.ready');
   return (
-    <div className={tw('page narrow')}>
+    <Page width="narrow">
       <PageHeader
         eyebrow="Across your services"
         title={t('activity.title')}
         subtitle={t('activity.subtitle')}
       />
-      <section className={tw('current-status')}>
-        <p>{t('activity.current')}</p>
-        <h2>{current}</h2>
+      <section className="mb-8 border-y border-border py-5">
+        <p className="mb-1 text-ink-muted">{t('activity.current')}</p>
+        <h2 className="mb-3">{current}</h2>
         <SourceMarker>Derived from current records</SourceMarker>
       </section>
-      <ol className={tw('activity-timeline')}>
+      <ol className="m-0 list-none p-0">
         {persona.activity.map((event, index) => (
-          <li key={event.id}>
-            <span className={tw('activity-node', event.status.toLowerCase())}>
-              {event.kind === 'IDENTITY' ? (
+          <TimelineEvent
+            key={event.id}
+            status={
+              event.status.toLowerCase() as 'complete' | 'in_progress' | 'info'
+            }
+            icon={
+              event.kind === 'IDENTITY' ? (
                 <Fingerprint />
               ) : event.status === 'IN_PROGRESS' ? (
                 <Clock3 />
@@ -40,39 +45,84 @@ export function ActivityPage() {
                 <Check />
               ) : (
                 <Activity />
-              )}
-            </span>
-            <div className={tw('activity-event')}>
-              <div>
-                <Status
-                  kind={
-                    event.status === 'COMPLETE'
-                      ? 'success'
-                      : event.status === 'IN_PROGRESS'
-                        ? 'info'
-                        : 'warning'
-                  }
-                >
-                  {event.kind === 'IDENTITY'
-                    ? t('nav.identity')
-                    : event.kind === 'EPFO'
-                      ? t('nav.epfo')
-                      : 'Nagrik'}
-                </Status>
-                <time>{formatDate(event.occurredAt, i18n.language)}</time>
-              </div>
-              <h2>{t(event.title, event.values)}</h2>
-              <p>{t(event.detail, event.values)}</p>
-              {index === 0 && event.status === 'IN_PROGRESS' && (
-                <div className={tw('next-event')}>
+              )
+            }
+            header={
+              <Status
+                kind={
+                  event.status === 'COMPLETE'
+                    ? 'success'
+                    : event.status === 'IN_PROGRESS'
+                      ? 'info'
+                      : 'warning'
+                }
+              >
+                {event.kind === 'IDENTITY'
+                  ? t('nav.identity')
+                  : event.kind === 'EPFO'
+                    ? t('nav.epfo')
+                    : 'Nagrik'}
+              </Status>
+            }
+            time={formatDate(event.occurredAt, i18n.language)}
+            title={t(event.title, event.values)}
+            detail={t(event.detail, event.values)}
+            next={
+              index === 0 && event.status === 'IN_PROGRESS' ? (
+                <>
                   <CircleDot />
                   {t('activity.next')}
-                </div>
-              )}
-            </div>
-          </li>
+                </>
+              ) : undefined
+            }
+          />
         ))}
       </ol>
-    </div>
+    </Page>
+  );
+}
+
+function TimelineEvent({
+  status,
+  icon,
+  header,
+  time,
+  title,
+  detail,
+  next,
+}: {
+  status: 'complete' | 'in_progress' | 'info';
+  icon: ReactNode;
+  header: ReactNode;
+  time: ReactNode;
+  title: ReactNode;
+  detail: ReactNode;
+  next?: ReactNode;
+}) {
+  return (
+    <li className="relative grid grid-cols-[50px_1fr] gap-3.75 pb-6.5 before:absolute before:top-10.5 before:left-5.25 before:h-[calc(100%-22px)] before:w-px before:bg-border last:before:hidden max-[599px]:grid-cols-[42px_1fr] max-[599px]:gap-2.5 max-[599px]:before:left-4.5">
+      <span
+        className={cn(
+          'z-1 grid size-10.75 place-items-center rounded-full border border-border bg-surface text-primary max-[599px]:size-9.5 [&>svg]:size-5',
+          status === 'complete' && 'border-success bg-success text-white',
+          status === 'in_progress' && 'border-info text-info',
+        )}
+      >
+        {icon}
+      </span>
+      <div className="border-b border-border pb-5.5">
+        <div className="flex justify-between gap-3 max-[599px]:grid">
+          {header}
+          <time className="text-[0.76rem] text-ink-muted">{time}</time>
+        </div>
+        <h2 className="mt-2.25 mb-1">{title}</h2>
+        <p className="m-0 text-ink-muted">{detail}</p>
+        {next && (
+          <div className="mt-3 flex items-center gap-1.75 text-[0.82rem] text-info">
+            {next}
+          </div>
+        )}
+      </div>
+    </li>
   );
 }
