@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
@@ -16,7 +17,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
-import { PageHeader, SourceMarker, Status } from '../../components/ui';
+import {
+  Button,
+  ButtonLink,
+  PageHeader,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 import { formatDate, formatMoney } from '../../components/formatters';
 import type { ClaimSubmission, ClaimValidation } from '../../types/domain';
 
@@ -25,14 +32,14 @@ export function EPFOPage() {
   const persona = useAppStore((state) => state.persona);
   if (!persona) return null;
   return (
-    <div className="page">
+    <div className={tw('page')}>
       <PageHeader
         eyebrow={t('epfo.home.eyebrow')}
         title={t('epfo.home.title')}
         subtitle={t('epfo.home.subtitle')}
       />
       <Link
-        className="balance-band balance-link"
+        className={tw('balance-band balance-link')}
         to="/epfo/passbook"
       >
         <div>
@@ -46,9 +53,9 @@ export function EPFOPage() {
         </div>
         <BadgeIndianRupee />
       </Link>
-      <div className="task-list">
+      <div className={tw('task-list')}>
         <Link to="/epfo/claim">
-          <span className="task-number">01</span>
+          <span className={tw('task-number')}>01</span>
           <span>
             <strong>{t('epfo.home.withdraw')}</strong>
             <small>{t('epfo.home.withdrawHelp')}</small>
@@ -56,7 +63,7 @@ export function EPFOPage() {
           <ArrowRight />
         </Link>
         <Link to="/epfo/transfer">
-          <span className="task-number">02</span>
+          <span className={tw('task-number')}>02</span>
           <span>
             <strong>{t('epfo.home.transfer')}</strong>
             <small>{t('epfo.home.transferHelp')}</small>
@@ -64,7 +71,7 @@ export function EPFOPage() {
           <ArrowRight />
         </Link>
         <Link to="/epfo/passbook">
-          <span className="task-number">03</span>
+          <span className={tw('task-number')}>03</span>
           <span>
             <strong>{t('epfo.home.passbook')}</strong>
             <small>{t('epfo.home.passbookHelp')}</small>
@@ -72,7 +79,7 @@ export function EPFOPage() {
           <ArrowRight />
         </Link>
         <Link to="/epfo/nomination">
-          <span className="task-number">04</span>
+          <span className={tw('task-number')}>04</span>
           <span>
             <strong>{t('epfo.home.nomination')}</strong>
             <small>{t('epfo.home.nominationHelp')}</small>
@@ -80,8 +87,8 @@ export function EPFOPage() {
           <ArrowRight />
         </Link>
       </div>
-      <section className="kyc-strip">
-        <div className="section-title-row">
+      <section className={tw('kyc-strip')}>
+        <div className={tw('section-title-row')}>
           <h2>{t('epfo.home.profile')}</h2>
           <Link to="/epfo/profile">
             {t('common.details')}
@@ -188,29 +195,31 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
   }
 
   return (
-    <div className="page narrow journey-page">
+    <div className={tw('page narrow journey-page')}>
       <PageHeader
         eyebrow="PF & EPFO · Final settlement"
         title={t('epfo.title')}
         subtitle={t('epfo.subtitle')}
         back="/epfo"
       />
-      <div className="journey-progress">
+      <div className={tw('journey-progress')}>
         <span>Step {currentNumber} of 4</span>
         <div>
-          <i className="on" />
-          <i className={currentNumber >= 2 ? 'on' : ''} />
-          <i className={currentNumber >= 3 ? 'on' : ''} />
-          <i className={currentNumber >= 4 ? 'on' : ''} />
+          <i className={tw('on')} />
+          <i className={tw(currentNumber >= 2 && 'on')} />
+          <i className={tw(currentNumber >= 3 && 'on')} />
+          <i className={tw(currentNumber >= 4 && 'on')} />
         </div>
       </div>
       {step === 'type' && (
         <section>
           <h2>{t('epfo.claim.chooseType')}</h2>
-          <p className="section-intro">{t('epfo.claim.chooseTypeHelp')}</p>
-          <fieldset className="choice-list">
+          <p className={tw('section-intro')}>
+            {t('epfo.claim.chooseTypeHelp')}
+          </p>
+          <fieldset className={tw('choice-list')}>
             <legend>{t('epfo.claim.supportedType')}</legend>
-            <label className="choice selected">
+            <label className={tw('choice selected')}>
               <input
                 type="radio"
                 checked
@@ -223,25 +232,22 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               </span>
               <Check />
             </label>
-            <div className="unavailable-choice">
+            <div className={tw('unavailable-choice')}>
               <span>{t('epfo.claim.otherTypes')}</span>
               <small>{t('epfo.claim.otherTypesHelp')}</small>
             </div>
           </fieldset>
-          <div className="sticky-action">
+          <div className={tw('sticky-action')}>
             <span>{t('common.saved')}</span>
-            <button
-              className="button primary"
-              onClick={() => setStep('eligibility')}
-            >
+            <Button onClick={() => setStep('eligibility')}>
               {t('epfo.claim.checkEligibility')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'eligibility' && (
-        <section className="eligibility-card">
+        <section className={tw('eligibility-card')}>
           <ShieldCheck />
           <div>
             <Status kind="info">{t('epfo.claim.eligibility')}</Status>
@@ -253,29 +259,26 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               <li>{t('epfo.claim.identityChecked')}</li>
             </ul>
           </div>
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('type')}
             >
               {t('common.back')}
-            </button>
-            <button
-              className="button primary"
-              onClick={() => setStep('checking')}
-            >
+            </Button>
+            <Button onClick={() => setStep('checking')}>
               {t('epfo.run')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'checking' && (
         <section
-          className="checking-state"
+          className={tw('checking-state')}
           aria-live="polite"
         >
-          <div className="scan-icon">
+          <div className={tw('scan-icon')}>
             <ShieldCheck />
             <span />
           </div>
@@ -284,17 +287,17 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
             Identity, KYC, bank and service history are being checked together.
           </p>
           {formError && (
-            <div className="validation-error">
+            <div className={tw('validation-error')}>
               {formError}
-              <button
-                className="button secondary"
+              <Button
+                variant="secondary"
                 onClick={() => setStep('checking')}
               >
                 Retry
-              </button>
+              </Button>
             </div>
           )}
-          <div className="skeleton-lines">
+          <div className={tw('skeleton-lines')}>
             <i />
             <i />
             <i />
@@ -304,11 +307,10 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
       {step === 'checks' && validation && (
         <section>
           <div
-            className={
-              validation.ready
-                ? 'readiness-banner ready'
-                : 'readiness-banner blocked'
-            }
+            className={tw(
+              'readiness-banner',
+              validation.ready ? 'ready' : 'blocked',
+            )}
           >
             {validation.ready ? <CheckCircle2 /> : <AlertTriangle />}
             <div>
@@ -326,30 +328,26 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
             onIssue={() => setIssueOpen(true)}
           />
           {validation.ready ? (
-            <div className="sticky-action">
+            <div className={tw('sticky-action')}>
               <span>
                 {t('epfo.claim.checked', {
                   date: formatDate(validation.checkedAt, i18n.language),
                 })}
               </span>
-              <button
-                className="button primary"
-                onClick={() => setStep('details')}
-              >
+              <Button onClick={() => setStep('details')}>
                 {t('epfo.claim.enterDetails')}
                 <ArrowRight />
-              </button>
+              </Button>
             </div>
           ) : (
-            <div className="sticky-action">
-              <button
-                className="button secondary"
+            <div className={tw('sticky-action')}>
+              <Button
+                variant="secondary"
                 onClick={() => setIssueOpen(true)}
               >
                 {t('common.details')}
-              </button>
-              <Link
-                className="button primary"
+              </Button>
+              <ButtonLink
                 to={
                   validation.results.find((r) => !r.passed)?.fixTarget ??
                   '/identity'
@@ -357,7 +355,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               >
                 {t('epfo.claim.fixMismatch')}
                 <ArrowRight />
-              </Link>
+              </ButtonLink>
             </div>
           )}
           {issueOpen && (
@@ -370,18 +368,18 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
       )}
       {step === 'details' && (
         <section>
-          <div className="amount-context">
+          <div className={tw('amount-context')}>
             <span>{t('epfo.balance')}</span>
             <strong>{formatMoney(persona.epfo.balance, i18n.language)}</strong>
             <small>This is a cached estimate, not a settlement quote.</small>
           </div>
           <label
-            className="field-label"
+            className={tw('field-label')}
             htmlFor="claim-amount"
           >
             {t('epfo.claimAmount')}
           </label>
-          <div className="money-input">
+          <div className={tw('money-input')}>
             <span>₹</span>
             <input
               id="claim-amount"
@@ -392,7 +390,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               onChange={(e) => setAmount(Number(e.target.value))}
             />
           </div>
-          <div className="bank-confirm">
+          <div className={tw('bank-confirm')}>
             <Banknote />
             <div>
               <span>{t('epfo.bank')}</span>
@@ -401,28 +399,27 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
             </div>
             <Status kind="success">Validated</Status>
           </div>
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('checks')}
             >
               Back
-            </button>
-            <button
-              className="button primary"
+            </Button>
+            <Button
               disabled={amount < 1000 || amount > persona.epfo.balance}
               onClick={() => setStep('review')}
             >
               Review claim
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'review' && (
         <section>
           <h2>Review and mock verify</h2>
-          <div className="claim-review">
+          <div className={tw('claim-review')}>
             <div>
               <span>Claim type</span>
               <strong>Final PF settlement</strong>
@@ -440,7 +437,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               <Status kind="success">7 checks passed</Status>
             </div>
           </div>
-          <label className="declaration">
+          <label className={tw('declaration')}>
             <input
               type="checkbox"
               checked={declared}
@@ -449,14 +446,14 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
             <span>{t('epfo.declaration')}</span>
           </label>
           <label
-            className="field-label"
+            className={tw('field-label')}
             htmlFor="claim-otp"
           >
             {t('epfo.otp')} <small>{t('epfo.otpHint')}</small>
           </label>
           <input
             id="claim-otp"
-            className="otp-input"
+            className={tw('otp-input')}
             maxLength={6}
             inputMode="numeric"
             value={otp}
@@ -464,43 +461,42 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
           />
           {formError && (
             <div
-              className="validation-error"
+              className={tw('validation-error')}
               role="alert"
             >
               {formError}
             </div>
           )}
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('details')}
             >
               Back
-            </button>
-            <button
-              className="button primary"
+            </Button>
+            <Button
               disabled={busy}
               onClick={() => void sendClaim()}
             >
               {t('epfo.submit')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'submitting' && (
-        <section className="propagation-progress">
-          <LoaderCircle className="spinner" />
+        <section className={tw('propagation-progress')}>
+          <LoaderCircle className={tw('spinner')} />
           <h2>Sending your mock claim</h2>
           <p>
             Duplicate submission is prevented while this request is in progress.
           </p>
-          <div className="submission-stages">
-            <span className="done">
+          <div className={tw('submission-stages')}>
+            <span className={tw('done')}>
               <Check />
               Details sealed
             </span>
-            <span className="active">
+            <span className={tw('active')}>
               <LoaderCircle />
               Reference being created
             </span>
@@ -526,20 +522,20 @@ function RuleChecklist({
   const failed = validation.results.filter((rule) => !rule.passed);
   const passed = validation.results.filter((rule) => rule.passed);
   return (
-    <div className="rule-groups">
+    <div className={tw('rule-groups')}>
       {failed.length > 0 && (
         <section>
           <h3>{t('epfo.failed')}</h3>
           {failed.map((rule) => (
             <button
-              className="rule-row failed rule-button"
+              className={tw('rule-row failed rule-button')}
               key={rule.code}
               onClick={onIssue}
             >
-              <span className="rule-icon">
+              <span className={tw('rule-icon')}>
                 <AlertTriangle />
               </span>
-              <span className="rule-copy">
+              <span className={tw('rule-copy')}>
                 <strong>{t(rule.messageKey)}</strong>
                 <SourceMarker>{rule.sourceRefs.join(' + ')}</SourceMarker>
                 <small>{t('common.details')}</small>
@@ -553,10 +549,10 @@ function RuleChecklist({
         <h3>{t('epfo.passed')}</h3>
         {passed.map((rule) => (
           <div
-            className="rule-row"
+            className={tw('rule-row')}
             key={rule.code}
           >
-            <span className="rule-icon">
+            <span className={tw('rule-icon')}>
               <Check />
             </span>
             <div>
@@ -591,27 +587,27 @@ function ClaimIssueSheet({
   if (!failed) return null;
   return (
     <div
-      className="sheet-backdrop"
+      className={tw('sheet-backdrop')}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
-        className="detail-sheet"
+        className={tw('detail-sheet')}
         role="dialog"
         aria-modal="true"
         aria-labelledby="claim-issue-title"
       >
         <button
           ref={closeRef}
-          className="icon-button sheet-close"
+          className={tw('icon-button sheet-close')}
           onClick={onClose}
           aria-label={t('common.close')}
         >
           <X />
         </button>
-        <p className="eyebrow">{t('epfo.claim.issueEyebrow')}</p>
+        <p className={tw('eyebrow')}>{t('epfo.claim.issueEyebrow')}</p>
         <h2 id="claim-issue-title">{t(failed.messageKey)}</h2>
         <p>{t('epfo.claim.issueConsequence')}</p>
         <SourceMarker>{failed.sourceRefs.join(' + ')}</SourceMarker>
@@ -619,13 +615,13 @@ function ClaimIssueSheet({
           <summary>{t('epfo.claim.technicalDetail')}</summary>
           <code>{failed.code}</code>
         </details>
-        <Link
-          className="button primary wide"
+        <ButtonLink
+          wide
           to={failed.fixTarget ?? '/identity'}
         >
           {t('epfo.claim.fixMismatch')}
           <ArrowRight />
-        </Link>
+        </ButtonLink>
       </section>
     </div>
   );
@@ -639,7 +635,7 @@ export function RejectedClaimPage() {
   );
   if (!claim)
     return (
-      <div className="page narrow">
+      <div className={tw('page narrow')}>
         <PageHeader
           eyebrow={t('epfo.history.eyebrow')}
           title={t('epfo.history.none')}
@@ -649,14 +645,14 @@ export function RejectedClaimPage() {
       </div>
     );
   return (
-    <div className="page narrow">
+    <div className={tw('page narrow')}>
       <PageHeader
         eyebrow={t('epfo.history.eyebrow')}
         title={t('epfo.history.rejected')}
         subtitle={t('epfo.history.rejectedHelp')}
         back="/epfo/history"
       />
-      <section className="rejection-panel">
+      <section className={tw('rejection-panel')}>
         <FileWarning />
         <div>
           <Status kind="danger">{t('epfo.history.decision')}</Status>
@@ -664,7 +660,7 @@ export function RejectedClaimPage() {
           <p>{t('epfo.history.c15Help')}</p>
         </div>
       </section>
-      <div className="claim-review">
+      <div className={tw('claim-review')}>
         <div>
           <span>{t('epfo.reference')}</span>
           <strong>{claim.reference}</strong>
@@ -682,13 +678,10 @@ export function RejectedClaimPage() {
           <strong>{claim.reasonCode}</strong>
         </div>
       </div>
-      <Link
-        className="button primary"
-        to="/identity"
-      >
+      <ButtonLink to="/identity">
         {t('epfo.history.fix')}
         <ArrowRight />
-      </Link>
+      </ButtonLink>
     </div>
   );
 }
@@ -696,24 +689,24 @@ export function RejectedClaimPage() {
 function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
   const { t, i18n } = useTranslation();
   return (
-    <div className="page narrow completion-page">
+    <div className={tw('page narrow completion-page')}>
       <PageHeader
         eyebrow="PF & EPFO · Claim status"
         title={t('epfo.received')}
         subtitle={t('epfo.expected')}
         back="/epfo"
       />
-      <div className="outcome-mark">
+      <div className={tw('outcome-mark')}>
         <Check />
       </div>
-      <div className="reference-band">
+      <div className={tw('reference-band')}>
         <span>{t('epfo.reference')}</span>
         <strong>{submission.reference}</strong>
         <small>
           Submitted {formatDate(submission.submittedAt, i18n.language)}
         </small>
       </div>
-      <section className="status-now">
+      <section className={tw('status-now')}>
         <Status kind="info">Claim received</Status>
         <h2>EPFO validation is next</h2>
         <p>
@@ -721,8 +714,8 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
           contacted.
         </p>
       </section>
-      <ol className="status-timeline">
-        <li className="complete">
+      <ol className={tw('status-timeline')}>
+        <li className={tw('complete')}>
           <span>
             <Check />
           </span>
@@ -731,7 +724,7 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
             <small>{formatDate(submission.submittedAt, i18n.language)}</small>
           </div>
         </li>
-        <li className="current">
+        <li className={tw('current')}>
           <span>
             <Clock3 />
           </span>
@@ -759,13 +752,13 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
           </div>
         </li>
       </ol>
-      <Link
-        className="button primary wide"
+      <ButtonLink
+        wide
         to="/activity"
       >
         View in Unified Activity
         <ArrowRight />
-      </Link>
+      </ButtonLink>
     </div>
   );
 }

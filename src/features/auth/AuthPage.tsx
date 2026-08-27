@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import { Select } from '@base-ui/react/select';
 import {
   ArrowLeft,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAppStore } from '../../app/store';
+import { Button } from '../../components/ui';
 import { apiService } from '../../services/LocalAPIService';
 import type { MockSession, PersonaId } from '../../types/domain';
 
@@ -132,25 +134,25 @@ export function AuthPage() {
   }
 
   return (
-    <main className="auth-page">
-      <div className="auth-mast">
-        <div className="wordmark auth-wordmark">
-          <span className="brand-mark">न</span>
+    <main className={tw('auth-page')}>
+      <div className={tw('auth-mast')}>
+        <div className={tw('wordmark auth-wordmark')}>
+          <span className={tw('brand-mark')}>न</span>
           <span>Nagrik</span>
-          <span className="prototype-tag">Prototype</span>
+          <span className={tw('prototype-tag')}>Prototype</span>
         </div>
         <div
-          className="auth-illustration"
+          className={tw('auth-illustration')}
           aria-hidden="true"
         >
-          <div className="identity-orbit">
+          <div className={tw('identity-orbit')}>
             <Fingerprint size={52} />
-            <span className="orbit-dot dot-a" />
-            <span className="orbit-dot dot-b" />
-            <span className="orbit-dot dot-c" />
+            <span className={tw('orbit-dot dot-a')} />
+            <span className={tw('orbit-dot dot-b')} />
+            <span className={tw('orbit-dot dot-c')} />
           </div>
-          <div className="trace-line" />
-          <div className="trace-services">
+          <div className={tw('trace-line')} />
+          <div className={tw('trace-services')}>
             <span>
               <Landmark size={20} />
               Income Tax
@@ -162,14 +164,14 @@ export function AuthPage() {
           </div>
         </div>
         <div>
-          <p className="eyebrow">One identity · connected outcomes</p>
+          <p className={tw('eyebrow')}>One identity · connected outcomes</p>
           <h1>Your financial records should work together.</h1>
-          <p className="auth-lede">
+          <p className={tw('auth-lede')}>
             See what needs attention, fix it once, and follow what changes
             across services.
           </p>
         </div>
-        <div className="prototype-disclosure">
+        <div className={tw('prototype-disclosure')}>
           <Eye size={19} />
           <p>
             <strong>A safe, fictional prototype.</strong> Login, integrations,
@@ -179,12 +181,12 @@ export function AuthPage() {
         </div>
       </div>
       <section
-        className="auth-panel"
+        className={tw('auth-panel')}
         aria-live="polite"
       >
         {step === 'otp' && (
           <button
-            className="back-button"
+            className={tw('back-button')}
             onClick={() => {
               setStep('identifier');
               setError('');
@@ -195,16 +197,16 @@ export function AuthPage() {
           </button>
         )}
         <div
-          className="step-dots"
+          className={tw('step-dots')}
           aria-label={`Step ${step === 'identifier' ? 1 : 2} of 2`}
         >
-          <i className="on" />
-          <i className={step === 'otp' ? 'on' : ''} />
+          <i className={tw('on')} />
+          <i className={tw(step === 'otp' && 'on')} />
         </div>
 
         {step === 'identifier' && (
           <>
-            <p className="panel-number">Identify yourself</p>
+            <p className={tw('panel-number')}>Identify yourself</p>
             <h2>Sign in to your records</h2>
             <p>
               Use a mobile number or Aadhaar number. For this prototype, you can
@@ -212,14 +214,14 @@ export function AuthPage() {
             </p>
 
             <label
-              className="field-label"
+              className={tw('field-label')}
               htmlFor="identifier"
             >
               Mobile or Aadhaar number
             </label>
             <input
               id="identifier"
-              className="identifier-input"
+              className={tw('identifier-input')}
               inputMode="numeric"
               autoComplete="username"
               maxLength={12}
@@ -233,7 +235,7 @@ export function AuthPage() {
             />
             <p
               id="identifier-help"
-              className="identifier-help"
+              className={tw('identifier-help')}
             >
               {identifier.length === 12
                 ? `Aadhaar · ${formatAadhaar(identifier)}`
@@ -244,57 +246,61 @@ export function AuthPage() {
 
             {error && (
               <div
-                className="validation-error"
+                className={tw('validation-error')}
                 role="alert"
               >
                 {error}
               </div>
             )}
-            <button
-              className="button primary wide"
+            <Button
+              wide
               disabled={busy || !isValidIdentifier(identifier)}
               onClick={() => void sendOtp()}
             >
               {busy ? 'Sending mock OTP…' : 'Send OTP'}
               <ArrowRight size={18} />
-            </button>
-            <div className="mock-account-select">
+            </Button>
+            <div className={tw('mock-account-select')}>
               <Select.Root
                 items={MOCK_ACCOUNT_OPTIONS}
                 value={selectedAccount || null}
                 onValueChange={chooseAccount}
               >
                 <Select.Trigger
-                  className="mock-account-trigger"
+                  className={tw('mock-account-trigger')}
                   aria-label="Choose a mock account"
                 >
                   <Select.Value
-                    className="mock-account-value"
+                    className={tw('mock-account-value')}
                     placeholder="Choose a citizen"
                   />
-                  <Select.Icon className="mock-account-icon">
+                  <Select.Icon className={tw('mock-account-icon')}>
                     <ChevronsUpDown size={19} />
                   </Select.Icon>
                 </Select.Trigger>
                 <Select.Portal>
                   <Select.Positioner
-                    className="mock-account-positioner"
+                    className={tw('mock-account-positioner')}
                     sideOffset={7}
                     alignItemWithTrigger={false}
                   >
-                    <Select.Popup className="mock-account-popup">
-                      <Select.List className="mock-account-list">
+                    <Select.Popup className={tw('mock-account-popup')}>
+                      <Select.List className={tw('mock-account-list')}>
                         {MOCK_ACCOUNT_OPTIONS.map((account) => (
                           <Select.Item
                             key={account.value}
                             value={account.value}
-                            className="mock-account-item"
+                            className={tw('mock-account-item')}
                           >
-                            <Select.ItemText className="mock-account-item-copy">
+                            <Select.ItemText
+                              className={tw('mock-account-item-copy')}
+                            >
                               <strong>{account.label}</strong>
                               <small>{account.description}</small>
                             </Select.ItemText>
-                            <Select.ItemIndicator className="mock-account-indicator">
+                            <Select.ItemIndicator
+                              className={tw('mock-account-indicator')}
+                            >
                               <Check size={18} />
                             </Select.ItemIndicator>
                           </Select.Item>
@@ -310,7 +316,7 @@ export function AuthPage() {
 
         {step === 'otp' && (
           <>
-            <p className="panel-number">Verification</p>
+            <p className={tw('panel-number')}>Verification</p>
             <h2>Enter the OTP</h2>
             <p>
               We sent a six-digit code for the{' '}
@@ -318,14 +324,14 @@ export function AuthPage() {
               ending in {identifier.slice(-4)}.
             </p>
             <label
-              className="field-label"
+              className={tw('field-label')}
               htmlFor="otp"
             >
               Six-digit OTP
             </label>
             <input
               id="otp"
-              className="otp-input"
+              className={tw('otp-input')}
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={6}
@@ -336,7 +342,7 @@ export function AuthPage() {
               placeholder="••••••"
               autoFocus
             />
-            <div className="otp-helper">
+            <div className={tw('otp-helper')}>
               <span>
                 <KeyRound size={16} />
                 Demo OTP: <strong>123456</strong>
@@ -345,27 +351,28 @@ export function AuthPage() {
             </div>
             {error && (
               <div
-                className="validation-error"
+                className={tw('validation-error')}
                 role="alert"
               >
                 {error}
               </div>
             )}
-            <button
-              className="button primary wide"
+            <Button
+              wide
               disabled={busy || otp.length !== 6 || seconds === 0}
               onClick={() => void verify()}
             >
               {busy ? 'Verifying…' : 'Enter Nagrik'}
               <ArrowRight size={18} />
-            </button>
+            </Button>
             {seconds === 0 && (
-              <button
-                className="button text wide"
+              <Button
+                variant="text"
+                wide
                 onClick={() => void sendOtp()}
               >
                 Resend mock OTP
-              </button>
+              </Button>
             )}
           </>
         )}

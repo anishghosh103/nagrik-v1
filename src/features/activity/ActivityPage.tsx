@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import { Activity, Check, CircleDot, Clock3, Fingerprint } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
@@ -16,21 +17,21 @@ export function ActivityPage() {
         ? t('activity.currentStates.identity')
         : t('activity.currentStates.ready');
   return (
-    <div className="page narrow">
+    <div className={tw('page narrow')}>
       <PageHeader
         eyebrow="Across your services"
         title={t('activity.title')}
         subtitle={t('activity.subtitle')}
       />
-      <section className="current-status">
+      <section className={tw('current-status')}>
         <p>{t('activity.current')}</p>
         <h2>{current}</h2>
         <SourceMarker>Derived from current records</SourceMarker>
       </section>
-      <ol className="activity-timeline">
+      <ol className={tw('activity-timeline')}>
         {persona.activity.map((event, index) => (
           <li key={event.id}>
-            <span className={`activity-node ${event.status.toLowerCase()}`}>
+            <span className={tw('activity-node', event.status.toLowerCase())}>
               {event.kind === 'IDENTITY' ? (
                 <Fingerprint />
               ) : event.status === 'IN_PROGRESS' ? (
@@ -41,7 +42,7 @@ export function ActivityPage() {
                 <Activity />
               )}
             </span>
-            <div className="activity-event">
+            <div className={tw('activity-event')}>
               <div>
                 <Status
                   kind={
@@ -63,7 +64,7 @@ export function ActivityPage() {
               <h2>{t(event.title, event.values)}</h2>
               <p>{t(event.detail, event.values)}</p>
               {index === 0 && event.status === 'IN_PROGRESS' && (
-                <div className="next-event">
+                <div className={tw('next-event')}>
                   <CircleDot />
                   {t('activity.next')}
                 </div>

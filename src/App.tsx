@@ -1,3 +1,4 @@
+import { tw } from './styles/recipes';
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './app/AppShell';
@@ -28,17 +29,17 @@ import { ProfilePage } from './features/profile/ProfilePage';
 function HydrationScreen() {
   return (
     <main
-      className="hydration"
+      className={tw('hydration')}
       aria-live="polite"
     >
       <div
-        className="brand-mark"
+        className={tw('brand-mark')}
         aria-hidden="true"
       >
         न
       </div>
       <p>Restoring your private demo workspace…</p>
-      <div className="loading-line" />
+      <div className={tw('loading-line')} />
     </main>
   );
 }

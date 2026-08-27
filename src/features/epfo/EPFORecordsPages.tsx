@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import { useEffect, useState } from 'react';
 import {
   ArrowRight,
@@ -15,22 +16,22 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { formatDate, formatMoney } from '../../components/formatters';
-import { PageHeader, SourceMarker, Status } from '../../components/ui';
+import { Button, PageHeader, SourceMarker, Status } from '../../components/ui';
 
 export function EPFOProfilePage() {
   const { t } = useTranslation();
   const persona = useAppStore((state) => state.persona);
   if (!persona) return null;
   return (
-    <div className="page">
+    <div className={tw('page')}>
       <PageHeader
         eyebrow={t('epfo.profile.eyebrow')}
         title={t('epfo.profile.title')}
         subtitle={t('epfo.profile.subtitle')}
         back="/epfo"
       />
-      <section className="profile-identity-band">
-        <div className="profile-monogram">
+      <section className={tw('profile-identity-band')}>
+        <div className={tw('profile-monogram')}>
           <UserRound />
         </div>
         <div>
@@ -46,7 +47,7 @@ export function EPFOProfilePage() {
         </div>
         <Status kind="success">{t('epfo.profile.connected')}</Status>
       </section>
-      <div className="record-card-grid">
+      <div className={tw('record-card-grid')}>
         <Link to="/epfo/kyc">
           <ShieldCheck />
           <span>
@@ -82,7 +83,7 @@ export function EPFOProfilePage() {
           <ArrowRight />
         </Link>
       </div>
-      <section className="bank-record">
+      <section className={tw('bank-record')}>
         <Banknote />
         <div>
           <span>{t('epfo.bank')}</span>
@@ -107,19 +108,19 @@ export function KYCPage() {
   if (!persona) return null;
   const icons = { AADHAAR: Fingerprint, PAN: Landmark, BANK: Banknote };
   return (
-    <div className="page narrow">
+    <div className={tw('page narrow')}>
       <PageHeader
         eyebrow={t('epfo.kyc.eyebrow')}
         title={t('epfo.kyc.title')}
         subtitle={t('epfo.kyc.subtitle')}
         back="/epfo/profile"
       />
-      <div className="record-ledger">
+      <div className={tw('record-ledger')}>
         {persona.epfo.kyc.map((record) => {
           const Icon = icons[record.kind];
           return (
             <article key={record.kind}>
-              <span className="record-icon">
+              <span className={tw('record-icon')}>
                 <Icon />
               </span>
               <div>
@@ -144,7 +145,7 @@ export function KYCPage() {
           );
         })}
       </div>
-      <aside className="simulation-note">
+      <aside className={tw('simulation-note')}>
         <ShieldCheck />
         <span>{t('epfo.kyc.prototype')}</span>
       </aside>
@@ -170,7 +171,7 @@ export function EmploymentPage() {
     setSaved(true);
   }
   return (
-    <div className="page narrow">
+    <div className={tw('page narrow')}>
       <PageHeader
         eyebrow={t('epfo.employment.eyebrow')}
         title={t('epfo.employment.title')}
@@ -179,25 +180,25 @@ export function EmploymentPage() {
       />
       {saved && (
         <div
-          className="success-inline"
+          className={tw('success-inline')}
           role="status"
         >
           <Check />
           {t('epfo.employment.saved')}
         </div>
       )}
-      <ol className="employment-timeline">
+      <ol className={tw('employment-timeline')}>
         {persona.epfo.employment.map((record) => (
           <li
             key={record.id}
             id={`employment-${record.id}`}
             tabIndex={-1}
           >
-            <span className="employment-node">
+            <span className={tw('employment-node')}>
               <BriefcaseBusiness />
             </span>
             <article>
-              <div className="section-title-row">
+              <div className={tw('section-title-row')}>
                 <div>
                   <h2>{record.employer}</h2>
                   <small>{record.memberId}</small>
@@ -229,7 +230,7 @@ export function EmploymentPage() {
                 </div>
               </dl>
               {editing === record.id ? (
-                <div className="inline-edit">
+                <div className={tw('inline-edit')}>
                   <label htmlFor={`exit-${record.id}`}>
                     {t('epfo.employment.correctExit')}
                   </label>
@@ -244,25 +245,24 @@ export function EmploymentPage() {
                     onChange={(event) => setDate(event.target.value)}
                   />
                   <div>
-                    <button
-                      className="button secondary"
+                    <Button
+                      variant="secondary"
                       onClick={() => setEditing(null)}
                     >
                       {t('common.cancel')}
-                    </button>
-                    <button
-                      className="button primary"
+                    </Button>
+                    <Button
                       disabled={busy || !date}
                       onClick={() => void save(record.id)}
                     >
                       {t('common.save')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
                 !record.current && (
                   <button
-                    className="text-button"
+                    className={tw('text-button')}
                     onClick={() => setEditing(record.id)}
                   >
                     {t('epfo.employment.correctDates')}
@@ -283,14 +283,14 @@ export function ServiceHistoryPage() {
   const persona = useAppStore((state) => state.persona);
   if (!persona) return null;
   return (
-    <div className="page narrow">
+    <div className={tw('page narrow')}>
       <PageHeader
         eyebrow={t('epfo.history.eyebrow')}
         title={t('epfo.history.title')}
         subtitle={t('epfo.history.subtitle')}
         back="/epfo/profile"
       />
-      <div className="service-history-list">
+      <div className={tw('service-history-list')}>
         {persona.epfo.claim && (
           <article>
             <Clock3 />
@@ -399,7 +399,7 @@ export function ServiceHistoryPage() {
 
 function UsersRoundIcon() {
   return (
-    <span className="history-glyph">
+    <span className={tw('history-glyph')}>
       <UserRound />
     </span>
   );

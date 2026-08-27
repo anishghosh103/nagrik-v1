@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import { useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -9,10 +10,9 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { formatDate } from '../../components/formatters';
-import { PageHeader, Status } from '../../components/ui';
+import { Button, ButtonLink, PageHeader, Status } from '../../components/ui';
 import { validateNomineeAllocation } from '../../rules/epfo';
 import type { Nominee } from '../../types/domain';
 
@@ -103,7 +103,7 @@ export function NominationPage() {
 
   if (step === 'done') return <NominationComplete />;
   return (
-    <div className="page narrow journey-page">
+    <div className={tw('page narrow journey-page')}>
       <PageHeader
         eyebrow={t('epfo.nomination.eyebrow')}
         title={t('epfo.nomination.title')}
@@ -111,8 +111,8 @@ export function NominationPage() {
         back="/epfo"
       />
       {step === 'status' && (
-        <section className="nomination-status">
-          <span className="large-glyph">
+        <section className={tw('nomination-status')}>
+          <span className={tw('large-glyph')}>
             <UsersRound />
           </span>
           <Status
@@ -135,7 +135,7 @@ export function NominationPage() {
             )}
           </p>
           {existing.status === 'EFFECTIVE' && (
-            <div className="nominee-summary">
+            <div className={tw('nominee-summary')}>
               {existing.nominees.map((nominee) => (
                 <div key={nominee.id}>
                   <UserRound />
@@ -152,37 +152,36 @@ export function NominationPage() {
               ))}
             </div>
           )}
-          <div className="sticky-action">
+          <div className={tw('sticky-action')}>
             <span>{existing.reference ?? t('common.saved')}</span>
-            <button
-              className="button primary"
-              onClick={() => setStep('details')}
-            >
+            <Button onClick={() => setStep('details')}>
               {t(
                 existing.status === 'EFFECTIVE'
                   ? 'epfo.nomination.update'
                   : 'epfo.nomination.start',
               )}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'details' && (
         <section>
           <h2>{t('epfo.nomination.detailsTitle')}</h2>
-          <p className="section-intro">{t('epfo.nomination.detailsHelp')}</p>
+          <p className={tw('section-intro')}>
+            {t('epfo.nomination.detailsHelp')}
+          </p>
           {error && (
             <div
               ref={errorRef}
-              className="validation-error"
+              className={tw('validation-error')}
               role="alert"
               tabIndex={-1}
             >
               {error}
             </div>
           )}
-          <div className="nominee-forms">
+          <div className={tw('nominee-forms')}>
             {nominees.map((nominee, index) => (
               <fieldset key={nominee.id}>
                 <legend>
@@ -238,7 +237,7 @@ export function NominationPage() {
                 />
                 {nominees.length > 1 && (
                   <button
-                    className="text-button danger-text"
+                    className={tw('text-button danger-text')}
                     onClick={() => remove(index)}
                   >
                     <Trash2 />
@@ -248,40 +247,40 @@ export function NominationPage() {
               </fieldset>
             ))}
           </div>
-          <button
-            className="button secondary add-nominee"
+          <Button
+            variant="secondary"
+            className={tw('add-nominee')}
             onClick={() =>
               setNominees((items) => [...items, blankNominee(items.length)])
             }
           >
             <Plus />
             {t('epfo.nomination.add')}
-          </button>
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          </Button>
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('status')}
             >
               {t('common.back')}
-            </button>
-            <button
-              className="button primary"
-              onClick={() => void continueToAllocation()}
-            >
+            </Button>
+            <Button onClick={() => void continueToAllocation()}>
               {t('epfo.nomination.allocate')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'allocation' && (
         <section>
           <h2>{t('epfo.nomination.allocationTitle')}</h2>
-          <p className="section-intro">{t('epfo.nomination.allocationHelp')}</p>
+          <p className={tw('section-intro')}>
+            {t('epfo.nomination.allocationHelp')}
+          </p>
           {error && (
             <div
               ref={errorRef}
-              className="validation-error"
+              className={tw('validation-error')}
               role="alert"
               tabIndex={-1}
             >
@@ -289,7 +288,7 @@ export function NominationPage() {
             </div>
           )}
           <div
-            className="allocation-total"
+            className={tw('allocation-total')}
             aria-live="polite"
           >
             <span>{t('epfo.nomination.total')}</span>
@@ -302,7 +301,7 @@ export function NominationPage() {
               )}
             </Status>
           </div>
-          <div className="allocation-list">
+          <div className={tw('allocation-list')}>
             {nominees.map((nominee, index) => (
               <label
                 key={nominee.id}
@@ -316,7 +315,7 @@ export function NominationPage() {
                     )}
                   </small>
                 </span>
-                <span className="percentage-input">
+                <span className={tw('percentage-input')}>
                   <input
                     id={`share-${index}`}
                     type="number"
@@ -335,24 +334,21 @@ export function NominationPage() {
           </div>
           <p
             id="allocation-help"
-            className="field-help"
+            className={tw('field-help')}
           >
             {t('epfo.nomination.exactHelp')}
           </p>
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('details')}
             >
               {t('common.back')}
-            </button>
-            <button
-              className="button primary"
-              onClick={() => void continueToReview()}
-            >
+            </Button>
+            <Button onClick={() => void continueToReview()}>
               {t('epfo.nomination.review')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
@@ -362,14 +358,14 @@ export function NominationPage() {
           {error && (
             <div
               ref={errorRef}
-              className="validation-error"
+              className={tw('validation-error')}
               role="alert"
               tabIndex={-1}
             >
               {error}
             </div>
           )}
-          <div className="nominee-summary review">
+          <div className={tw('nominee-summary review')}>
             {nominees.map((nominee) => (
               <div key={nominee.id}>
                 <UserRound />
@@ -386,7 +382,7 @@ export function NominationPage() {
               </div>
             ))}
           </div>
-          <div className="readiness-banner ready">
+          <div className={tw('readiness-banner ready')}>
             <Check />
             <div>
               <Status kind="success">{t('epfo.nomination.ready')}</Status>
@@ -395,43 +391,42 @@ export function NominationPage() {
             </div>
           </div>
           <label
-            className="field-label"
+            className={tw('field-label')}
             htmlFor="nomination-otp"
           >
             {t('epfo.otp')} <small>{t('epfo.otpHint')}</small>
           </label>
           <input
             id="nomination-otp"
-            className="otp-input"
+            className={tw('otp-input')}
             maxLength={6}
             inputMode="numeric"
             value={otp}
             onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
           />
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('allocation')}
             >
               {t('common.back')}
-            </button>
-            <button
-              className="button primary"
+            </Button>
+            <Button
               disabled={busy}
               onClick={() => void submit()}
             >
               {t('epfo.nomination.verify')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'submitting' && (
         <section
-          className="propagation-progress"
+          className={tw('propagation-progress')}
           aria-live="polite"
         >
-          <LoaderCircle className="spinner" />
+          <LoaderCircle className={tw('spinner')} />
           <h2>{t('epfo.nomination.submitting')}</h2>
           <p>{t('epfo.nomination.submittingHelp')}</p>
         </section>
@@ -445,17 +440,17 @@ function NominationComplete() {
   const nomination = useAppStore((state) => state.persona?.epfo.nomination);
   if (!nomination) return null;
   return (
-    <div className="page narrow completion-page">
+    <div className={tw('page narrow completion-page')}>
       <PageHeader
         eyebrow={t('epfo.nomination.completeEyebrow')}
         title={t('epfo.nomination.completeTitle')}
         subtitle={t('epfo.nomination.completeHelp')}
         back="/epfo"
       />
-      <div className="outcome-mark">
+      <div className={tw('outcome-mark')}>
         <Check />
       </div>
-      <div className="reference-band">
+      <div className={tw('reference-band')}>
         <span>{t('epfo.nomination.reference')}</span>
         <strong>{nomination.reference}</strong>
         <small>
@@ -464,18 +459,18 @@ function NominationComplete() {
           })}
         </small>
       </div>
-      <section className="status-now success-border">
+      <section className={tw('status-now success-border')}>
         <Status kind="success">{t('epfo.nomination.status.effective')}</Status>
         <h2>{t('epfo.nomination.legallyRecorded')}</h2>
         <p>{t('epfo.nomination.prototype')}</p>
       </section>
-      <Link
-        className="button primary wide"
+      <ButtonLink
+        wide
         to="/epfo/history"
       >
         {t('epfo.nomination.viewHistory')}
         <ArrowRight />
-      </Link>
+      </ButtonLink>
     </div>
   );
 }

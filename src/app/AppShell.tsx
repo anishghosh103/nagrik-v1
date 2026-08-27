@@ -1,3 +1,4 @@
+import { tw } from '../styles/recipes';
 import type { ReactNode } from 'react';
 import {
   Activity,
@@ -26,12 +27,12 @@ const nav = [
 function LanguageSelect() {
   const { i18n } = useTranslation();
   return (
-    <label className="language-control">
+    <label className={tw('language-control')}>
       <Languages
         size={17}
         aria-hidden="true"
       />
-      <span className="sr-only">Language</span>
+      <span className={tw('sr-only')}>Language</span>
       <select
         value={i18n.language}
         onChange={(event) => {
@@ -52,26 +53,26 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { persona, online, error, busy, signOut } = useAppStore();
   const navigate = useNavigate();
   return (
-    <div className="app-frame">
-      <header className="global-header">
+    <div className={tw('app-frame')}>
+      <header className={tw('global-header')}>
         <NavLink
-          className="wordmark"
+          className={tw('wordmark')}
           to="/home"
         >
           <span
-            className="brand-mark"
+            className={tw('brand-mark')}
             aria-hidden="true"
           >
             न
           </span>
           <span>Nagrik</span>
-          <span className="prototype-tag">{t('common.prototype')}</span>
+          <span className={tw('prototype-tag')}>{t('common.prototype')}</span>
         </NavLink>
-        <div className="header-tools">
+        <div className={tw('header-tools')}>
           <LanguageSelect />
           <NavLink
             to="/profile"
-            className="persona-chip"
+            className={tw('persona-chip')}
             aria-label={`${persona?.profile.firstName ?? 'Demo'} profile`}
           >
             <CircleUserRound size={19} />
@@ -81,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       {!online && (
         <div
-          className="offline-banner"
+          className={tw('offline-banner')}
           role="status"
         >
           <WifiOff size={17} />
@@ -91,7 +92,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
       {error && (
         <div
-          className="error-banner"
+          className={tw('error-banner')}
           role="alert"
         >
           {error}
@@ -100,15 +101,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
       )}
-      <div className="shell-grid">
-        <aside className="sidebar">
+      <div className={tw('shell-grid')}>
+        <aside className={tw('sidebar')}>
           <nav aria-label="Primary navigation">
             {nav.map(({ to, key, Icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  isActive ? 'nav-item active' : 'nav-item'
+                  tw('nav-item', isActive && 'active')
                 }
               >
                 <Icon size={20} />
@@ -116,16 +117,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
-          <div className="sidebar-bottom">
+          <div className={tw('sidebar-bottom')}>
             <NavLink
               to="/profile"
-              className="nav-item"
+              className={tw('nav-item')}
             >
               <CircleUserRound size={20} />
               <span>{t('nav.profile')}</span>
             </NavLink>
             <button
-              className="nav-item"
+              className={tw('nav-item')}
               onClick={() => {
                 if (
                   confirm(
@@ -139,7 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span>Reset demo</span>
             </button>
             <button
-              className="nav-item"
+              className={tw('nav-item')}
               onClick={() => {
                 void signOut();
                 navigate('/');
@@ -152,14 +153,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
         <main
           id="main-content"
-          className="main-content"
+          className={tw('main-content')}
           aria-busy={busy}
         >
           {children}
         </main>
       </div>
       <nav
-        className="bottom-nav"
+        className={tw('bottom-nav')}
         aria-label="Mobile navigation"
       >
         {nav
@@ -168,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) => (isActive ? 'active' : '')}
+              className={({ isActive }) => tw(isActive && 'active')}
             >
               <Icon size={20} />
               <span>{t(`nav.${key}`)}</span>

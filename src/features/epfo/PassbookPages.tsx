@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import {
   AlertTriangle,
   ArrowRight,
@@ -10,10 +11,15 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { formatDate, formatMoney } from '../../components/formatters';
-import { PageHeader, SourceMarker, Status } from '../../components/ui';
+import {
+  Button,
+  ButtonLink,
+  PageHeader,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 import type { MonthlyContribution } from '../../types/domain';
 
 export function PassbookPage() {
@@ -44,14 +50,14 @@ export function PassbookPage() {
   if (!persona) return null;
   const passbook = persona.epfo.passbook;
   return (
-    <div className="page">
+    <div className={tw('page')}>
       <PageHeader
         eyebrow={t('epfo.passbook.eyebrow')}
         title={t('epfo.passbook.title')}
         subtitle={t('epfo.passbook.subtitle')}
         back="/epfo"
       />
-      <section className="balance-band passbook-balance">
+      <section className={tw('balance-band passbook-balance')}>
         <div>
           <p>{t('epfo.passbook.total')}</p>
           <strong>{formatMoney(persona.epfo.balance, i18n.language)}</strong>
@@ -61,22 +67,22 @@ export function PassbookPage() {
             })}
           </small>
         </div>
-        <button
-          className="button secondary"
+        <Button
+          variant="secondary"
           disabled={refreshing || !online}
           onClick={() => void refresh()}
         >
           {refreshing ? (
-            <LoaderCircle className="spinner-small" />
+            <LoaderCircle className={tw('spinner-small')} />
           ) : (
             <RefreshCw />
           )}
           {t(refreshing ? 'epfo.passbook.refreshing' : 'epfo.passbook.refresh')}
-        </button>
+        </Button>
       </section>
       {!online && (
         <div
-          className="cache-notice"
+          className={tw('cache-notice')}
           role="status"
         >
           <CircleDot />
@@ -88,7 +94,7 @@ export function PassbookPage() {
       )}
       {refreshFailed && (
         <div
-          className="cache-notice warning"
+          className={tw('cache-notice warning')}
           role="alert"
         >
           <AlertTriangle />
@@ -97,7 +103,7 @@ export function PassbookPage() {
             <span>{t('epfo.passbook.failedHelp')}</span>
           </div>
           <button
-            className="text-button"
+            className={tw('text-button')}
             onClick={() => void refresh()}
           >
             {t('common.retry')}
@@ -113,10 +119,10 @@ export function PassbookPage() {
           );
         return (
           <section
-            className="passbook-employer"
+            className={tw('passbook-employer')}
             key={employer.employmentId}
           >
-            <div className="employer-ledger-head">
+            <div className={tw('employer-ledger-head')}>
               <div>
                 <Landmark />
                 <span>
@@ -129,7 +135,7 @@ export function PassbookPage() {
                 <strong>{formatMoney(total, i18n.language)}</strong>
               </div>
             </div>
-            <div className="financial-table">
+            <div className={tw('financial-table')}>
               <table>
                 <caption>
                   {t('epfo.passbook.caption', { employer: employer.employer })}
@@ -147,7 +153,7 @@ export function PassbookPage() {
                   {employer.contributions.map((item) => (
                     <tr
                       key={item.id}
-                      className={item.status === 'MISSING' ? 'missing-row' : ''}
+                      className={tw(item.status === 'MISSING' && 'missing-row')}
                     >
                       <th scope="row">
                         {formatDate(item.month, i18n.language)}
@@ -163,7 +169,7 @@ export function PassbookPage() {
                       </td>
                       <td data-label={t('epfo.passbook.state')}>
                         <button
-                          className="status-button"
+                          className={tw('status-button')}
                           onClick={() => setSelected(item)}
                         >
                           <Status
@@ -219,28 +225,28 @@ function ContributionSheet({
   }, []);
   return (
     <div
-      className="sheet-backdrop"
+      className={tw('sheet-backdrop')}
       role="presentation"
     >
       <section
-        className="detail-sheet"
+        className={tw('detail-sheet')}
         role="dialog"
         aria-modal="true"
         aria-labelledby="contribution-title"
       >
         <button
           ref={close}
-          className="icon-button sheet-close"
+          className={tw('icon-button sheet-close')}
           onClick={onClose}
           aria-label={t('common.close')}
         >
           <X />
         </button>
-        <p className="eyebrow">{t('epfo.passbook.detailEyebrow')}</p>
+        <p className={tw('eyebrow')}>{t('epfo.passbook.detailEyebrow')}</p>
         <h2 id="contribution-title">
           {formatDate(contribution.month, i18n.language)}
         </h2>
-        <div className="claim-review">
+        <div className={tw('claim-review')}>
           <div>
             <span>{t('epfo.passbook.employee')}</span>
             <strong>{formatMoney(contribution.employee, i18n.language)}</strong>
@@ -262,13 +268,13 @@ function ContributionSheet({
           )}
         </p>
         {contribution.status === 'MISSING' && (
-          <Link
-            className="button primary wide"
+          <ButtonLink
+            wide
             to="/epfo/passbook/issue"
           >
             {t('epfo.passbook.resolve')}
             <ArrowRight />
-          </Link>
+          </ButtonLink>
         )}
       </section>
     </div>
@@ -281,7 +287,7 @@ export function ContributionIssuePage() {
   const issue = persona?.epfo.contributionIssue;
   if (!persona || !issue)
     return (
-      <div className="page narrow">
+      <div className={tw('page narrow')}>
         <PageHeader
           eyebrow={t('epfo.issue.eyebrow')}
           title={t('epfo.issue.none')}
@@ -294,19 +300,19 @@ export function ContributionIssuePage() {
     (item) => item.id === issue.employmentId,
   );
   return (
-    <div className="page narrow">
+    <div className={tw('page narrow')}>
       <PageHeader
         eyebrow={t('epfo.issue.eyebrow')}
         title={t('epfo.issue.title')}
         subtitle={t('epfo.issue.subtitle')}
         back="/epfo/passbook"
       />
-      <section className="issue-explanation">
+      <section className={tw('issue-explanation')}>
         <Status kind="warning">{t('epfo.issue.category')}</Status>
         <h2>{issue.summary}</h2>
         <p>{t('epfo.issue.consequence')}</p>
       </section>
-      <div className="claim-review">
+      <div className={tw('claim-review')}>
         <div>
           <span>{t('epfo.issue.service')}</span>
           <strong>{t('nav.epfo')}</strong>
@@ -320,23 +326,22 @@ export function ContributionIssuePage() {
           <strong>{t('epfo.issue.category')}</strong>
         </div>
       </div>
-      <aside className="handoff-panel">
+      <aside className={tw('handoff-panel')}>
         <Check />
         <div>
           <h2>{t('epfo.issue.prefilled')}</h2>
           <p>{t('epfo.issue.prefilledHelp')}</p>
         </div>
       </aside>
-      <button
-        className="button primary"
+      <Button
         disabled
         aria-describedby="grievance-deferred"
       >
         {t('epfo.issue.submit')}
-      </button>
+      </Button>
       <p
         id="grievance-deferred"
-        className="field-help"
+        className={tw('field-help')}
       >
         {t('epfo.issue.deferred')}
       </p>

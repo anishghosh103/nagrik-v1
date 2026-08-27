@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import {
   Languages,
   LogOut,
@@ -8,7 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
-import { PageHeader, SourceMarker } from '../../components/ui';
+import { Button, PageHeader, SourceMarker } from '../../components/ui';
 import type { PersonaId } from '../../types/domain';
 
 export function ProfilePage() {
@@ -28,14 +29,14 @@ export function ProfilePage() {
     navigate('/home');
   }
   return (
-    <div className="page narrow">
+    <div className={tw('page narrow')}>
       <PageHeader
         eyebrow="Profile and settings"
         title="Your demo workspace"
         subtitle="Manage the active fictional citizen, language, privacy and reset controls."
       />
-      <section className="profile-card">
-        <span className="profile-avatar">
+      <section className={tw('profile-card')}>
+        <span className={tw('profile-avatar')}>
           {persona.profile.firstName[0]}
           {persona.profile.fullName.split(' ')[1]?.[0]}
         </span>
@@ -45,7 +46,7 @@ export function ProfilePage() {
           <SourceMarker>{persona.profile.maskedAadhaar}</SourceMarker>
         </div>
       </section>
-      <div className="settings-list">
+      <div className={tw('settings-list')}>
         <section>
           <div>
             <UserRound />
@@ -94,7 +95,7 @@ export function ProfilePage() {
           <span>Device only</span>
         </section>
       </div>
-      <section className="privacy-panel">
+      <section className={tw('privacy-panel')}>
         <ShieldCheck />
         <div>
           <h2>Simulation boundaries</h2>
@@ -105,9 +106,9 @@ export function ProfilePage() {
           </p>
         </div>
       </section>
-      <div className="profile-actions">
-        <button
-          className="button secondary"
+      <div className={tw('profile-actions')}>
+        <Button
+          variant="secondary"
           onClick={() => {
             if (
               confirm(
@@ -119,9 +120,9 @@ export function ProfilePage() {
         >
           <RotateCcw />
           Reset this demo
-        </button>
-        <button
-          className="button text"
+        </Button>
+        <Button
+          variant="text"
           onClick={() => {
             void signOut();
             navigate('/');
@@ -129,7 +130,7 @@ export function ProfilePage() {
         >
           <LogOut />
           {t('common.signOut')}
-        </button>
+        </Button>
       </div>
     </div>
   );

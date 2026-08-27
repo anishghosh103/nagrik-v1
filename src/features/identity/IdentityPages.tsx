@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import { useMemo, useState } from 'react';
 import {
   ArrowRight,
@@ -12,7 +13,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
-import { PageHeader, SourceMarker, Status } from '../../components/ui';
+import {
+  Button,
+  ButtonLink,
+  PageHeader,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 import { formatDate } from '../../components/formatters';
 import { identityHealth } from '../../rules/identity';
 import type { IdentityField, IdentitySource } from '../../types/domain';
@@ -47,26 +54,26 @@ export function IdentityPage() {
   );
   const health = identityHealth(persona);
   return (
-    <div className="page wide-page">
+    <div className={tw('page wide-page')}>
       <PageHeader
         eyebrow="Financial identity · Health check"
         title={t('identity.title')}
         subtitle={t('identity.subtitle')}
       />
-      <section className="identity-summary">
+      <section className={tw('identity-summary')}>
         <div>
-          <div className="score-inline">
+          <div className={tw('score-inline')}>
             <strong>{health}</strong>
             <span>/ 100</span>
           </div>
           <p>{t('identity.score')}</p>
         </div>
-        <div className="connection-summary">
+        <div className={tw('connection-summary')}>
           <span>
             <Fingerprint />
             <b>Aadhaar-led identity</b>
           </span>
-          <span className="connection-line" />
+          <span className={tw('connection-line')} />
           <span>
             <Landmark />
             <b>5 connected records</b>
@@ -77,13 +84,13 @@ export function IdentityPage() {
         </Status>
       </section>
       <div
-        className="comparison-desktop"
+        className={tw('comparison-desktop')}
         role="region"
         aria-label="Identity source comparison"
         tabIndex={0}
       >
         <table>
-          <caption className="sr-only">
+          <caption className={tw('sr-only')}>
             Values held by each connected identity source
           </caption>
           <thead>
@@ -104,7 +111,7 @@ export function IdentityPage() {
               return (
                 <tr
                   key={field}
-                  className={mismatch ? 'mismatch-row' : ''}
+                  className={tw(mismatch && 'mismatch-row')}
                 >
                   <th>
                     {fieldNames[field]}
@@ -125,17 +132,17 @@ export function IdentityPage() {
           </tbody>
         </table>
       </div>
-      <div className="comparison-mobile">
+      <div className={tw('comparison-mobile')}>
         {fields.map((field) => {
           const mismatch = persona.mismatches.find(
             (item) => item.field === field && item.status !== 'RESOLVED',
           );
           return (
             <section
-              className={mismatch ? 'field-card mismatch-row' : 'field-card'}
+              className={tw('field-card', mismatch && 'mismatch-row')}
               key={field}
             >
-              <div className="field-card-head">
+              <div className={tw('field-card-head')}>
                 <h2>{fieldNames[field]}</h2>
                 <Status kind={mismatch ? 'danger' : 'success'}>
                   {mismatch
@@ -147,7 +154,7 @@ export function IdentityPage() {
                 (source) =>
                   persona.identity.valuesBySource[source][field] && (
                     <div
-                      className="field-value"
+                      className={tw('field-value')}
                       key={source}
                     >
                       <SourceMarker>{sourceNames[source]}</SourceMarker>
@@ -159,7 +166,7 @@ export function IdentityPage() {
               )}
               {mismatch && (
                 <Link
-                  className="arrow-link"
+                  className={tw('arrow-link')}
                   to={`/identity/mismatch/${mismatch.id}`}
                 >
                   {t('common.review')}
@@ -172,7 +179,7 @@ export function IdentityPage() {
       </div>
       {openMismatch ? (
         <Link
-          className="mismatch-callout"
+          className={tw('mismatch-callout')}
           to={`/identity/mismatch/${openMismatch.id}`}
         >
           <span>
@@ -180,13 +187,13 @@ export function IdentityPage() {
             <b>Name mismatch</b>
           </span>
           <p>May block your PF claim and delay Income Tax bank validation.</p>
-          <span className="arrow-link">
+          <span className={tw('arrow-link')}>
             {t('common.review')}
             <ArrowRight />
           </span>
         </Link>
       ) : (
-        <section className="success-callout">
+        <section className={tw('success-callout')}>
           <CheckCircle2 />
           <div>
             <h2>{t('identity.success')}</h2>
@@ -201,13 +208,13 @@ export function IdentityPage() {
               </small>
             )}
           </div>
-          <Link
-            className="button secondary"
+          <ButtonLink
+            variant="secondary"
             to="/epfo/claim"
           >
             {t('identity.viewPf')}
             <ArrowRight />
-          </Link>
+          </ButtonLink>
         </section>
       )}
     </div>
@@ -239,7 +246,7 @@ export function MismatchPage() {
   );
   if (!persona || !mismatch)
     return (
-      <div className="page narrow">
+      <div className={tw('page narrow')}>
         <PageHeader
           eyebrow="Financial identity"
           title="This difference is no longer open"
@@ -262,7 +269,7 @@ export function MismatchPage() {
   const stepNumber =
     step === 'choose' ? 1 : step === 'review' ? 2 : step === 'progress' ? 3 : 4;
   return (
-    <div className="page narrow journey-page">
+    <div className={tw('page narrow journey-page')}>
       <PageHeader
         eyebrow="Financial identity · Correct and propagate"
         title={
@@ -277,18 +284,18 @@ export function MismatchPage() {
         }
         back="/identity"
       />
-      <div className="journey-progress">
+      <div className={tw('journey-progress')}>
         <span>Step {stepNumber} of 4</span>
         <div>
-          <i className="on" />
-          <i className={stepNumber >= 2 ? 'on' : ''} />
-          <i className={stepNumber >= 3 ? 'on' : ''} />
-          <i className={stepNumber >= 4 ? 'on' : ''} />
+          <i className={tw('on')} />
+          <i className={tw(stepNumber >= 2 && 'on')} />
+          <i className={tw(stepNumber >= 3 && 'on')} />
+          <i className={tw(stepNumber >= 4 && 'on')} />
         </div>
       </div>
       {step === 'choose' && (
         <section>
-          <div className="issue-explanation">
+          <div className={tw('issue-explanation')}>
             <Status kind="danger">Blocking</Status>
             <h2>Connected records use four different versions</h2>
             <p>
@@ -296,11 +303,11 @@ export function MismatchPage() {
               simulated destination.
             </p>
           </div>
-          <fieldset className="choice-list">
+          <fieldset className={tw('choice-list')}>
             <legend>{t('identity.canonical')}</legend>
             {choices.map((choice) => (
               <label
-                className={value === choice ? 'choice selected' : 'choice'}
+                className={tw('choice', value === choice && 'selected')}
                 key={choice}
               >
                 <input
@@ -327,35 +334,32 @@ export function MismatchPage() {
               </label>
             ))}
           </fieldset>
-          <div className="sticky-action">
+          <div className={tw('sticky-action')}>
             <span>{t('common.saved')}</span>
-            <button
-              className="button primary"
-              onClick={() => setStep('review')}
-            >
+            <Button onClick={() => setStep('review')}>
               Review destinations
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'review' && (
         <section>
-          <div className="review-value">
+          <div className={tw('review-value')}>
             <span>Canonical name</span>
             <strong>{value}</strong>
-            <button
-              className="button text"
+            <Button
+              variant="text"
               onClick={() => setStep('choose')}
             >
               Change
-            </button>
+            </Button>
           </div>
           <h2>{t('identity.propagation')}</h2>
-          <div className="destination-list">
+          <div className={tw('destination-list')}>
             {sources.map((source, index) => (
               <div key={source}>
-                <span className="destination-index">0{index + 1}</span>
+                <span className={tw('destination-index')}>0{index + 1}</span>
                 <span>
                   <strong>{sourceNames[source]}</strong>
                   <small>
@@ -366,44 +370,43 @@ export function MismatchPage() {
               </div>
             ))}
           </div>
-          <div className="simulation-note">
+          <div className={tw('simulation-note')}>
             <FileCheck2 />
             This creates a local change receipt. No real system will be
             contacted.
           </div>
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('choose')}
             >
               Back
-            </button>
-            <button
-              className="button primary"
+            </Button>
+            <Button
               disabled={busy}
               onClick={() => void propagate()}
             >
               {t('identity.confirm')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'progress' && (
         <section
-          className="propagation-progress"
+          className={tw('propagation-progress')}
           aria-live="polite"
         >
-          <LoaderCircle className="spinner" />
+          <LoaderCircle className={tw('spinner')} />
           <h2>Updating connected records</h2>
           <p>Keeping the chosen name traceable across each destination.</p>
-          <div className="destination-list animating">
+          <div className={tw('destination-list animating')}>
             {sources.map((source, index) => (
               <div
                 style={{ animationDelay: `${index * 90}ms` }}
                 key={source}
               >
-                <span className="destination-index">
+                <span className={tw('destination-index')}>
                   <LoaderCircle />
                 </span>
                 <span>
@@ -416,13 +419,13 @@ export function MismatchPage() {
         </section>
       )}
       {step === 'result' && (
-        <section className="result-panel">
-          <div className="outcome-mark">
+        <section className={tw('result-panel')}>
+          <div className={tw('outcome-mark')}>
             <Check />
           </div>
           <Status kind="success">5 records updated</Status>
-          <div className="receipt">
-            <div className="receipt-head">
+          <div className={tw('receipt')}>
+            <div className={tw('receipt-head')}>
               <span>{t('identity.receipt')}</span>
               <strong>{change?.id ?? 'Saved change'}</strong>
             </div>
@@ -446,7 +449,7 @@ export function MismatchPage() {
             </dl>
             {sources.map((source) => (
               <div
-                className="receipt-row"
+                className={tw('receipt-row')}
                 key={source}
               >
                 <SourceMarker>{sourceNames[source]}</SourceMarker>
@@ -454,19 +457,20 @@ export function MismatchPage() {
               </div>
             ))}
           </div>
-          <Link
-            className="button primary wide"
+          <ButtonLink
+            wide
             to="/epfo/claim"
           >
             {t('identity.viewPf')}
             <ArrowRight />
-          </Link>
-          <Link
-            className="button text wide"
+          </ButtonLink>
+          <ButtonLink
+            variant="text"
+            wide
             to="/activity"
           >
             View change in Activity
-          </Link>
+          </ButtonLink>
         </section>
       )}
     </div>

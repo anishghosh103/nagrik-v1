@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import {
   Activity,
   ArrowRight,
@@ -23,7 +24,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
   const action = persona.actions[0];
   if (actionsOnly)
     return (
-      <div className="page narrow">
+      <div className={tw('page narrow')}>
         <PageHeader
           eyebrow="Across your services"
           title={t('nav.actions')}
@@ -32,7 +33,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
         {action ? (
           <ActionCard action={action} />
         ) : (
-          <section className="empty-ledger">
+          <section className={tw('empty-ledger')}>
             <CheckCircle2 />
             <h2>Nothing needs your attention</h2>
             <p>
@@ -44,7 +45,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
       </div>
     );
   return (
-    <div className="page dashboard-page">
+    <div className={tw('page dashboard-page')}>
       <PageHeader
         eyebrow={`${t('home.eyebrow')}, ${persona.profile.firstName}`}
         title={t('home.title')}
@@ -52,40 +53,40 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
       />
       {action && (
         <section aria-labelledby="priority-title">
-          <div className="section-kicker">
+          <div className={tw('section-kicker')}>
             <Flag size={16} />
             <span>{t('home.priority')}</span>
-            <span className="rule" />
+            <span className={tw('rule')} />
           </div>
           <ActionCard action={action} />
         </section>
       )}
-      <div className="dashboard-grid">
+      <div className={tw('dashboard-grid')}>
         <Link
           to="/identity"
-          className="identity-score-card"
+          className={tw('identity-score-card')}
         >
           <div
-            className="score-ring"
+            className={tw('score-ring')}
             style={{ '--score': `${health * 3.6}deg` } as React.CSSProperties}
           >
             <span>{health}</span>
             <small>/ 100</small>
           </div>
           <div>
-            <p className="card-eyebrow">{t('home.identity')}</p>
+            <p className={tw('card-eyebrow')}>{t('home.identity')}</p>
             <h2>{health === 100 ? t('home.healthy') : t('home.issue')}</h2>
             <p>5 {t('home.connected')}</p>
           </div>
           <ArrowRight />
         </Link>
-        <section className="service-ledger">
-          <div className="service-row">
-            <span className="service-icon tax">
+        <section className={tw('service-ledger')}>
+          <div className={tw('service-row')}>
+            <span className={tw('service-icon tax')}>
               <Landmark />
             </span>
             <div>
-              <p className="card-eyebrow">Income Tax</p>
+              <p className={tw('card-eyebrow')}>Income Tax</p>
               <h3>
                 {health === 100
                   ? 'Bank record ready'
@@ -97,12 +98,12 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
               {health === 100 ? 'Ready' : 'Review'}
             </Status>
           </div>
-          <div className="service-row">
-            <span className="service-icon pf">
+          <div className={tw('service-row')}>
+            <span className={tw('service-icon pf')}>
               <BadgeIndianRupee />
             </span>
             <div>
-              <p className="card-eyebrow">EPFO</p>
+              <p className={tw('card-eyebrow')}>EPFO</p>
               <h3>
                 {persona.epfo.claim
                   ? 'Claim received'
@@ -110,7 +111,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
                     ? 'Claim checks ready'
                     : 'Claim is blocked'}
               </h3>
-              <p className="money-small">
+              <p className={tw('money-small')}>
                 {formatMoney(persona.epfo.balance, i18n.language)}
               </p>
             </div>
@@ -132,23 +133,23 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
           </div>
         </section>
       </div>
-      <section className="recent-section">
-        <div className="section-title-row">
+      <section className={tw('recent-section')}>
+        <div className={tw('section-title-row')}>
           <div>
-            <p className="eyebrow">Traceable by design</p>
+            <p className={tw('eyebrow')}>Traceable by design</p>
             <h2>{t('home.recent')}</h2>
           </div>
           <Link to="/activity">
             View all <ArrowRight size={17} />
           </Link>
         </div>
-        <div className="mini-timeline">
+        <div className={tw('mini-timeline')}>
           {persona.activity.slice(0, 3).map((event) => (
             <div
               key={event.id}
-              className="timeline-row"
+              className={tw('timeline-row')}
             >
-              <span className="timeline-icon">
+              <span className={tw('timeline-icon')}>
                 {event.kind === 'IDENTITY' ? <Fingerprint /> : <Activity />}
               </span>
               <div>
@@ -174,9 +175,9 @@ function ActionCard({
   return (
     <Link
       to={action.fixTarget}
-      className="priority-card"
+      className={tw('priority-card')}
     >
-      <span className="priority-icon">
+      <span className={tw('priority-icon')}>
         <ShieldAlert />
       </span>
       <div>
@@ -189,7 +190,7 @@ function ActionCard({
         <p>{action.consequence}</p>
         <SourceMarker>{action.source}</SourceMarker>
       </div>
-      <span className="priority-action">
+      <span className={tw('priority-action')}>
         Open task
         <ArrowRight />
       </span>

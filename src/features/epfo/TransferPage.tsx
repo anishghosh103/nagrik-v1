@@ -1,3 +1,4 @@
+import { tw } from '../../styles/recipes';
 import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
@@ -10,10 +11,15 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { formatDate, formatMoney } from '../../components/formatters';
-import { PageHeader, SourceMarker, Status } from '../../components/ui';
+import {
+  Button,
+  ButtonLink,
+  PageHeader,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 import type { PFTransfer, TransferValidation } from '../../types/domain';
 
 type TransferStep =
@@ -110,7 +116,7 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
   }
 
   return (
-    <div className="page narrow journey-page">
+    <div className={tw('page narrow journey-page')}>
       <PageHeader
         eyebrow={t('epfo.transfer.eyebrow')}
         title={t('epfo.transfer.title')}
@@ -118,8 +124,8 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
         back="/epfo"
       />
       {step === 'intro' && (
-        <section className="journey-intro">
-          <span className="large-glyph">
+        <section className={tw('journey-intro')}>
+          <span className={tw('large-glyph')}>
             <MoveRight />
           </span>
           <h2>{t('epfo.transfer.introTitle')}</h2>
@@ -129,37 +135,34 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
             <li>{t('epfo.transfer.introTwo')}</li>
             <li>{t('epfo.transfer.introThree')}</li>
           </ul>
-          <div className="sticky-action">
+          <div className={tw('sticky-action')}>
             <span>{t('common.saved')}</span>
-            <button
-              className="button primary"
-              onClick={() => setStep('employments')}
-            >
+            <Button onClick={() => setStep('employments')}>
               {t('epfo.transfer.start')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'employments' && (
         <section>
           <h2>{t('epfo.transfer.choose')}</h2>
-          <p className="section-intro">{t('epfo.transfer.chooseHelp')}</p>
+          <p className={tw('section-intro')}>{t('epfo.transfer.chooseHelp')}</p>
           {error && (
             <div
-              className="validation-error"
+              className={tw('validation-error')}
               role="alert"
             >
               {error}
             </div>
           )}
-          <fieldset className="choice-list">
+          <fieldset className={tw('choice-list')}>
             <legend>{t('epfo.transfer.previous')}</legend>
             {persona.epfo.employment
               .filter((item) => !item.current)
               .map((item) => (
                 <label
-                  className={`choice ${sourceId === item.id ? 'selected' : ''}`}
+                  className={tw('choice', sourceId === item.id && 'selected')}
                   key={item.id}
                 >
                   <input
@@ -181,13 +184,16 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
                 </label>
               ))}
           </fieldset>
-          <fieldset className="choice-list">
+          <fieldset className={tw('choice-list')}>
             <legend>{t('epfo.transfer.current')}</legend>
             {persona.epfo.employment
               .filter((item) => item.current)
               .map((item) => (
                 <label
-                  className={`choice ${destinationId === item.id ? 'selected' : ''}`}
+                  className={tw(
+                    'choice',
+                    destinationId === item.id && 'selected',
+                  )}
                   key={item.id}
                 >
                   <input
@@ -207,30 +213,29 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
                 </label>
               ))}
           </fieldset>
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('intro')}
             >
               {t('common.back')}
-            </button>
-            <button
-              className="button primary"
+            </Button>
+            <Button
               disabled={!sourceId || !destinationId}
               onClick={() => void review()}
             >
               {t('epfo.transfer.runChecks')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'checking' && (
         <section
-          className="checking-state"
+          className={tw('checking-state')}
           aria-live="polite"
         >
-          <LoaderCircle className="spinner" />
+          <LoaderCircle className={tw('spinner')} />
           <h2>{t('epfo.transfer.checking')}</h2>
           <p>{t('epfo.transfer.checkingHelp')}</p>
         </section>
@@ -238,11 +243,10 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
       {step === 'validation' && validation && (
         <section>
           <div
-            className={
-              validation.ready
-                ? 'readiness-banner ready'
-                : 'readiness-banner blocked'
-            }
+            className={tw(
+              'readiness-banner',
+              validation.ready ? 'ready' : 'blocked',
+            )}
           >
             {validation.ready ? <ShieldCheck /> : <AlertTriangle />}
             <div>
@@ -263,15 +267,15 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
               <p>{t('epfo.transfer.notGuarantee')}</p>
             </div>
           </div>
-          <div className="rule-groups">
+          <div className={tw('rule-groups')}>
             <section>
               <h3>{t('epfo.transfer.checks')}</h3>
               {validation.results.map((rule) => (
                 <div
-                  className={`rule-row ${rule.passed ? '' : 'failed'}`}
+                  className={tw('rule-row', !rule.passed && 'failed')}
                   key={rule.code}
                 >
-                  <span className="rule-icon">
+                  <span className={tw('rule-icon')}>
                     {rule.passed ? <Check /> : <AlertTriangle />}
                   </span>
                   <div>
@@ -287,24 +291,20 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
               ))}
             </section>
           </div>
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('employments')}
             >
               {t('common.back')}
-            </button>
+            </Button>
             {validation.ready ? (
-              <button
-                className="button primary"
-                onClick={() => setStep('review')}
-              >
+              <Button onClick={() => setStep('review')}>
                 {t('epfo.transfer.review')}
                 <ArrowRight />
-              </button>
+              </Button>
             ) : (
-              <Link
-                className="button primary"
+              <ButtonLink
                 to={
                   validation.results.find((rule) => !rule.passed)?.fixTarget ??
                   '/epfo/employment'
@@ -312,7 +312,7 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
               >
                 {t('epfo.transfer.fix')}
                 <ArrowRight />
-              </Link>
+              </ButtonLink>
             )}
           </div>
         </section>
@@ -320,7 +320,7 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
       {step === 'review' && source && destination && (
         <section>
           <h2>{t('epfo.transfer.reviewTitle')}</h2>
-          <div className="transfer-route">
+          <div className={tw('transfer-route')}>
             <article>
               <span>{t('epfo.transfer.from')}</span>
               <strong>{source.employer}</strong>
@@ -333,12 +333,12 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
               <small>{destination.memberId}</small>
             </article>
           </div>
-          <div className="amount-context">
+          <div className={tw('amount-context')}>
             <span>{t('epfo.transfer.transferable')}</span>
             <strong>{formatMoney(source.balance, i18n.language)}</strong>
             <small>{t('epfo.transfer.estimate')}</small>
           </div>
-          <label className="declaration">
+          <label className={tw('declaration')}>
             <input
               type="checkbox"
               checked={declared}
@@ -347,14 +347,14 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
             <span>{t('epfo.transfer.declaration')}</span>
           </label>
           <label
-            className="field-label"
+            className={tw('field-label')}
             htmlFor="transfer-otp"
           >
             {t('epfo.otp')} <small>{t('epfo.otpHint')}</small>
           </label>
           <input
             id="transfer-otp"
-            className="otp-input"
+            className={tw('otp-input')}
             maxLength={6}
             inputMode="numeric"
             value={otp}
@@ -362,36 +362,35 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
           />
           {error && (
             <div
-              className="validation-error"
+              className={tw('validation-error')}
               role="alert"
             >
               {error}
             </div>
           )}
-          <div className="sticky-action">
-            <button
-              className="button secondary"
+          <div className={tw('sticky-action')}>
+            <Button
+              variant="secondary"
               onClick={() => setStep('validation')}
             >
               {t('common.back')}
-            </button>
-            <button
-              className="button primary"
+            </Button>
+            <Button
               disabled={busy}
               onClick={() => void submit()}
             >
               {t('epfo.transfer.submit')}
               <ArrowRight />
-            </button>
+            </Button>
           </div>
         </section>
       )}
       {step === 'submitting' && (
         <section
-          className="propagation-progress"
+          className={tw('propagation-progress')}
           aria-live="polite"
         >
-          <LoaderCircle className="spinner" />
+          <LoaderCircle className={tw('spinner')} />
           <h2>{t('epfo.transfer.submitting')}</h2>
           <p>{t('epfo.transfer.submittingHelp')}</p>
         </section>
@@ -403,17 +402,17 @@ export function TransferPage({ statusOnly = false }: { statusOnly?: boolean }) {
 function TransferStatus({ transfer }: { transfer: PFTransfer }) {
   const { t, i18n } = useTranslation();
   return (
-    <div className="page narrow completion-page">
+    <div className={tw('page narrow completion-page')}>
       <PageHeader
         eyebrow={t('epfo.transfer.statusEyebrow')}
         title={t('epfo.transfer.received')}
         subtitle={t('epfo.transfer.receivedHelp')}
         back="/epfo"
       />
-      <div className="outcome-mark pending-mark">
+      <div className={tw('outcome-mark pending-mark')}>
         <Clock3 />
       </div>
-      <div className="reference-band">
+      <div className={tw('reference-band')}>
         <span>{t('epfo.transfer.reference')}</span>
         <strong>{transfer.reference}</strong>
         <small>
@@ -422,13 +421,13 @@ function TransferStatus({ transfer }: { transfer: PFTransfer }) {
           })}
         </small>
       </div>
-      <section className="status-now">
+      <section className={tw('status-now')}>
         <Status kind="info">{t('epfo.transfer.statusEmployer')}</Status>
         <h2>{t('epfo.transfer.statusEmployerTitle')}</h2>
         <p>{t('epfo.transfer.statusEmployerHelp')}</p>
       </section>
-      <ol className="status-timeline">
-        <li className="complete">
+      <ol className={tw('status-timeline')}>
+        <li className={tw('complete')}>
           <span>
             <Check />
           </span>
@@ -437,7 +436,7 @@ function TransferStatus({ transfer }: { transfer: PFTransfer }) {
             <small>{formatDate(transfer.submittedAt, i18n.language)}</small>
           </div>
         </li>
-        <li className="current">
+        <li className={tw('current')}>
           <span>
             <Clock3 />
           </span>
@@ -465,13 +464,13 @@ function TransferStatus({ transfer }: { transfer: PFTransfer }) {
           </div>
         </li>
       </ol>
-      <Link
-        className="button primary wide"
+      <ButtonLink
+        wide
         to="/activity"
       >
         {t('epfo.transfer.track')}
         <ArrowRight />
-      </Link>
+      </ButtonLink>
     </div>
   );
 }
