@@ -84,7 +84,7 @@ h3 { font-size: 1.05rem; line-height: 1.35; }
 .auth-panel { max-width: 590px; width: 100%; padding: clamp(34px, 7vw, 100px); align-self: center; justify-self: center; }
 .auth-panel h2 { font-size: clamp(1.8rem, 3vw, 2.35rem); margin-bottom: 10px; }
 .auth-panel > p:not(.panel-number) { color: var(--ink-muted); margin-bottom: 28px; }
-.step-dots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 0 0 38px; }
+.step-dots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin: 0 0 38px; }
 .step-dots i { height: 3px; background: var(--border); }
 .step-dots i.on { background: var(--primary); }
 .trust-list { list-style: none; padding: 12px 0 28px; margin: 0; display: grid; gap: 12px; }
@@ -104,6 +104,29 @@ h3 { font-size: 1.05rem; line-height: 1.35; }
 .safety-note { display: flex; gap: 8px; align-items: center; color: var(--ink-muted); font-size: .82rem; margin: 15px 0 28px; }
 .field-label { display: flex; justify-content: space-between; font-weight: 700; margin: 22px 0 7px; }
 .field-label small { color: var(--ink-muted); font-weight: 500; }
+.identifier-input { width: 100%; height: 60px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); padding: 10px 16px; font-size: 1.18rem; font-variant-numeric: tabular-nums; letter-spacing: .035em; transition: border-color .18s, box-shadow .18s; }
+.identifier-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(38,91,67,.08); }
+.identifier-input[aria-invalid="true"] { border-color: var(--danger); }
+.identifier-help { min-height: 21px; margin: 7px 0 22px !important; color: var(--ink-muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.mock-account-select { width: 100%; margin-top: 18px; }
+.mock-account-trigger { width: 100%; height: 60px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--ink); padding: 10px 12px 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px; text-align: left; cursor: pointer; box-shadow: 0 5px 18px rgba(23,35,29,.045); transition: border-color .18s, box-shadow .18s; }
+.mock-account-trigger:hover { border-color: #bdb5a3; }
+.mock-account-trigger[data-popup-open] { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(38,91,67,.08); }
+.mock-account-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; font-weight: 650; }
+.mock-account-value[data-placeholder] { color: var(--ink-muted); font-weight: 600; }
+.mock-account-icon { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 7px; background: var(--surface-muted); color: var(--primary); transition: background .18s, color .18s; }
+.mock-account-trigger[data-popup-open] .mock-account-icon { background: var(--primary); color: #fff; }
+.mock-account-positioner { z-index: 60; outline: none; }
+.mock-account-popup { width: var(--anchor-width); padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); box-shadow: 0 18px 48px rgba(23,35,29,.16), 0 3px 10px rgba(23,35,29,.08); transform-origin: var(--transform-origin); transition: opacity .16s, transform .16s; }
+.mock-account-popup[data-starting-style], .mock-account-popup[data-ending-style] { opacity: 0; transform: translateY(-4px) scale(.98); }
+.mock-account-list { outline: none; }
+.mock-account-item { min-height: 62px; padding: 10px 11px 10px 13px; border-radius: 7px; display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: default; outline: none; user-select: none; }
+.mock-account-item[data-highlighted] { background: var(--surface-muted); color: var(--primary-strong); }
+.mock-account-item[data-selected] { color: var(--primary); }
+.mock-account-item-copy { min-width: 0; display: grid; gap: 1px; }
+.mock-account-item-copy strong { font-weight: 700; }
+.mock-account-item-copy small { color: var(--ink-muted); font-size: .84rem; font-weight: 500; line-height: 1.35; }
+.mock-account-indicator { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 50%; background: #e5efe8; color: var(--success); }
 .otp-input { width: 100%; height: 60px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); padding: 10px 16px; font-size: 1.6rem; letter-spacing: .38em; font-variant-numeric: tabular-nums; }
 .otp-input:focus { border-color: var(--primary); }
 .otp-helper { display: flex; justify-content: space-between; color: var(--ink-muted); font-size: .82rem; margin: 10px 0 26px; }
