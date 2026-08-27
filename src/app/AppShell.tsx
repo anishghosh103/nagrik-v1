@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Activity, BadgeIndianRupee, CircleUserRound, Fingerprint, Home, Languages, ListTodo, LogOut, RotateCcw, ShieldCheck, WifiOff } from 'lucide-react'
+import { Activity, BadgeIndianRupee, CircleUserRound, Fingerprint, Home, Languages, ListTodo, LogOut, RotateCcw, WifiOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAppStore } from './store'
@@ -36,10 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <main id="main-content" className="main-content" aria-busy={busy}>{children}</main>
-      <aside className="context-rail"><p className="context-label"><ShieldCheck size={17} />Prototype privacy</p><h2>Fictional by design</h2><p>No real Aadhaar, PAN, UAN, bank or OTP data is used. Authentication, propagation and submission are simulated on this device.</p><div className="ledger-note"><span>{t('common.saved')}</span><strong>{new Intl.DateTimeFormat(i18nLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(new Date())}</strong></div></aside>
     </div>
     <nav className="bottom-nav" aria-label="Mobile navigation">{nav.filter((item) => item.key !== 'actions').map(({ to, key, Icon }) => <NavLink key={to} to={to} className={({ isActive }) => isActive ? 'active' : ''}><Icon size={20} /><span>{t(`nav.${key}`)}</span></NavLink>)}</nav>
   </div>
 }
-
-function i18nLocale() { return document.documentElement.lang || 'en-IN' }
