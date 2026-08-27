@@ -1,12 +1,13 @@
 import type { PersonaSeed } from '../types/domain';
 import { personaSeedSchema } from '../types/domain';
+import { TAX_RULES_VERSION } from './taxRules';
 
 const baseTime = '2026-08-24T09:30:00.000Z';
 const historyTime = '2025-11-18T08:10:00.000Z';
 
 const ananya: PersonaSeed = {
   id: 'ananya',
-  schemaVersion: 3,
+  schemaVersion: 5,
   profile: {
     fullName: 'Ananya Sen',
     firstName: 'Ananya',
@@ -165,6 +166,89 @@ const ananya: PersonaSeed = {
     },
     lastUpdatedAt: baseTime,
   },
+  tax: {
+    assessmentYear: '2026-27',
+    rulesVersion: TAX_RULES_VERSION,
+    sources: {
+      assessmentYear: '2026-27',
+      capturedAt: baseTime,
+      salary: [
+        {
+          id: 'tax-a-salary-1',
+          employerName: 'Bengal Learning Studio',
+          employerTan: 'CALB12345A',
+          grossSalary: 950000,
+          salarySection17_1: 950000,
+          perquisites17_2: 0,
+          profitsInLieu17_3: 0,
+          exemptAllowances: 20000,
+          professionalTax: 2400,
+          employerNps80CCD2: 0,
+          tdsDeducted: 48000,
+          source: 'FORM16',
+          reviewed: true,
+        },
+      ],
+      otherSources: [
+        {
+          id: 'tax-a-other-1',
+          category: 'SAVINGS_INTEREST',
+          payerName: 'State Bank of India',
+          maskedReference: '•••• 4821',
+          amount: 6200,
+          tdsDeducted: 0,
+          source: 'AIS',
+          reviewed: true,
+        },
+        {
+          id: 'tax-a-other-2',
+          category: 'DEPOSIT_INTEREST',
+          payerName: 'State Bank of India — Fixed Deposit',
+          maskedReference: '•••• 4821',
+          amount: 18000,
+          tdsDeducted: 1800,
+          source: 'FORM_26AS',
+          reviewed: true,
+        },
+      ],
+      bankAccounts: [
+        {
+          id: 'tax-a-bank-1',
+          bankName: 'State Bank of India',
+          maskedAccountNumber: '•••• 4821',
+          ifsc: 'SBIN0001234',
+          accountType: 'SAVINGS',
+          validationStatus: 'VALIDATED',
+          panLinked: true,
+        },
+      ],
+      suggestedDeductions: [
+        {
+          id: 'tax-a-ded-1',
+          section: '80C',
+          label: 'tax.deductions.ppf',
+          amount: 100000,
+          source: 'FORM16',
+        },
+        {
+          id: 'tax-a-ded-2',
+          section: '80C',
+          label: 'tax.deductions.elss',
+          amount: 80000,
+          source: 'FORM16',
+        },
+        {
+          id: 'tax-a-ded-3',
+          section: '80D',
+          label: 'tax.deductions.healthInsurance',
+          amount: 22000,
+          source: 'FORM16',
+        },
+      ],
+    },
+    draft: null,
+    filedReturns: [],
+  },
   mismatches: [],
   identityChanges: [],
   actions: [],
@@ -182,7 +266,7 @@ const ananya: PersonaSeed = {
 
 const rajesh: PersonaSeed = {
   id: 'rajesh',
-  schemaVersion: 3,
+  schemaVersion: 5,
   profile: {
     fullName: 'Rajesh Kumar',
     firstName: 'Rajesh',
@@ -335,6 +419,97 @@ const rajesh: PersonaSeed = {
     ],
     nomination: { status: 'NOT_STARTED', nominees: [], updatedAt: baseTime },
     lastUpdatedAt: baseTime,
+  },
+  tax: {
+    assessmentYear: '2026-27',
+    rulesVersion: TAX_RULES_VERSION,
+    sources: {
+      assessmentYear: '2026-27',
+      capturedAt: baseTime,
+      salary: [
+        {
+          id: 'tax-r-salary-1',
+          employerName: 'Deccan Fabrication Works',
+          employerTan: 'PUNK54321B',
+          grossSalary: 210000,
+          salarySection17_1: 210000,
+          perquisites17_2: 0,
+          profitsInLieu17_3: 0,
+          exemptAllowances: 0,
+          professionalTax: 400,
+          employerNps80CCD2: 0,
+          tdsDeducted: 9000,
+          source: 'FORM16',
+          reviewed: true,
+        },
+        {
+          id: 'tax-r-salary-2',
+          employerName: 'Mula Engineering Services',
+          employerTan: 'PUNM98765C',
+          grossSalary: 1090000,
+          salarySection17_1: 1090000,
+          perquisites17_2: 0,
+          profitsInLieu17_3: 0,
+          exemptAllowances: 0,
+          professionalTax: 2000,
+          employerNps80CCD2: 0,
+          tdsDeducted: 62000,
+          source: 'FORM16',
+          reviewed: true,
+        },
+      ],
+      otherSources: [
+        {
+          id: 'tax-r-other-1',
+          category: 'SAVINGS_INTEREST',
+          payerName: 'Union Bank of India',
+          maskedReference: '•••• 9032',
+          amount: 4800,
+          tdsDeducted: 0,
+          source: 'AIS',
+          reviewed: true,
+        },
+        {
+          id: 'tax-r-other-2',
+          category: 'OTHER',
+          payerName: 'AIS record',
+          maskedReference: '—',
+          amount: 8000,
+          tdsDeducted: 0,
+          source: 'AIS',
+          reviewed: false,
+        },
+      ],
+      bankAccounts: [
+        {
+          id: 'tax-r-bank-1',
+          bankName: 'Union Bank of India',
+          maskedAccountNumber: '•••• 9032',
+          ifsc: 'UBIN0559032',
+          accountType: 'SAVINGS',
+          validationStatus: 'NEEDS_VALIDATION',
+          panLinked: true,
+        },
+      ],
+      suggestedDeductions: [
+        {
+          id: 'tax-r-ded-1',
+          section: '80C',
+          label: 'tax.deductions.lifeInsuranceAndPpf',
+          amount: 120000,
+          source: 'FORM16',
+        },
+        {
+          id: 'tax-r-ded-2',
+          section: '80D',
+          label: 'tax.deductions.healthInsurance',
+          amount: 18000,
+          source: 'FORM16',
+        },
+      ],
+    },
+    draft: null,
+    filedReturns: [],
   },
   mismatches: [
     {

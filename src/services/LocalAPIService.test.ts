@@ -1,6 +1,89 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { PERSONA_SEEDS } from '../data/personas';
+import { getTaxRulesConfig } from '../data/taxRules';
 import { LocalAPIService } from './LocalAPIService';
+import type { ReturnDraft, SectionId, SectionState } from '../types/tax';
+
+const SECTION_IDS: SectionId[] = [
+  'ELIGIBILITY',
+  'INCOME_SOURCES',
+  'SALARY',
+  'HOUSE_PROPERTY',
+  'CAPITAL_GAINS',
+  'BUSINESS',
+  'INTEREST',
+  'DEDUCTIONS',
+  'TAX_CREDITS',
+  'REGIME',
+  'BANK',
+];
+
+function emptySectionStates(): Record<SectionId, SectionState> {
+  const states = {} as Record<SectionId, SectionState>;
+  for (const id of SECTION_IDS)
+    states[id] = { status: 'NOT_STARTED', blockingIssues: [] };
+  return states;
+}
+
+function buildDraftFromSeed(personaId: 'ananya' | 'rajesh'): ReturnDraft {
+  const rules = getTaxRulesConfig('2026-27');
+  const sources = PERSONA_SEEDS[personaId].tax!.sources;
+  return {
+    assessmentYear: '2026-27',
+    rulesVersion: rules.rulesVersion,
+    filingType: 'ORIGINAL',
+    filingRoute: 'ITR1_LIKE',
+    residentialStatus: 'RESIDENT',
+    eligibilityAnswers: {
+      residentialStatus: 'RESIDENT',
+      isDirector: false,
+      holdsUnlistedShares: false,
+      hasForeignAssetsOrIncome: false,
+      hasDeferredEsopTax: false,
+      hasCarryForwardLoss: false,
+      expectsIncomeAboveFiftyLakh: false,
+      agriculturalIncomeAmount: 0,
+      hasSpecialCategoryIncome: false,
+      hasIncomeBelongingToAnotherPerson: false,
+      hasUnclassifiableIncomeSource: false,
+    },
+    salary: structuredClone(sources.salary),
+    properties: [],
+    capitalGains: [],
+    business: null,
+    otherSources: structuredClone(sources.otherSources).map((item) => ({
+      ...item,
+      reviewed: true,
+      disputed: false,
+    })),
+    exemptIncome: [],
+    deductions: [],
+    taxCredits: {
+      salaryTds: [],
+      otherTds: [],
+      tcs: [],
+      advanceTax: [],
+      selfAssessmentTax: [],
+    },
+    regime: { selected: 'NEW', recommended: 'NEW' },
+    bankAccounts: structuredClone(sources.bankAccounts).map((account) => ({
+      ...account,
+      validationStatus: 'VALIDATED' as const,
+    })),
+    refundAccountId: sources.bankAccounts[0]?.id ?? null,
+    aisReviewItems: [],
+    losses: {
+      housePropertyCarriedForward: 0,
+      capitalLossCarriedForward: 0,
+    },
+    filingDate: '2026-08-27',
+    validationIssues: [],
+    sectionStates: emptySectionStates(),
+    notices: [],
+    computation: null,
+    updatedAt: '2026-08-24T00:00:00.000Z',
+  };
+}
 
 describe('LocalAPIService vertical slice', () => {
   let service: LocalAPIService;
@@ -49,7 +132,7 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.schemaVersion).toBe(5);
     expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
     expect(migrated.epfo.passbook.employers.length).toBeGreaterThan(0);
   });
@@ -186,5 +269,63 @@ describe('LocalAPIService vertical slice', () => {
     const result = await service.submitNomination('rajesh', nominees, '123456');
     expect(result.status).toBe('EFFECTIVE');
     expect(result.reference).toBe('NGR-NOM-6473');
+  });
+
+  it('round-trips a saved Income Tax return draft', async () => {
+    expect(await service.getExistingReturnDraft('ananya', '2026-27')).toBe(
+      null,
+    );
+    const draft = buildDraftFromSeed('ananya');
+    await service.saveReturnDraft('ananya', draft);
+    const loaded = await service.getExistingReturnDraft('ananya', '2026-27');
+    expect(loaded?.regime.selected).toBe('NEW');
+    expect(loaded?.salary).toHaveLength(1);
+  });
+
+  it('keeps filing and e-verification as separate statuses', async () => {
+    const draft = buildDraftFromSeed('ananya');
+    const filed = await service.fileReturn('ananya', draft);
+    expect(filed.acknowledgmentNumber).toBe('NGR-ITR-260825-3382');
+    await expect(
+      service.verifyReturn('ananya', {
+        acknowledgmentNumber: filed.acknowledgmentNumber,
+        otp: '000000',
+      }),
+    ).rejects.toThrow('INVALID_OTP');
+    const verified = await service.verifyReturn('ananya', {
+      acknowledgmentNumber: filed.acknowledgmentNumber,
+      otp: '123456',
+    });
+    expect(verified.status).toBe('VERIFIED');
+  });
+
+  it('files an Income Tax return once and resubmits idempotently', async () => {
+    const draft = buildDraftFromSeed('ananya');
+    const first = await service.fileReturn('ananya', draft);
+    const duplicate = await service.fileReturn('ananya', draft);
+    expect(duplicate.acknowledgmentNumber).toBe(first.acknowledgmentNumber);
+    const persona = await service.getPersona('ananya');
+    expect(persona.tax?.filedReturns).toHaveLength(1);
+    expect(
+      persona.activity.filter((event) => event.kind === 'INCOME_TAX'),
+    ).toHaveLength(1);
+  });
+
+  it('migrates a version-three persona without discarding identity or tax state', async () => {
+    const legacy = structuredClone(PERSONA_SEEDS.rajesh) as unknown as {
+      schemaVersion: number;
+      tax?: unknown;
+    };
+    legacy.schemaVersion = 3;
+    delete legacy.tax;
+    localStorage.setItem(
+      'nagrik:persona:rajesh:state:v3',
+      JSON.stringify(legacy),
+    );
+    const migrated = await service.getPersona('rajesh');
+    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
+    expect(migrated.tax?.assessmentYear).toBe('2026-27');
+    expect(migrated.tax?.sources.salary.length).toBeGreaterThan(0);
   });
 });

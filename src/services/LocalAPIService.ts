@@ -5,6 +5,13 @@ import {
   validatePFClaim,
   validatePFTransfer,
 } from '../rules/epfo';
+import {
+  compareRegimes as compareRegimesRule,
+  computeReturn as computeReturnRule,
+  determineFilingRoute as determineFilingRouteRule,
+  validateReturn as validateReturnRule,
+} from '../rules/tax';
+import { getTaxRulesConfig } from '../data/taxRules';
 import type { APIService } from './APIService';
 import type {
   ClaimSubmission,
@@ -24,8 +31,9 @@ import type {
   RetryPropagationInput,
 } from '../types/domain';
 import { personaSeedSchema } from '../types/domain';
+import type { FiledReturnSnapshot, ReturnDraft, TaxRegime } from '../types/tax';
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 5;
 const SESSION_KEY = 'nagrik:app:session';
 const keyFor = (id: PersonaId, version = SCHEMA_VERSION) =>
   `nagrik:persona:${id}:state:v${version}`;
@@ -63,6 +71,15 @@ export class LocalAPIService implements APIService {
   private claimRequests = new Map<PersonaId, Promise<ClaimSubmission>>();
   private transferRequests = new Map<PersonaId, Promise<PFTransfer>>();
   private nominationRequests = new Map<PersonaId, Promise<NominationRecord>>();
+  private taxFileRequests = new Map<
+    PersonaId,
+    Promise<{
+      acknowledgmentNumber: string;
+      filedAt: string;
+      rulesVersion: string;
+      regime: TaxRegime;
+    }>
+  >();
   private failures: LocalAPITestFailures;
 
   constructor(failures: LocalAPITestFailures = {}) {
@@ -74,6 +91,61 @@ export class LocalAPIService implements APIService {
     const legacy = raw as Partial<PersonaSeed>;
     if (legacy.id !== id) return null;
     const seed = cloneSeed(id);
+    const legacyTax = legacy.tax;
+    const migrateDraft = (candidate: unknown): ReturnDraft | null => {
+      if (!candidate || typeof candidate !== 'object') return null;
+      const old = candidate as ReturnDraft;
+      const now = new Date().toISOString();
+      return {
+        ...old,
+        rulesVersion: getTaxRulesConfig(old.assessmentYear).rulesVersion,
+        properties: Array.isArray(old.properties) ? old.properties : [],
+        capitalGains: Array.isArray(old.capitalGains) ? old.capitalGains : [],
+        business: old.business ?? null,
+        losses:
+          old.losses && typeof old.losses === 'object'
+            ? old.losses
+            : {
+                housePropertyCarriedForward: 0,
+                capitalLossCarriedForward: 0,
+              },
+        filingDate: old.filingDate ?? now.slice(0, 10),
+        sectionStates: {
+          ...old.sectionStates,
+          HOUSE_PROPERTY: old.sectionStates?.HOUSE_PROPERTY ?? {
+            status: 'NOT_STARTED',
+            blockingIssues: [],
+          },
+          CAPITAL_GAINS: old.sectionStates?.CAPITAL_GAINS ?? {
+            status: 'NOT_STARTED',
+            blockingIssues: [],
+          },
+          BUSINESS: old.sectionStates?.BUSINESS ?? {
+            status: 'NOT_STARTED',
+            blockingIssues: [],
+          },
+        },
+        computation: null,
+        updatedAt: now,
+      };
+    };
+    const migratedDraft = migrateDraft(legacyTax?.draft);
+    const migratedFiledReturns = (legacyTax?.filedReturns ?? []).flatMap(
+      (filed) => {
+        const draft = migrateDraft(filed.draft);
+        if (!draft) return [];
+        const rules = getTaxRulesConfig(draft.assessmentYear);
+        const computation = computeReturnRule(draft, filed.regime, rules);
+        return [
+          {
+            ...filed,
+            rulesVersion: rules.rulesVersion,
+            draft: { ...draft, computation: null },
+            computation,
+          },
+        ];
+      },
+    );
     const migrated = {
       ...seed,
       ...legacy,
@@ -101,6 +173,16 @@ export class LocalAPIService implements APIService {
           })),
         status: change.status ?? ('SUCCESS' as const),
       })),
+      tax: legacyTax
+        ? {
+            ...seed.tax!,
+            ...legacyTax,
+            rulesVersion: getTaxRulesConfig(legacyTax.assessmentYear)
+              .rulesVersion,
+            draft: migratedDraft,
+            filedReturns: migratedFiledReturns,
+          }
+        : seed.tax,
     };
     const parsed = personaSeedSchema.safeParse(migrated);
     return parsed.success ? (parsed.data as PersonaSeed) : null;
@@ -116,7 +198,7 @@ export class LocalAPIService implements APIService {
         return data;
       }
     }
-    for (const version of [2, 1]) {
+    for (const version of [4, 3, 2, 1]) {
       const legacyRaw = localStorage.getItem(keyFor(id, version));
       if (legacyRaw) {
         const migrated = this.migrate(id, JSON.parse(legacyRaw));
@@ -582,9 +664,174 @@ export class LocalAPIService implements APIService {
     return submission;
   }
 
+  async getTaxRules(assessmentYear: string) {
+    await wait(150);
+    return getTaxRulesConfig(assessmentYear);
+  }
+
+  async getTaxSources(id: PersonaId, assessmentYear: string) {
+    await wait(200);
+    requireOnline();
+    const seed = this.read(id);
+    if (!seed.tax || seed.tax.assessmentYear !== assessmentYear)
+      throw new Error('ASSESSMENT_YEAR_NOT_SUPPORTED');
+    return structuredClone(seed.tax.sources);
+  }
+
+  async getExistingReturnDraft(id: PersonaId, assessmentYear: string) {
+    const seed = this.read(id);
+    if (!seed.tax || seed.tax.assessmentYear !== assessmentYear) return null;
+    return seed.tax.draft ? structuredClone(seed.tax.draft) : null;
+  }
+
+  async saveReturnDraft(id: PersonaId, draft: ReturnDraft) {
+    const seed = this.read(id);
+    if (!seed.tax) throw new Error('TAX_RECORD_NOT_FOUND');
+    seed.tax.draft = structuredClone({
+      ...draft,
+      updatedAt: new Date().toISOString(),
+    });
+    this.write(seed);
+  }
+
+  async determineFilingRoute(draft: ReturnDraft) {
+    await wait(120);
+    const rules = getTaxRulesConfig(draft.assessmentYear);
+    return determineFilingRouteRule(draft, rules);
+  }
+
+  async computeReturn(draft: ReturnDraft, regime: TaxRegime) {
+    await wait(180);
+    const rules = getTaxRulesConfig(draft.assessmentYear);
+    return computeReturnRule(draft, regime, rules);
+  }
+
+  async compareRegimes(draft: ReturnDraft) {
+    await wait(220);
+    const rules = getTaxRulesConfig(draft.assessmentYear);
+    return compareRegimesRule(draft, rules);
+  }
+
+  async validateReturn(draft: ReturnDraft) {
+    await wait(160);
+    const rules = getTaxRulesConfig(draft.assessmentYear);
+    return validateReturnRule(draft, rules);
+  }
+
+  async validateTaxBankAccount(id: PersonaId, accountId: string) {
+    await wait(300);
+    requireOnline();
+    const seed = this.read(id);
+    const draft = seed.tax?.draft;
+    if (!draft) throw new Error('DRAFT_NOT_FOUND');
+    const account = draft.bankAccounts.find((item) => item.id === accountId);
+    if (!account) throw new Error('BANK_ACCOUNT_NOT_FOUND');
+    account.validationStatus = 'VALIDATED';
+    draft.updatedAt = new Date().toISOString();
+    this.write(seed);
+    return structuredClone(account);
+  }
+
+  async fileReturn(id: PersonaId, draft: ReturnDraft) {
+    const existing = this.taxFileRequests.get(id);
+    if (existing) return existing;
+    const request = this.performFileReturn(id, draft).finally(() =>
+      this.taxFileRequests.delete(id),
+    );
+    this.taxFileRequests.set(id, request);
+    return request;
+  }
+
+  private async performFileReturn(id: PersonaId, draft: ReturnDraft) {
+    await this.saveReturnDraft(id, draft);
+    await wait(520);
+    requireOnline();
+    const seed = this.read(id);
+    const tax = seed.tax;
+    if (!tax) throw new Error('TAX_RECORD_NOT_FOUND');
+    if (tax.filedReturns.length > 0) {
+      const filed = tax.filedReturns[0];
+      return {
+        acknowledgmentNumber: filed.acknowledgmentNumber,
+        filedAt: filed.filedAt,
+        rulesVersion: filed.rulesVersion,
+        regime: filed.regime,
+      };
+    }
+    const rules = getTaxRulesConfig(draft.assessmentYear);
+    const issues = validateReturnRule(draft, rules);
+    if (
+      issues.some(
+        (issue) =>
+          issue.severity === 'BLOCKING' || issue.severity === 'ROUTE_CHANGE',
+      )
+    )
+      throw new Error('RETURN_NOT_READY');
+    const regime = draft.regime.selected;
+    if (!regime) throw new Error('RETURN_NOT_READY');
+    const computation = computeReturnRule(draft, regime, rules);
+    const now = new Date().toISOString();
+    const references: Record<PersonaId, string> = {
+      rajesh: 'NGR-ITR-260825-4471',
+      ananya: 'NGR-ITR-260825-3382',
+    };
+    const snapshot: FiledReturnSnapshot = {
+      acknowledgmentNumber: references[id],
+      filedAt: now,
+      rulesVersion: draft.rulesVersion,
+      regime,
+      draft: structuredClone(draft),
+      computation,
+      verification: { status: 'PENDING' },
+    };
+    tax.filedReturns.push(snapshot);
+    seed.activity.unshift({
+      id: `act-tax-filed-${id}-${tax.assessmentYear}`,
+      kind: 'INCOME_TAX',
+      title: 'activity.events.taxFiled',
+      detail: 'activity.events.taxFiledDetail',
+      values: { reference: snapshot.acknowledgmentNumber },
+      status: 'IN_PROGRESS',
+      occurredAt: now,
+    });
+    this.write(seed);
+    return {
+      acknowledgmentNumber: snapshot.acknowledgmentNumber,
+      filedAt: snapshot.filedAt,
+      rulesVersion: snapshot.rulesVersion,
+      regime: snapshot.regime,
+    };
+  }
+
+  async verifyReturn(
+    id: PersonaId,
+    input: { acknowledgmentNumber: string; otp: string },
+  ) {
+    await wait(320);
+    requireOnline();
+    if (input.otp !== '123456') throw new Error('INVALID_OTP');
+    const seed = this.read(id);
+    const filed = seed.tax?.filedReturns.find(
+      (item) => item.acknowledgmentNumber === input.acknowledgmentNumber,
+    );
+    if (!filed) throw new Error('FILED_RETURN_NOT_FOUND');
+    const now = new Date().toISOString();
+    filed.verification = {
+      status: 'VERIFIED',
+      method: 'AADHAAR_OTP',
+      verifiedAt: now,
+    };
+    const activityId = `act-tax-filed-${id}-${seed.tax?.assessmentYear}`;
+    const event = seed.activity.find((item) => item.id === activityId);
+    if (event) event.status = 'COMPLETE';
+    this.write(seed);
+    return { status: 'VERIFIED' as const, verifiedAt: now };
+  }
+
   async resetPersona(id: PersonaId) {
     await wait();
     localStorage.removeItem(keyFor(id));
+    localStorage.removeItem(keyFor(id, 3));
     localStorage.removeItem(keyFor(id, 2));
     localStorage.removeItem(keyFor(id, 1));
     const seed = cloneSeed(id);

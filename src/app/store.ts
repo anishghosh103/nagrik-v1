@@ -15,6 +15,19 @@ import type {
   PropagationResult,
   TransferValidation,
 } from '../types/domain';
+import type {
+  FilingRoute,
+  RegimeComparison,
+  ReturnComputation,
+  ReturnDraft,
+  TaxBankAccount,
+  TaxRegime,
+  TaxRulesConfig,
+  TaxSourceSnapshot,
+  ValidationIssue,
+} from '../types/tax';
+
+const CURRENT_ASSESSMENT_YEAR = '2026-27';
 
 interface AppState {
   status: 'hydrating' | 'ready' | 'error';
@@ -55,6 +68,28 @@ interface AppState {
   signOut: () => Promise<void>;
   setOnline: (online: boolean) => void;
   clearError: () => void;
+  getTaxRules: (assessmentYear: string) => Promise<TaxRulesConfig>;
+  getTaxSources: () => Promise<TaxSourceSnapshot>;
+  getExistingReturnDraft: () => Promise<ReturnDraft | null>;
+  saveTaxDraft: (draft: ReturnDraft) => Promise<void>;
+  determineFilingRoute: (draft: ReturnDraft) => Promise<FilingRoute>;
+  computeReturn: (
+    draft: ReturnDraft,
+    regime: TaxRegime,
+  ) => Promise<ReturnComputation>;
+  compareRegimes: (draft: ReturnDraft) => Promise<RegimeComparison>;
+  validateReturn: (draft: ReturnDraft) => Promise<ValidationIssue[]>;
+  validateTaxBankAccount: (accountId: string) => Promise<TaxBankAccount>;
+  fileReturn: (draft: ReturnDraft) => Promise<{
+    acknowledgmentNumber: string;
+    filedAt: string;
+    rulesVersion: string;
+    regime: TaxRegime;
+  }>;
+  verifyReturn: (
+    acknowledgmentNumber: string,
+    otp: string,
+  ) => Promise<{ status: 'VERIFIED'; verifiedAt: string }>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -275,4 +310,74 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   setOnline: (online) => set({ online }),
   clearError: () => set({ error: null }),
+  getTaxRules: async (assessmentYear) => apiService.getTaxRules(assessmentYear),
+  getTaxSources: async () => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    return apiService.getTaxSources(id, CURRENT_ASSESSMENT_YEAR);
+  },
+  getExistingReturnDraft: async () => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    return apiService.getExistingReturnDraft(id, CURRENT_ASSESSMENT_YEAR);
+  },
+  saveTaxDraft: async (draft) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    await apiService.saveReturnDraft(id, draft);
+    set({ persona: await apiService.getPersona(id) });
+  },
+  determineFilingRoute: async (draft) => apiService.determineFilingRoute(draft),
+  computeReturn: async (draft, regime) =>
+    apiService.computeReturn(draft, regime),
+  compareRegimes: async (draft) => apiService.compareRegimes(draft),
+  validateReturn: async (draft) => apiService.validateReturn(draft),
+  validateTaxBankAccount: async (accountId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.validateTaxBankAccount(id, accountId);
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({ busy: false, error: 'errors.taxBankValidationFailed' });
+      throw error;
+    }
+  },
+  fileReturn: async (draft) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.fileReturn(id, draft);
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({
+        busy: false,
+        error:
+          error instanceof Error && error.message === 'OFFLINE'
+            ? 'errors.taxFilingOffline'
+            : 'errors.taxFilingUnavailable',
+      });
+      throw error;
+    }
+  },
+  verifyReturn: async (acknowledgmentNumber, otp) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.verifyReturn(id, {
+        acknowledgmentNumber,
+        otp,
+      });
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({ busy: false, error: 'errors.taxVerificationUnavailable' });
+      throw error;
+    }
+  },
 }));

@@ -22,7 +22,7 @@ Nagrik is not an official government product. All Aadhaar, PAN, bank, tax, EPFO,
 This set synthesizes two planning sources:
 
 - `Nagrik-PRD.md`, which defines the cross-service product, identity layer, personas, EPFO scope, prototype architecture, and hackathon constraints.
-- `Flow-A-ITR-Filing-Spec-Revised-AY-2026-27.md`, which defines the guided Income Tax journey, supported-case boundaries, screen behavior, computation pipeline, filing routes, and validation requirements.
+- [`reference/Flow-A-ITR-Filing-Spec-Revised-AY-2026-27.md`](./reference/Flow-A-ITR-Filing-Spec-Revised-AY-2026-27.md), which defines the guided Income Tax journey, supported-case boundaries, screen behavior, computation pipeline, filing routes, and validation requirements.
 
 When requirements conflict, use this order:
 

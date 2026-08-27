@@ -1,12 +1,14 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { epfoBn, epfoEn, epfoHi } from './epfo';
+import { taxBn, taxEn, taxHi } from './tax';
 
 const en = {
   nav: {
     home: 'Home',
     actions: 'Action Centre',
     identity: 'Identity',
+    tax: 'Income Tax',
     epfo: 'PF & EPFO',
     activity: 'Activity',
     profile: 'Profile',
@@ -25,6 +27,8 @@ const en = {
     close: 'Close',
     cancel: 'Cancel',
     save: 'Save',
+    remove: 'Remove',
+    confirmed: 'Confirmed',
   },
   home: {
     eyebrow: 'Good afternoon',
@@ -85,6 +89,7 @@ const en = {
     reference: 'Claim reference',
     ...epfoEn,
   },
+  tax: taxEn,
   activity: {
     title: 'Activity and status',
     subtitle: 'A traceable history across identity and PF services.',
@@ -95,6 +100,9 @@ const en = {
       claim: 'PF claim received — validation is expected next.',
       identity:
         'Identity correction is needed before the PF claim can continue.',
+      taxVerificationPending:
+        'Income Tax return filed — e-verification is expected next.',
+      taxDraftInProgress: 'An Income Tax return draft is in progress.',
       ready: 'PF claim checks are ready to review.',
     },
     events: {
@@ -112,6 +120,8 @@ const en = {
       serviceDatesUpdated: 'Employment dates corrected',
       serviceDatesUpdatedDetail:
         '{{employer}} will be rechecked in dependent PF journeys.',
+      taxFiled: 'Income Tax return filed',
+      taxFiledDetail: 'Reference {{reference}} is awaiting e-verification.',
     },
   },
   rules: {
@@ -143,6 +153,7 @@ const hi = {
     home: 'होम',
     actions: 'कार्य केंद्र',
     identity: 'पहचान',
+    tax: 'आयकर',
     epfo: 'पीएफ और ईपीएफओ',
     activity: 'गतिविधि',
     profile: 'प्रोफ़ाइल',
@@ -161,6 +172,8 @@ const hi = {
     close: 'बंद करें',
     cancel: 'रद्द करें',
     save: 'सहेजें',
+    remove: 'हटाएँ',
+    confirmed: 'पुष्टि हो गई',
   },
   home: {
     eyebrow: 'नमस्कार',
@@ -218,6 +231,7 @@ const hi = {
     reference: 'दावा संदर्भ',
     ...epfoHi,
   },
+  tax: taxHi,
   activity: {
     ...en.activity,
     title: 'गतिविधि और स्थिति',
@@ -243,6 +257,7 @@ const bn = {
     home: 'হোম',
     actions: 'করণীয়',
     identity: 'পরিচয়',
+    tax: 'আয়কর',
     epfo: 'পিএফ ও ইপিএফও',
     activity: 'কার্যকলাপ',
     profile: 'প্রোফাইল',
@@ -261,6 +276,8 @@ const bn = {
     close: 'বন্ধ করুন',
     cancel: 'বাতিল',
     save: 'সংরক্ষণ করুন',
+    remove: 'সরান',
+    confirmed: 'নিশ্চিত',
   },
   home: {
     eyebrow: 'নমস্কার',
@@ -321,6 +338,7 @@ const bn = {
     reference: 'দাবির রেফারেন্স',
     ...epfoBn,
   },
+  tax: taxBn,
   activity: {
     ...en.activity,
     title: 'কার্যকলাপ ও অবস্থা',

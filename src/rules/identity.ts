@@ -30,6 +30,19 @@ export function deriveActions(seed: PersonaSeed): ActionItem[] {
         source: 'EPFO and identity records',
       },
     ];
+  if (seed.tax?.draft && seed.tax.filedReturns.length === 0)
+    return [
+      {
+        id: 'action-tax-draft',
+        service: 'INCOME_TAX',
+        severity: 'INFO',
+        title: 'Continue your Income Tax return',
+        consequence:
+          'Your Income Tax return has unsaved sections that still need review before filing.',
+        fixTarget: '/tax/file',
+        source: 'Income Tax draft',
+      },
+    ];
   return [];
 }
 

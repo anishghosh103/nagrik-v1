@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
-import { Activity, Check, CircleDot, Clock3, Fingerprint } from 'lucide-react';
+import {
+  Activity,
+  Check,
+  CircleDot,
+  Clock3,
+  Fingerprint,
+  Landmark,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
 import { cn } from '../../components/cn';
@@ -10,13 +17,18 @@ export function ActivityPage() {
   const { t, i18n } = useTranslation();
   const persona = useAppStore((state) => state.persona);
   if (!persona) return null;
+  const filedReturn = persona.tax?.filedReturns[0];
   const current = persona.epfo.transfer
     ? t('activity.currentStates.transfer')
     : persona.epfo.claim
       ? t('activity.currentStates.claim')
       : persona.mismatches.some((m) => m.status !== 'RESOLVED')
         ? t('activity.currentStates.identity')
-        : t('activity.currentStates.ready');
+        : filedReturn && filedReturn.verification.status === 'PENDING'
+          ? t('activity.currentStates.taxVerificationPending')
+          : persona.tax?.draft && !filedReturn
+            ? t('activity.currentStates.taxDraftInProgress')
+            : t('activity.currentStates.ready');
   return (
     <Page width="narrow">
       <PageHeader
@@ -39,6 +51,8 @@ export function ActivityPage() {
             icon={
               event.kind === 'IDENTITY' ? (
                 <Fingerprint />
+              ) : event.kind === 'INCOME_TAX' ? (
+                <Landmark />
               ) : event.status === 'IN_PROGRESS' ? (
                 <Clock3 />
               ) : event.status === 'COMPLETE' ? (
@@ -61,7 +75,9 @@ export function ActivityPage() {
                   ? t('nav.identity')
                   : event.kind === 'EPFO'
                     ? t('nav.epfo')
-                    : 'Nagrik'}
+                    : event.kind === 'INCOME_TAX'
+                      ? t('nav.tax')
+                      : 'Nagrik'}
               </Status>
             }
             time={formatDate(event.occurredAt, i18n.language)}

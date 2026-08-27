@@ -27,10 +27,12 @@ pnpm dev
 Additional checks:
 
 ```bash
+pnpm typecheck
 pnpm lint
+pnpm test
 pnpm build
 ```
 
 ## Current state
 
-The repository currently contains the React, TypeScript, and Vite application foundation plus the complete planning documentation. Runtime screens and domain logic remain to be implemented.
+The repository contains a working React, TypeScript, and Vite prototype with guided Financial Identity, EPFO, and AY 2026–27 Income Tax journeys. All government authentication, data import, filing, tax payment, claims, and propagation remain local simulations using fictional personas.

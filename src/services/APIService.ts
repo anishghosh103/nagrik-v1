@@ -21,6 +21,17 @@ import type {
   RetryPropagationInput,
   TransferValidation,
 } from '../types/domain';
+import type {
+  FilingRoute,
+  RegimeComparison,
+  ReturnComputation,
+  ReturnDraft,
+  TaxBankAccount,
+  TaxRegime,
+  TaxRulesConfig,
+  TaxSourceSnapshot,
+  ValidationIssue,
+} from '../types/tax';
 
 export interface APIService {
   login(personaId: PersonaId): Promise<MockSession>;
@@ -71,4 +82,39 @@ export interface APIService {
   getActions(personaId: PersonaId): Promise<ActionItem[]>;
   getActivity(personaId: PersonaId): Promise<ActivityEvent[]>;
   resetPersona(personaId: PersonaId): Promise<PersonaSeed>;
+
+  getTaxRules(assessmentYear: string): Promise<TaxRulesConfig>;
+  getTaxSources(
+    personaId: PersonaId,
+    assessmentYear: string,
+  ): Promise<TaxSourceSnapshot>;
+  getExistingReturnDraft(
+    personaId: PersonaId,
+    assessmentYear: string,
+  ): Promise<ReturnDraft | null>;
+  saveReturnDraft(personaId: PersonaId, draft: ReturnDraft): Promise<void>;
+  determineFilingRoute(draft: ReturnDraft): Promise<FilingRoute>;
+  computeReturn(
+    draft: ReturnDraft,
+    regime: TaxRegime,
+  ): Promise<ReturnComputation>;
+  compareRegimes(draft: ReturnDraft): Promise<RegimeComparison>;
+  validateReturn(draft: ReturnDraft): Promise<ValidationIssue[]>;
+  validateTaxBankAccount(
+    personaId: PersonaId,
+    accountId: string,
+  ): Promise<TaxBankAccount>;
+  fileReturn(
+    personaId: PersonaId,
+    draft: ReturnDraft,
+  ): Promise<{
+    acknowledgmentNumber: string;
+    filedAt: string;
+    rulesVersion: string;
+    regime: TaxRegime;
+  }>;
+  verifyReturn(
+    personaId: PersonaId,
+    input: { acknowledgmentNumber: string; otp: string },
+  ): Promise<{ status: 'VERIFIED'; verifiedAt: string }>;
 }

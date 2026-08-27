@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { taxRecordSchema, type TaxRecord } from './tax';
 
 export type PersonaId = 'ananya' | 'rajesh';
 export type IdentityField = 'name' | 'mobile' | 'bankAccount';
@@ -12,6 +13,7 @@ export interface TaxpayerProfile {
   city: string;
   maskedAadhaar: string;
   maskedPan: string;
+  dateOfBirth?: string;
 }
 
 export interface IdentityRecord {
@@ -184,7 +186,7 @@ export interface ActionItem {
 
 export interface ActivityEvent {
   id: string;
-  kind: 'IDENTITY' | 'EPFO' | 'SESSION';
+  kind: 'IDENTITY' | 'EPFO' | 'SESSION' | 'INCOME_TAX';
   title: string;
   detail: string;
   values?: Record<string, string | number>;
@@ -209,6 +211,7 @@ export interface PersonaSeed {
   profile: TaxpayerProfile;
   identity: IdentityRecord;
   epfo: EPFOProfile;
+  tax?: TaxRecord;
   mismatches: IdentityMismatch[];
   identityChanges: IdentityChange[];
   actions: ActionItem[];
@@ -297,6 +300,7 @@ export const personaSeedSchema = z.object({
     city: z.string(),
     maskedAadhaar: z.string(),
     maskedPan: z.string(),
+    dateOfBirth: z.string().optional(),
   }),
   identity: z.object({
     personaId: z.enum(['ananya', 'rajesh']),
@@ -446,6 +450,7 @@ export const personaSeedSchema = z.object({
     }),
     lastUpdatedAt: z.string(),
   }),
+  tax: taxRecordSchema.optional(),
   mismatches: z.array(
     z.object({
       id: z.string(),
@@ -489,7 +494,7 @@ export const personaSeedSchema = z.object({
   activity: z.array(
     z.object({
       id: z.string(),
-      kind: z.enum(['IDENTITY', 'EPFO', 'SESSION']),
+      kind: z.enum(['IDENTITY', 'EPFO', 'SESSION', 'INCOME_TAX']),
       title: z.string(),
       detail: z.string(),
       values: z

@@ -31,6 +31,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
   if (!persona) return null;
   const health = identityHealth(persona);
   const action = persona.actions[0];
+  const taxFiled = persona.tax?.filedReturns[0];
   if (actionsOnly)
     return (
       <Page width="narrow">
@@ -89,14 +90,45 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
             tone="tax"
             label="Income Tax"
             title={
-              health === 100
-                ? 'Bank record ready'
-                : 'Bank validation may be delayed'
+              taxFiled
+                ? taxFiled.verification.status === 'VERIFIED'
+                  ? 'Filed and verified'
+                  : 'Filed — verification needed'
+                : persona.tax?.draft
+                  ? 'Continue your return'
+                  : 'Start your return'
             }
-            meta={<SourceMarker>Income Tax profile</SourceMarker>}
+            meta={
+              taxFiled ? (
+                <p className="m-0 text-ink-muted [font-variant-numeric:tabular-nums]">
+                  {formatMoney(
+                    taxFiled.computation.refund > 0
+                      ? taxFiled.computation.refund
+                      : taxFiled.computation.taxPayable,
+                    i18n.language,
+                  )}
+                </p>
+              ) : (
+                <SourceMarker>Income Tax profile</SourceMarker>
+              )
+            }
             status={
-              <Status kind={health === 100 ? 'success' : 'warning'}>
-                {health === 100 ? 'Ready' : 'Review'}
+              <Status
+                kind={
+                  taxFiled
+                    ? taxFiled.verification.status === 'VERIFIED'
+                      ? 'success'
+                      : 'warning'
+                    : 'info'
+                }
+              >
+                {taxFiled
+                  ? taxFiled.verification.status === 'VERIFIED'
+                    ? 'Verified'
+                    : 'Pending'
+                  : persona.tax?.draft
+                    ? 'In progress'
+                    : 'Ready'}
               </Status>
             }
           />
@@ -153,7 +185,15 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
           {persona.activity.slice(0, 3).map((event) => (
             <ActivityPreviewRow
               key={event.id}
-              icon={event.kind === 'IDENTITY' ? <Fingerprint /> : <Activity />}
+              icon={
+                event.kind === 'IDENTITY' ? (
+                  <Fingerprint />
+                ) : event.kind === 'INCOME_TAX' ? (
+                  <Landmark />
+                ) : (
+                  <Activity />
+                )
+              }
               title={event.title}
               detail={event.detail}
               time={formatDate(event.occurredAt, i18n.language)}

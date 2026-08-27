@@ -25,6 +25,15 @@ import {
 import { TransferPage } from './features/epfo/TransferPage';
 import { NominationPage } from './features/epfo/NominationPage';
 import { ProfilePage } from './features/profile/ProfilePage';
+import { TaxHomePage } from './features/tax/TaxHomePage';
+import { TaxFilingEntryPages } from './features/tax/TaxFilingEntryPages';
+import { TaxIncomePages } from './features/tax/TaxIncomePages';
+import { TaxIncomeDetailsPages } from './features/tax/TaxIncomeDetailsPages';
+import { TaxDeductionsAndCreditsPage } from './features/tax/TaxDeductionsAndCreditsPage';
+import { TaxRegimeAndBankPages } from './features/tax/TaxRegimeAndBankPages';
+import { TaxSummaryPages } from './features/tax/TaxSummaryPages';
+import { TaxFilingPages } from './features/tax/TaxFilingPages';
+import { TaxPaymentPage } from './features/tax/TaxPaymentPage';
 
 function HydrationScreen() {
   return (
@@ -126,6 +135,46 @@ export default function App() {
         <Route
           path="/epfo/nomination"
           element={<NominationPage />}
+        />
+        <Route
+          path="/tax"
+          element={<TaxHomePage />}
+        />
+        <Route
+          path="/tax/file"
+          element={<TaxFilingEntryPages />}
+        />
+        <Route
+          path="/tax/file/income"
+          element={<TaxIncomePages />}
+        />
+        <Route
+          path="/tax/file/income-details"
+          element={<TaxIncomeDetailsPages />}
+        />
+        <Route
+          path="/tax/file/deductions"
+          element={<TaxDeductionsAndCreditsPage />}
+        />
+        <Route
+          path="/tax/file/regime"
+          element={<TaxRegimeAndBankPages />}
+        />
+        <Route
+          path="/tax/file/summary"
+          element={<TaxSummaryPages />}
+        />
+        <Route
+          path="/tax/file/payment"
+          element={<TaxPaymentPage />}
+        />
+        <Route
+          path="/tax/file/declare"
+          element={<TaxFilingPages />}
+        />
+        <Route
+          path="/tax/file/status"
+          element={<TaxFilingPages statusOnly />}
         />
         <Route
           path="/activity"
