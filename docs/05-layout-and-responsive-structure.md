@@ -66,12 +66,12 @@ When the context rail is absent, keep the task column centered rather than stret
 
 ## Breakpoints
 
-| Range | Structure |
-|---|---|
-| Below `600px` | Mobile header, stacked content, sticky actions, bottom navigation, full-screen sheets. |
-| `600–899px` | Tablet header, centered content, optional compact journey rail, sheets for context. |
-| `900–1199px` | Desktop sidebar and main content; context remains a drawer. |
-| `1200px` and above | Sidebar, main content, and contextual right rail. |
+| Range              | Structure                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| Below `600px`      | Mobile header, stacked content, sticky actions, bottom navigation, full-screen sheets. |
+| `600–899px`        | Tablet header, centered content, optional compact journey rail, sheets for context.    |
+| `900–1199px`       | Desktop sidebar and main content; context remains a drawer.                            |
+| `1200px` and above | Sidebar, main content, and contextual right rail.                                      |
 
 Design and test first at approximately `390px`, then at `768px`, `1024px`, and `1440px`.
 

@@ -68,14 +68,29 @@ interface NagrikAPIService {
   getMismatches(userId: string): Promise<IdentityMismatch[]>;
   resolveMismatch(input: ResolveMismatchInput): Promise<PropagationResult>;
 
-  getExistingReturnDraft(userId: string, assessmentYear: string): Promise<ReturnDraft | null>;
+  getExistingReturnDraft(
+    userId: string,
+    assessmentYear: string,
+  ): Promise<ReturnDraft | null>;
   saveReturnDraft(userId: string, draft: ReturnDraft): Promise<void>;
-  getFormSixteenSources(userId: string, assessmentYear: string): Promise<SalarySource[]>;
-  getAisSummary(userId: string, assessmentYear: string): Promise<AISReviewItem[]>;
-  getForm26ASSummary(userId: string, assessmentYear: string): Promise<TaxCredits>;
+  getFormSixteenSources(
+    userId: string,
+    assessmentYear: string,
+  ): Promise<SalarySource[]>;
+  getAisSummary(
+    userId: string,
+    assessmentYear: string,
+  ): Promise<AISReviewItem[]>;
+  getForm26ASSummary(
+    userId: string,
+    assessmentYear: string,
+  ): Promise<TaxCredits>;
   getTaxRules(assessmentYear: string): Promise<TaxRulesConfig>;
   determineFilingRoute(data: ReturnDraft): Promise<FilingRoute>;
-  computeReturn(data: ReturnDraft, regime: TaxRegime): Promise<ReturnComputation>;
+  computeReturn(
+    data: ReturnDraft,
+    regime: TaxRegime,
+  ): Promise<ReturnComputation>;
   compareRegimes(data: ReturnDraft): Promise<RegimeComparison>;
   validateReturn(data: ReturnDraft): Promise<ValidationIssue[]>;
   fileReturn(userId: string, data: ReturnDraft): Promise<FileReturnResult>;
@@ -85,7 +100,10 @@ interface NagrikAPIService {
   validateClaim(userId: string, type: ClaimType): Promise<ClaimValidation>;
   submitClaim(userId: string, claim: PFClaim): Promise<ClaimSubmission>;
 
-  parseNotice(userId: string, document: MockNoticeDocument): Promise<NoticeItem>;
+  parseNotice(
+    userId: string,
+    document: MockNoticeDocument,
+  ): Promise<NoticeItem>;
   resolveNoticeAction(userId: string, noticeId: string): Promise<NoticeRemedy>;
 }
 ```
@@ -127,22 +145,18 @@ UI components subscribe to shared state so dependent screens update without relo
 
 ```ts
 type FilingRoute =
-  | "ITR1_LIKE"
-  | "ITR2_LIKE"
-  | "ITR4_LIKE"
-  | "ITR3_ADVANCED"
-  | "UNSUPPORTED";
+  'ITR1_LIKE' | 'ITR2_LIKE' | 'ITR4_LIKE' | 'ITR3_ADVANCED' | 'UNSUPPORTED';
 ```
 
 The route engine evaluates taxpayer type, residency, income, properties, capital gains, business activity, director status, unlisted shares, foreign interests, losses, and special conditions against AY-specific configuration.
 
 ```ts
 function determineFilingRoute(data: ReturnDraft): FilingRoute {
-  if (hasUnsupportedComplexity(data)) return "UNSUPPORTED";
+  if (hasUnsupportedComplexity(data)) return 'UNSUPPORTED';
   if (hasBusinessOrProfessionIncome(data)) {
-    return isEligibleForPresumptiveReturn(data) ? "ITR4_LIKE" : "ITR3_ADVANCED";
+    return isEligibleForPresumptiveReturn(data) ? 'ITR4_LIKE' : 'ITR3_ADVANCED';
   }
-  return isEligibleForSimpleIndividualReturn(data) ? "ITR1_LIKE" : "ITR2_LIKE";
+  return isEligibleForSimpleIndividualReturn(data) ? 'ITR1_LIKE' : 'ITR2_LIKE';
 }
 ```
 
@@ -197,9 +211,9 @@ No slab, cap, rebate, standard deduction, surcharge, special rate, eligibility r
 
 ```ts
 TaxRules.get({
-  assessmentYear: "2026-27",
-  taxpayerType: "INDIVIDUAL",
-  residentialStatus: "RESIDENT",
+  assessmentYear: '2026-27',
+  taxpayerType: 'INDIVIDUAL',
+  residentialStatus: 'RESIDENT',
 });
 ```
 
@@ -241,7 +255,7 @@ Store `enteredAmount` separately from `allowedAmount` and `appliedAmount` wherev
 ## Validation
 
 ```ts
-type ValidationSeverity = "INFO" | "WARNING" | "BLOCKING" | "ROUTE_CHANGE";
+type ValidationSeverity = 'INFO' | 'WARNING' | 'BLOCKING' | 'ROUTE_CHANGE';
 
 interface ValidationIssue {
   id: string;
@@ -274,15 +288,15 @@ Each rule returns pass/fail, severity, plain-language reason key, source referen
 ## Notice model
 
 ```ts
-type NoticeState = "NOTICE_RECEIVED" | "ACTION_REQUIRED" | "RESOLVED";
+type NoticeState = 'NOTICE_RECEIVED' | 'ACTION_REQUIRED' | 'RESOLVED';
 
 interface NoticeItem {
   id: string;
-  section: "139(9)" | "143(1)";
+  section: '139(9)' | '143(1)';
   issuedOn: string;
   responseDeadline?: string;
   discrepancies: NoticeDiscrepancy[];
-  remedy: "REFILE" | "PAY" | "RECTIFY" | "ITR_U";
+  remedy: 'REFILE' | 'PAY' | 'RECTIFY' | 'ITR_U';
   state: NoticeState;
 }
 ```

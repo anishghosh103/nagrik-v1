@@ -22,13 +22,13 @@ It should not feel like:
 
 Examples:
 
-| Avoid | Prefer |
-|---|---|
-| Select ITR-1 or ITR-2 | We'll choose the right return from your answers. |
-| Validation failed: TDS schedule | Your employer TDS is present, but the related salary is missing. |
-| AIS mismatch | Your tax records show an amount that has not been reviewed. |
-| Disposed | The office closed this grievance without changing your contribution record. |
-| Submit | File and verify / Send grievance / Submit claim. |
+| Avoid                           | Prefer                                                                      |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| Select ITR-1 or ITR-2           | We'll choose the right return from your answers.                            |
+| Validation failed: TDS schedule | Your employer TDS is present, but the related salary is missing.            |
+| AIS mismatch                    | Your tax records show an amount that has not been reviewed.                 |
+| Disposed                        | The office closed this grievance without changing your contribution record. |
+| Submit                          | File and verify / Send grievance / Submit claim.                            |
 
 ## Progressive disclosure
 
@@ -98,7 +98,7 @@ Page-level validation provides an error summary at the top and inline messages a
 Each journey section tracks:
 
 ```ts
-type SectionStatus = "NOT_STARTED" | "NEEDS_REVIEW" | "COMPLETE" | "BLOCKED";
+type SectionStatus = 'NOT_STARTED' | 'NEEDS_REVIEW' | 'COMPLETE' | 'BLOCKED';
 ```
 
 - A source import begins as `NEEDS_REVIEW`.

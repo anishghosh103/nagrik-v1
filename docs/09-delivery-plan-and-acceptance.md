@@ -214,13 +214,13 @@ Tables must transform into meaningful cards on mobile. Financial rows maintain l
 
 ## Key risks and mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Broad scope produces incomplete journeys | Enforce phase gates and hide unfinished routes. |
-| Tax arithmetic is visibly wrong | Narrow support and test versioned pure rules. |
-| UI implies official integration | Persistent disclosure and fictional records. |
-| Persona state contaminates another user | Namespaced persistence and switch tests. |
-| Reviewers alter the prepared demo | Always-available deterministic reset. |
-| Localization is only superficial | Translate the selected journey end to end. |
-| Portal-style density harms mobile use | Use task templates, sheets, and field-first cards. |
-| Simulated network states lose actions | Cache, explicit queue state, and duplicate prevention. |
+| Risk                                     | Mitigation                                             |
+| ---------------------------------------- | ------------------------------------------------------ |
+| Broad scope produces incomplete journeys | Enforce phase gates and hide unfinished routes.        |
+| Tax arithmetic is visibly wrong          | Narrow support and test versioned pure rules.          |
+| UI implies official integration          | Persistent disclosure and fictional records.           |
+| Persona state contaminates another user  | Namespaced persistence and switch tests.               |
+| Reviewers alter the prepared demo        | Always-available deterministic reset.                  |
+| Localization is only superficial         | Translate the selected journey end to end.             |
+| Portal-style density harms mobile use    | Use task templates, sheets, and field-first cards.     |
+| Simulated network states lose actions    | Cache, explicit queue state, and duplicate prevention. |

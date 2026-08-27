@@ -12,21 +12,21 @@ Avoid official emblems, Ashoka Chakra imagery, department logos, a literal trico
 
 Suggested light-theme foundation:
 
-| Token | Value | Use |
-|---|---:|---|
-| `--color-canvas` | `#F6F2E8` | Warm rice-paper application background. |
-| `--color-surface` | `#FFFCF5` | Main working surfaces. |
-| `--color-surface-muted` | `#EDE8DC` | Secondary rows and disabled regions. |
-| `--color-ink` | `#17231D` | Primary text and strong rules. |
-| `--color-ink-muted` | `#5F675F` | Supporting text. |
-| `--color-border` | `#D8D2C3` | Default borders and ledger rules. |
-| `--color-primary` | `#225E4B` | Primary actions and selected states. |
-| `--color-primary-strong` | `#174536` | Hover and high-emphasis primary states. |
-| `--color-accent` | `#D99A22` | Selective highlights and priority markers. |
-| `--color-info` | `#38657A` | Imported-source and informational states. |
-| `--color-warning` | `#A95A32` | Needs-review states. |
-| `--color-danger` | `#A33F3F` | Blocking issues and destructive actions. |
-| `--color-success` | `#33735A` | Completed and validated states. |
+| Token                    |     Value | Use                                        |
+| ------------------------ | --------: | ------------------------------------------ |
+| `--color-canvas`         | `#F6F2E8` | Warm rice-paper application background.    |
+| `--color-surface`        | `#FFFCF5` | Main working surfaces.                     |
+| `--color-surface-muted`  | `#EDE8DC` | Secondary rows and disabled regions.       |
+| `--color-ink`            | `#17231D` | Primary text and strong rules.             |
+| `--color-ink-muted`      | `#5F675F` | Supporting text.                           |
+| `--color-border`         | `#D8D2C3` | Default borders and ledger rules.          |
+| `--color-primary`        | `#225E4B` | Primary actions and selected states.       |
+| `--color-primary-strong` | `#174536` | Hover and high-emphasis primary states.    |
+| `--color-accent`         | `#D99A22` | Selective highlights and priority markers. |
+| `--color-info`           | `#38657A` | Imported-source and informational states.  |
+| `--color-warning`        | `#A95A32` | Needs-review states.                       |
+| `--color-danger`         | `#A33F3F` | Blocking issues and destructive actions.   |
+| `--color-success`        | `#33735A` | Completed and validated states.            |
 
 Colour is always paired with iconography and text. Verify contrast for text, icons, focus rings, input borders, and disabled states. Do not reduce warning or success states to tinted pills without explanation.
 
@@ -36,14 +36,14 @@ Use multilingual type designed for Indian scripts. A practical direction is the 
 
 Recommended scale:
 
-| Role | Desktop | Mobile | Weight/behavior |
-|---|---:|---:|---|
-| Outcome amount | `48–56px` | `40–44px` | Strong, tabular numerals. |
-| Page title | `34–40px` | `27–30px` | Compact line height. |
-| Section heading | `22–24px` | `20–22px` | Clear hierarchy. |
-| Card heading | `18–20px` | `18px` | Medium/semibold. |
-| Body | `16–18px` | `16px` | At least `1.5` line height. |
-| Supporting | `14–15px` | `14px` | Never essential at low contrast. |
+| Role            |   Desktop |    Mobile | Weight/behavior                  |
+| --------------- | --------: | --------: | -------------------------------- |
+| Outcome amount  | `48–56px` | `40–44px` | Strong, tabular numerals.        |
+| Page title      | `34–40px` | `27–30px` | Compact line height.             |
+| Section heading | `22–24px` | `20–22px` | Clear hierarchy.                 |
+| Card heading    | `18–20px` |    `18px` | Medium/semibold.                 |
+| Body            | `16–18px` |    `16px` | At least `1.5` line height.      |
+| Supporting      | `14–15px` |    `14px` | Never essential at low contrast. |
 
 Use tabular numerals for calculations, balances, deadlines, references, and comparative tables. Preserve Indian digit grouping. Masked identifiers must remain screen-reader understandable through explicit accessible labels.
 
@@ -98,14 +98,14 @@ Minimum interactive height is `44px`; primary mobile actions should generally be
 
 Every status treatment combines icon, label, and optional explanation:
 
-| Status | Suggested icon | Example label |
-|---|---|---|
-| Complete | Check | Verified |
-| In progress | Clock/loader | Updating EPFO |
-| Needs review | Flag | Check this value |
-| Blocking | Stop/error | Filing cannot continue |
-| Queued | Upload/cloud | Will retry online |
-| Stale | Refresh | Review after recalculation |
+| Status       | Suggested icon | Example label              |
+| ------------ | -------------- | -------------------------- |
+| Complete     | Check          | Verified                   |
+| In progress  | Clock/loader   | Updating EPFO              |
+| Needs review | Flag           | Check this value           |
+| Blocking     | Stop/error     | Filing cannot continue     |
+| Queued       | Upload/cloud   | Will retry online          |
+| Stale        | Refresh        | Review after recalculation |
 
 Small status badges may summarize state; full consequences appear in adjacent copy or detail views.
 

@@ -1,95 +1,157 @@
-import { expect, test } from '@playwright/test'
-import AxeBuilder from '@axe-core/playwright'
+import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
-async function login(page: import('@playwright/test').Page, persona: 'Rajesh' | 'Ananya') {
-  await page.goto('/')
-  await page.getByRole('button', { name: /choose a demo citizen/i }).click()
-  await page.getByRole('button', { name: persona === 'Rajesh' ? /^RK Rajesh Kumar/i : /^AS Ananya Sen/i }).click()
-  await page.getByRole('button', { name: new RegExp(`continue as ${persona}`, 'i') }).click()
-  await page.getByRole('button', { name: /send mock otp/i }).click()
-  await page.getByLabel('Six-digit OTP').fill('123456')
-  await page.getByRole('button', { name: /enter nagrik/i }).click()
+async function login(
+  page: import('@playwright/test').Page,
+  persona: 'Rajesh' | 'Ananya',
+) {
+  await page.goto('/');
+  await page.getByRole('button', { name: /choose a demo citizen/i }).click();
+  await page
+    .getByRole('button', {
+      name: persona === 'Rajesh' ? /^RK Rajesh Kumar/i : /^AS Ananya Sen/i,
+    })
+    .click();
+  await page
+    .getByRole('button', { name: new RegExp(`continue as ${persona}`, 'i') })
+    .click();
+  await page.getByRole('button', { name: /send mock otp/i }).click();
+  await page.getByLabel('Six-digit OTP').fill('123456');
+  await page.getByRole('button', { name: /enter nagrik/i }).click();
 }
 
-test('Rajesh corrects identity, submits PF once, and tracks it', async ({ page }) => {
-  await login(page, 'Rajesh')
-  await expect(page.getByRole('heading', { name: /your money tasks/i })).toBeVisible()
-  await page.getByRole('link', { name: /correct your name/i }).click()
-  await page.getByRole('button', { name: /review destinations/i }).click()
-  await page.getByRole('button', { name: /update connected records/i }).click()
-  await expect(page.getByRole('heading', { name: /name is consistent/i })).toBeVisible()
-  await page.getByRole('link', { name: /continue to pf claim/i }).click()
-  await page.getByRole('button', { name: /check eligibility/i }).click()
-  await page.getByRole('button', { name: /run claim checks/i }).click()
-  await expect(page.getByText(/7 of 7 checks passed/i)).toBeVisible()
-  await page.getByRole('button', { name: /enter claim details/i }).click()
-  await page.getByRole('button', { name: /review claim/i }).click()
-  await page.getByRole('checkbox').check()
-  await page.getByLabel(/mock otp/i).fill('123456')
-  await page.getByRole('button', { name: /submit mock pf claim/i }).click()
-  await expect(page.getByRole('heading', { name: /pf claim was received/i })).toBeVisible()
-  await expect(page.getByText('NGR-PF-260825-1042')).toBeVisible()
-  await page.getByRole('link', { name: /view in unified activity/i }).click()
-  await expect(page.getByRole('heading', { name: 'PF claim received', exact: true })).toBeVisible()
-})
+test('Rajesh corrects identity, submits PF once, and tracks it', async ({
+  page,
+}) => {
+  await login(page, 'Rajesh');
+  await expect(
+    page.getByRole('heading', { name: /your money tasks/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /correct your name/i }).click();
+  await page.getByRole('button', { name: /review destinations/i }).click();
+  await page.getByRole('button', { name: /update connected records/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /name is consistent/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /continue to pf claim/i }).click();
+  await page.getByRole('button', { name: /check eligibility/i }).click();
+  await page.getByRole('button', { name: /run claim checks/i }).click();
+  await expect(page.getByText(/7 of 7 checks passed/i)).toBeVisible();
+  await page.getByRole('button', { name: /enter claim details/i }).click();
+  await page.getByRole('button', { name: /review claim/i }).click();
+  await page.getByRole('checkbox').check();
+  await page.getByLabel(/mock otp/i).fill('123456');
+  await page.getByRole('button', { name: /submit mock pf claim/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /pf claim was received/i }),
+  ).toBeVisible();
+  await expect(page.getByText('NGR-PF-260825-1042')).toBeVisible();
+  await page.getByRole('link', { name: /view in unified activity/i }).click();
+  await expect(
+    page.getByRole('heading', { name: 'PF claim received', exact: true }),
+  ).toBeVisible();
+});
 
-test('Ananya starts healthy without an artificial warning', async ({ page }) => {
-  await login(page, 'Ananya')
-  await expect(page.getByText(/connected records agree/i)).toBeVisible()
-  await expect(page.getByRole('heading', { name: /correct your name/i })).toHaveCount(0)
-  const results = await new AxeBuilder({ page }).analyze()
-  expect(results.violations.filter((violation) => violation.impact === 'critical' || violation.impact === 'serious')).toEqual([])
-})
+test('Ananya starts healthy without an artificial warning', async ({
+  page,
+}) => {
+  await login(page, 'Ananya');
+  await expect(page.getByText(/connected records agree/i)).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: /correct your name/i }),
+  ).toHaveCount(0);
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter(
+      (violation) =>
+        violation.impact === 'critical' || violation.impact === 'serious',
+    ),
+  ).toEqual([]);
+});
 
 test('Ananya reviews profile and cached passbook records', async ({ page }) => {
-  await login(page, 'Ananya')
-  await page.getByRole('link', { name: /PF & EPFO/i }).first().click()
-  await page.getByRole('link', { name: 'Details', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /connected EPFO profile/i })).toBeVisible()
-  await page.getByRole('link', { name: /employment history/i }).click()
-  await expect(page.getByRole('heading', { name: /employment records/i })).toBeVisible()
-  await expect(page.getByRole('heading', { name: /Bengal Learning Studio/i })).toBeVisible()
-  await page.getByRole('link', { name: /^Back$/ }).click()
-  await page.getByRole('link', { name: /^Back$/ }).click()
-  await page.getByRole('link', { name: /view contribution passbook/i }).click()
-  await expect(page.getByRole('heading', { name: /contribution passbook/i })).toBeVisible()
-  await expect(page.getByRole('table', { name: /Bengal Learning Studio/i })).toBeVisible()
-  await page.reload()
-  await expect(page.getByRole('heading', { name: /contribution passbook/i })).toBeVisible()
-  const results = await new AxeBuilder({ page }).analyze()
-  expect(results.violations.filter((violation) => violation.impact === 'critical' || violation.impact === 'serious')).toEqual([])
-})
+  await login(page, 'Ananya');
+  await page
+    .getByRole('link', { name: /PF & EPFO/i })
+    .first()
+    .click();
+  await page.getByRole('link', { name: 'Details', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: /connected EPFO profile/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /employment history/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /employment records/i }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: /Bengal Learning Studio/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /^Back$/ }).click();
+  await page.getByRole('link', { name: /^Back$/ }).click();
+  await page.getByRole('link', { name: /view contribution passbook/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /contribution passbook/i }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('table', { name: /Bengal Learning Studio/i }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole('heading', { name: /contribution passbook/i }),
+  ).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter(
+      (violation) =>
+        violation.impact === 'critical' || violation.impact === 'serious',
+    ),
+  ).toEqual([]);
+});
 
 test('Ananya submits and tracks one PF transfer', async ({ page }) => {
-  await login(page, 'Ananya')
-  await page.getByRole('link', { name: /PF & EPFO/i }).first().click()
-  await page.getByRole('link', { name: /transfer my PF/i }).click()
-  await page.getByRole('button', { name: /start transfer/i }).click()
-  await page.getByRole('button', { name: /run transfer checks/i }).click()
-  await expect(page.getByText(/ready to review/i).first()).toBeVisible()
-  await page.getByRole('button', { name: /review transfer/i }).click()
-  await page.getByRole('checkbox').check()
-  await page.getByLabel(/mock otp/i).fill('123456')
-  await page.getByRole('button', { name: /submit mock transfer/i }).click()
-  await expect(page.getByRole('heading', { name: /transfer request was received/i })).toBeVisible()
-  await page.getByRole('link', { name: /unified activity/i }).click()
-  await expect(page.getByRole('heading', { name: 'PF transfer received', exact: true })).toBeVisible()
-})
+  await login(page, 'Ananya');
+  await page
+    .getByRole('link', { name: /PF & EPFO/i })
+    .first()
+    .click();
+  await page.getByRole('link', { name: /transfer my PF/i }).click();
+  await page.getByRole('button', { name: /start transfer/i }).click();
+  await page.getByRole('button', { name: /run transfer checks/i }).click();
+  await expect(page.getByText(/ready to review/i).first()).toBeVisible();
+  await page.getByRole('button', { name: /review transfer/i }).click();
+  await page.getByRole('checkbox').check();
+  await page.getByLabel(/mock otp/i).fill('123456');
+  await page.getByRole('button', { name: /submit mock transfer/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /transfer request was received/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /unified activity/i }).click();
+  await expect(
+    page.getByRole('heading', { name: 'PF transfer received', exact: true }),
+  ).toBeVisible();
+});
 
-test('Rajesh allocates exactly 100 percent and verifies a nomination', async ({ page }) => {
-  await login(page, 'Rajesh')
-  await page.getByRole('link', { name: /PF & EPFO/i }).first().click()
-  await page.getByRole('link', { name: /manage my nomination/i }).click()
-  await page.getByRole('button', { name: /add nomination/i }).click()
-  await page.getByLabel(/full name/i).fill('Meera Kumar')
-  await page.getByLabel(/date of birth/i).fill('1988-04-12')
-  await page.getByRole('button', { name: /allocate shares/i }).click()
-  await page.getByLabel(/Meera Kumar/i).fill('90')
-  await page.getByRole('button', { name: /review nomination/i }).click()
-  await expect(page.getByRole('alert')).toContainText('90%')
-  await page.getByLabel(/Meera Kumar/i).fill('100')
-  await page.getByRole('button', { name: /review nomination/i }).click()
-  await page.getByLabel(/mock otp/i).fill('123456')
-  await page.getByRole('button', { name: /mock-verify nomination/i }).click()
-  await expect(page.getByRole('heading', { name: /nomination is effective/i })).toBeVisible()
-})
+test('Rajesh allocates exactly 100 percent and verifies a nomination', async ({
+  page,
+}) => {
+  await login(page, 'Rajesh');
+  await page
+    .getByRole('link', { name: /PF & EPFO/i })
+    .first()
+    .click();
+  await page.getByRole('link', { name: /manage my nomination/i }).click();
+  await page.getByRole('button', { name: /add nomination/i }).click();
+  await page.getByLabel(/full name/i).fill('Meera Kumar');
+  await page.getByLabel(/date of birth/i).fill('1988-04-12');
+  await page.getByRole('button', { name: /allocate shares/i }).click();
+  await page.getByLabel(/Meera Kumar/i).fill('90');
+  await page.getByRole('button', { name: /review nomination/i }).click();
+  await expect(page.getByRole('alert')).toContainText('90%');
+  await page.getByLabel(/Meera Kumar/i).fill('100');
+  await page.getByRole('button', { name: /review nomination/i }).click();
+  await page.getByLabel(/mock otp/i).fill('123456');
+  await page.getByRole('button', { name: /mock-verify nomination/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /nomination is effective/i }),
+  ).toBeVisible();
+});
