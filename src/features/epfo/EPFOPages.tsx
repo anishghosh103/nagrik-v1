@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -11,18 +9,12 @@ import {
   FileWarning,
   ShieldCheck,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
-import {
-  Button,
-  ButtonLink,
-  Page,
-  PageHeader,
-  SectionHeading,
-  SourceMarker,
-  Status,
-} from '../../components/ui';
+import { formatDate, formatMoney } from '../../components/formatters';
 import {
   ChoiceCard,
   ChoiceGroup,
@@ -31,6 +23,7 @@ import {
 } from '../../components/forms';
 import {
   AmountContext,
+  BalanceSummary,
   DetailSheet,
   OutcomeMark,
   ProgressState,
@@ -49,9 +42,16 @@ import {
   StickyActions,
   SubmissionStage,
   SubmissionStages,
-  BalanceSummary,
 } from '../../components/patterns';
-import { formatDate, formatMoney } from '../../components/formatters';
+import {
+  Button,
+  ButtonLink,
+  Page,
+  PageHeader,
+  SectionHeading,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 import type { ClaimSubmission, ClaimValidation } from '../../types/domain';
 
 export function EPFOPage() {
@@ -882,7 +882,7 @@ function ClaimStatus({ reference }: { reference: string }) {
               title={t('epfo.claim.timelineValidation')}
               meta={
                 validationDone
-                  ? undefined
+                  ? 'Completed'
                   : t('epfo.claim.timelineValidationMeta')
               }
             />

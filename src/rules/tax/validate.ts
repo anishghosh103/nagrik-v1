@@ -25,7 +25,7 @@ export function validateReturn(
         titleKey: 'tax.validation.unreviewedSalaryTitle',
         messageKey: 'tax.validation.unreviewedSalaryMessage',
         sourceRefs: [source.employerName],
-        fixTarget: { route: '/tax/file/income', focusId: source.id },
+        fixTarget: { route: '/tax/file', focusId: source.id },
       });
     }
     if (source.tdsDeducted > 0 && source.grossSalary === 0) {
@@ -37,7 +37,7 @@ export function validateReturn(
         titleKey: 'tax.validation.tdsWithoutSalaryTitle',
         messageKey: 'tax.validation.tdsWithoutSalaryMessage',
         sourceRefs: [source.employerName],
-        fixTarget: { route: '/tax/file/income', focusId: source.id },
+        fixTarget: { route: '/tax/file', focusId: source.id },
       });
     }
   }
@@ -52,7 +52,7 @@ export function validateReturn(
         titleKey: 'tax.validation.unreviewedOtherTitle',
         messageKey: 'tax.validation.unreviewedOtherMessage',
         sourceRefs: [item.payerName],
-        fixTarget: { route: '/tax/file/income', focusId: item.id },
+        fixTarget: { route: '/tax/file', focusId: item.id },
       });
     }
   }
@@ -66,7 +66,7 @@ export function validateReturn(
         sectionId: 'HOUSE_PROPERTY',
         titleKey: 'tax.validation.propertyReviewTitle',
         messageKey: 'tax.validation.propertyReviewMessage',
-        fixTarget: { route: '/tax/file/income-details', focusId: property.id },
+        fixTarget: { route: '/tax/file', focusId: property.id },
       });
     }
     if (
@@ -80,7 +80,7 @@ export function validateReturn(
         sectionId: 'HOUSE_PROPERTY',
         titleKey: 'tax.validation.loanDetailsTitle',
         messageKey: 'tax.validation.loanDetailsMessage',
-        fixTarget: { route: '/tax/file/income-details', focusId: property.id },
+        fixTarget: { route: '/tax/file', focusId: property.id },
       });
     }
   }
@@ -94,7 +94,7 @@ export function validateReturn(
         sectionId: 'CAPITAL_GAINS',
         titleKey: 'tax.validation.capitalReviewTitle',
         messageKey: 'tax.validation.capitalReviewMessage',
-        fixTarget: { route: '/tax/file/income-details', focusId: gain.id },
+        fixTarget: { route: '/tax/file', focusId: gain.id },
       });
     }
   }
@@ -113,10 +113,7 @@ export function validateReturn(
         sectionId: 'BUSINESS',
         titleKey: 'tax.validation.businessReviewTitle',
         messageKey: 'tax.validation.businessReviewMessage',
-        fixTarget: {
-          route: '/tax/file/income-details',
-          focusId: draft.business.id,
-        },
+        fixTarget: { route: '/tax/file', focusId: draft.business.id },
       });
     }
   }
@@ -166,7 +163,7 @@ export function validateReturn(
       sectionId: 'REGIME',
       titleKey: 'tax.validation.noRegimeTitle',
       messageKey: 'tax.validation.noRegimeMessage',
-      fixTarget: { route: '/tax/file/regime' },
+      fixTarget: { route: '/tax/file' },
     });
   }
 
@@ -186,7 +183,7 @@ export function validateReturn(
       sectionId: 'BANK',
       titleKey: 'tax.validation.bankNotValidatedTitle',
       messageKey: 'tax.validation.bankNotValidatedMessage',
-      fixTarget: { route: '/tax/file/regime' },
+      fixTarget: { route: '/tax/file' },
     });
   }
 

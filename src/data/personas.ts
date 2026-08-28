@@ -7,7 +7,7 @@ const historyTime = '2025-11-18T08:10:00.000Z';
 
 const ananya: PersonaSeed = {
   id: 'ananya',
-  schemaVersion: 7,
+  schemaVersion: 8,
   profile: {
     fullName: 'Ananya Sen',
     firstName: 'Ananya',
@@ -54,6 +54,7 @@ const ananya: PersonaSeed = {
   epfo: {
     personaId: 'ananya',
     maskedUan: 'XXXX XXXX 2291',
+    uan: '1002 4567 2291',
     balance: 428650,
     bankAccount: '•••• 4821',
     aadhaarKyc: true,
@@ -274,7 +275,7 @@ const ananya: PersonaSeed = {
       id: 'act-a-1',
       kind: 'SESSION',
       title: 'activity.events.identityChecked',
-      detail: 'activity.events.identityHealthy',
+      detail: 'activity.events.identityCheckedDetail',
       status: 'COMPLETE',
       occurredAt: baseTime,
     },
@@ -284,7 +285,7 @@ const ananya: PersonaSeed = {
 
 const rajesh: PersonaSeed = {
   id: 'rajesh',
-  schemaVersion: 7,
+  schemaVersion: 8,
   profile: {
     fullName: 'Rajesh Kumar',
     firstName: 'Rajesh',
@@ -331,6 +332,7 @@ const rajesh: PersonaSeed = {
   epfo: {
     personaId: 'rajesh',
     maskedUan: 'XXXX XXXX 6473',
+    uan: '1003 8791 6473',
     balance: 312480,
     bankAccount: '•••• 9032',
     aadhaarKyc: true,
@@ -506,7 +508,7 @@ const rajesh: PersonaSeed = {
         {
           id: 'tax-r-other-2',
           category: 'OTHER',
-          payerName: 'AIS record',
+          payerName: 'Unidentified deposit',
           maskedReference: '—',
           amount: 8000,
           tdsDeducted: 0,
@@ -579,7 +581,7 @@ const rajesh: PersonaSeed = {
 
 const priya: PersonaSeed = {
   id: 'priya',
-  schemaVersion: 7,
+  schemaVersion: 8,
   profile: {
     fullName: 'Priya Menon',
     firstName: 'Priya',
@@ -626,6 +628,7 @@ const priya: PersonaSeed = {
   epfo: {
     personaId: 'priya',
     maskedUan: 'XXXX XXXX 8825',
+    uan: '1001 5623 8825',
     balance: 214300,
     bankAccount: '•••• 7714',
     aadhaarKyc: true,

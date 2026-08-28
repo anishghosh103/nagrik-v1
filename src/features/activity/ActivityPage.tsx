@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import {
   Activity,
   ArrowRight,
@@ -9,6 +8,7 @@ import {
   Landmark,
   Scale,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
 import { cn } from '../../components/cn';

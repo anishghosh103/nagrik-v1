@@ -106,7 +106,7 @@ export function TaxPaymentPage() {
           eyebrow={t('tax.payment.eyebrow')}
           title={t('tax.payment.completeTitle')}
           subtitle={t('tax.payment.completeHelp')}
-          back="/tax/file/summary"
+          back="/tax/file"
         />
         <div className="my-8 grid justify-items-center gap-3 text-center">
           <span className="grid size-16 place-items-center rounded-full bg-success-soft text-success">
@@ -116,7 +116,7 @@ export function TaxPaymentPage() {
         </div>
         <Button
           wide
-          onClick={() => navigate('/tax/file/summary')}
+          onClick={() => navigate('/tax/file')}
         >
           {t('tax.payment.returnToSummary')} <ArrowRight />
         </Button>

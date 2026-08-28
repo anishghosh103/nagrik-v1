@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   Banknote,
@@ -12,6 +10,8 @@ import {
   ShieldCheck,
   UserRound,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
@@ -45,10 +45,10 @@ export function EPFOProfilePage() {
           <strong
             className="text-[1.35rem] tracking-[0.03em]"
             aria-label={t('epfo.profile.uanAccessible', {
-              digits: persona.epfo.maskedUan.slice(-4),
+              uan: persona.epfo.uan,
             })}
           >
-            {persona.epfo.maskedUan}
+            {persona.epfo.uan}
           </strong>
           <SourceMarker>{t('epfo.profile.source')}</SourceMarker>
         </div>
@@ -125,14 +125,18 @@ function RecordCard({
   return (
     <Link
       to={to}
-      className="grid min-h-40 grid-cols-[1fr_auto] content-between gap-5 rounded-[var(--radius-sheet)] border border-border bg-surface p-5 text-inherit no-underline max-[599px]:min-h-26.25 [&>svg:first-child]:size-7.5 [&>svg:first-child]:text-primary [&>svg:last-child]:col-start-2 [&>svg:last-child]:row-span-2 [&>svg:last-child]:self-center"
+      className="group flex gap-5 rounded-[var(--radius-sheet)] border border-border bg-surface p-5 text-inherit no-underline shadow-[0_8px_28px_rgba(30,45,35,0.04)] transition hover:-translate-y-0.5 hover:border-primary max-[599px]:min-h-26.25"
     >
-      {icon}
-      <span className="grid gap-1.25">
+      <span className="flex size-10.5 justify-center items-center rounded-full bg-surface-muted text-primary [&>svg]:size-5.25">
+        {icon}
+      </span>
+      <span className="flex-1 flex flex-col gap-1.25">
         <strong>{title}</strong>
         <small className="text-ink-muted">{detail}</small>
+        <span className="flex justify-end">
+          <ArrowRight className="text-primary transition-transform group-hover:translate-x-1" />
+        </span>
       </span>
-      <ArrowRight />
     </Link>
   );
 }

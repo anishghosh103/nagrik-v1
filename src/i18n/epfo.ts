@@ -26,7 +26,7 @@ export const epfoEn = {
     subtitle:
       'Review the fictional UAN, KYC, bank and employment records used by PF journeys.',
     uan: 'Universal Account Number',
-    uanAccessible: 'Fictional UAN ending in {{digits}}',
+    uanAccessible: 'Fictional UAN {{uan}}',
     source: 'EPFO profile snapshot',
     connected: 'Connected',
     kyc: 'KYC status',
@@ -374,7 +374,7 @@ export const epfoHi = {
     subtitle:
       'पीएफ कार्यों में उपयोग होने वाले काल्पनिक यूएएन, केवाईसी, बैंक और नौकरी रिकॉर्ड देखें।',
     uan: 'यूनिवर्सल अकाउंट नंबर',
-    uanAccessible: '{{digits}} पर समाप्त काल्पनिक यूएएन',
+    uanAccessible: 'काल्पनिक यूएएन {{uan}}',
     source: 'ईपीएफओ प्रोफ़ाइल स्नैपशॉट',
     connected: 'जुड़ा हुआ',
     kyc: 'केवाईसी स्थिति',
@@ -712,7 +712,7 @@ export const epfoBn = {
     subtitle:
       'পিএফ কাজে ব্যবহৃত কাল্পনিক ইউএএন, কেওয়াইসি, ব্যাঙ্ক ও চাকরির রেকর্ড দেখুন।',
     uan: 'ইউনিভার্সাল অ্যাকাউন্ট নম্বর',
-    uanAccessible: '{{digits}}-এ শেষ কাল্পনিক ইউএএন',
+    uanAccessible: 'কাল্পনিক ইউএএন {{uan}}',
     source: 'ইপিএফও প্রোফাইল স্ন্যাপশট',
     connected: 'সংযুক্ত',
     kyc: 'কেওয়াইসি অবস্থা',

@@ -31,6 +31,7 @@ import {
 } from '../../components/patterns';
 import { formatDate, formatMoney } from '../../components/formatters';
 import { useReturnDraft } from './useReturnDraft';
+import { filingRouteLabel, regimeLabel } from './wizard/labels';
 import type { FiledReturnSnapshot } from '../../types/tax';
 
 type Step = 'declare' | 'filing' | 'verify' | 'done';
@@ -124,7 +125,7 @@ export function TaxFilingPages({
         eyebrow={t('tax.declare.eyebrow')}
         title={t('tax.declare.title')}
         subtitle={t('tax.declare.subtitle')}
-        back="/tax/file/summary"
+        back="/tax/file"
       />
       <StepProgress
         current={step === 'declare' ? 1 : step === 'filing' ? 1 : 2}
@@ -135,11 +136,15 @@ export function TaxFilingPages({
           <ReviewList>
             <ReviewRow
               label={t('tax.declare.route')}
-              value={draft.filingRoute}
+              value={filingRouteLabel(draft.filingRoute, t)}
             />
             <ReviewRow
               label={t('tax.declare.regime')}
-              value={draft.regime.selected ?? ''}
+              value={
+                draft.regime.selected
+                  ? regimeLabel(draft.regime.selected, t)
+                  : ''
+              }
             />
           </ReviewList>
           <DeclarationCheck

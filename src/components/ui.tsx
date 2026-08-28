@@ -1,8 +1,3 @@
-import type {
-  ButtonHTMLAttributes,
-  ComponentPropsWithoutRef,
-  ReactNode,
-} from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -12,6 +7,11 @@ import {
   Database,
   XCircle,
 } from 'lucide-react';
+import type {
+  ButtonHTMLAttributes,
+  ComponentPropsWithoutRef,
+  ReactNode,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, type LinkProps } from 'react-router-dom';
 import { cn } from './cn';
@@ -343,9 +343,11 @@ export function Wordmark({
 export function Status({
   kind,
   children,
+  className,
 }: {
   kind: 'success' | 'warning' | 'danger' | 'info';
   children: ReactNode;
+  className?: string;
 }) {
   const Icon =
     kind === 'success'
@@ -366,6 +368,7 @@ export function Status({
       className={cn(
         'inline-flex items-center gap-1.5 text-[0.79rem] leading-[1.2] font-bold',
         kindClass,
+        className,
       )}
     >
       <Icon size={16} />
@@ -376,9 +379,11 @@ export function Status({
 
 export function SourceMarker({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.25 rounded-[3px] border border-border bg-surface px-1.75 py-0.75 text-[0.72rem] font-[650] tracking-[0.015em] text-ink-muted">
-      <Database size={14} />
-      {children}
+    <span>
+      <span className="inline-flex items-center gap-1.25 rounded-[3px] border border-border bg-transparent px-1.75 py-0.75 text-[0.72rem] font-[650] tracking-[0.015em] text-ink-muted mt-0.5">
+        <Database size={14} />
+        {children}
+      </span>
     </span>
   );
 }

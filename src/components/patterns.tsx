@@ -1,5 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
 import { AlertTriangle, CheckCircle2, LoaderCircle, X } from 'lucide-react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { cn } from './cn';
@@ -301,12 +301,12 @@ export function RuleRow({
       >
         {icon}
       </span>
-      <div className="grid gap-1.25">{children}</div>
+      <div className="grid gap-1.25 py-4">{children}</div>
       {status}
     </>
   );
   const rowClass =
-    'grid min-h-20.5 grid-cols-[38px_1fr_auto] items-center gap-3 border-b border-border first-of-type:border-t max-[599px]:grid-cols-[34px_1fr] max-[599px]:py-3';
+    'grid min-h-20.5 grid-cols-[38px_1fr_auto] items-center gap-3 not-last:border-b border-border first-of-type:border-t max-[599px]:grid-cols-[34px_1fr] max-[599px]:py-3';
   if (onClick)
     return (
       <button
@@ -422,8 +422,9 @@ export function Notice({
   return (
     <div
       className={cn(
-        'flex items-start gap-3.5 rounded-[var(--radius-sheet)] p-5',
+        'flex items-start gap-3.5 rounded-[var(--radius-sheet)] border p-5',
         noticeCardTone[tone],
+        noticeInlineBorderTone[tone],
         className,
       )}
     >

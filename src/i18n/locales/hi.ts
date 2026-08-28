@@ -295,6 +295,9 @@ const hi = {
     events: {
       correctionComplete: 'पहचान सुधार पूरा हुआ',
       correctionDetail: 'चुना गया मान हर सिम्युलेटेड स्रोत तक पहुँचा।',
+      identityChecked: 'वित्तीय पहचान की जाँच हुई',
+      identityCheckedDetail:
+        'आपके दस्तावेज़ हर जुड़ी हुई सेवा में मेल खाते हैं।',
       documentUpdated: 'दस्तावेज़ अपडेट हुआ',
       documentUpdatedDetail: 'आपका {{source}} रिकॉर्ड अपडेट हुआ।',
       claimReceived: 'पीएफ दावा मिला',

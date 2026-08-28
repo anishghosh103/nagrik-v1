@@ -136,7 +136,7 @@ export function ChoiceGroup({
   className?: string;
 }) {
   return (
-    <fieldset className={cn('m-0 mb-7.5 border-0 p-0', className)}>
+    <fieldset className={cn('m-0 mb-4 border-0 p-0', className)}>
       <legend className="mb-3 font-bold">{legend}</legend>
       {children}
     </fieldset>

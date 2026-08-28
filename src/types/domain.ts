@@ -168,6 +168,7 @@ export interface ContributionIssue {
 export interface EPFOProfile {
   personaId: PersonaId;
   maskedUan: string;
+  uan: string;
   balance: number;
   bankAccount: string;
   aadhaarKyc: boolean;
@@ -495,6 +496,7 @@ export const personaSeedSchema = z.object({
   epfo: z.object({
     personaId: z.enum(['ananya', 'rajesh', 'priya']),
     maskedUan: z.string(),
+    uan: z.string(),
     balance: z.number(),
     bankAccount: z.string(),
     aadhaarKyc: z.boolean(),

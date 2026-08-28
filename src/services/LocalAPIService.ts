@@ -40,11 +40,15 @@ import type {
   TaxRegime,
 } from '../types/tax';
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 const SESSION_KEY = 'nagrik:app:session';
 const keyFor = (id: PersonaId, version = SCHEMA_VERSION) =>
   `nagrik:persona:${id}:state:v${version}`;
 const destinations: IdentitySource[] = ['EPFO', 'INCOME_TAX'];
+
+function maskBankAccount(value: string): string {
+  return `•••• ${value.slice(-4)}`;
+}
 
 /** Constructor-only test seams. The production singleton is created without these options. */
 export interface LocalAPITestFailures {
@@ -255,7 +259,7 @@ export class LocalAPIService implements APIService {
         return data;
       }
     }
-    for (const version of [6, 5, 4, 3, 2, 1]) {
+    for (const version of [7, 6, 5, 4, 3, 2, 1]) {
       const legacyRaw = localStorage.getItem(keyFor(id, version));
       if (legacyRaw) {
         const migrated = await this.migrate(id, JSON.parse(legacyRaw));
@@ -562,9 +566,18 @@ export class LocalAPIService implements APIService {
     for (const result of destinationResults)
       if (result.status === 'UPDATED')
         seed.identity.valuesBySource[result.source][field] = canonicalValue;
-    if (field === 'bankAccount')
-      seed.identity.documents.BANK.maskedAccountNumber = canonicalValue;
+    this.syncBankAccountMirror(seed, field, canonicalValue);
     return destinationResults;
+  }
+
+  private syncBankAccountMirror(
+    seed: PersonaSeed,
+    field: IdentityField,
+    value: string,
+  ) {
+    if (field !== 'bankAccount') return;
+    seed.identity.documents.BANK.maskedAccountNumber = value;
+    seed.epfo.bankAccount = maskBankAccount(value);
   }
 
   private syncKycRecord(
@@ -688,8 +701,7 @@ export class LocalAPIService implements APIService {
       seed.identity.valuesBySource[result.source][change.field] =
         change.toValue;
     }
-    if (change.field === 'bankAccount')
-      seed.identity.documents.BANK.maskedAccountNumber = change.toValue;
+    this.syncBankAccountMirror(seed, change.field, change.toValue);
     change.status = 'SUCCESS';
     change.changedAt = now;
     mismatch.status = 'RESOLVED';
@@ -747,6 +759,7 @@ export class LocalAPIService implements APIService {
       const previousValue = seed.identity.valuesBySource[source][field];
       if (FIELD_AUTHORITY[field] === source) {
         seed.identity.canonical[field] = value;
+        seed.identity.valuesBySource[source][field] = value;
         this.propagateField(seed, field, value);
         if (field === 'name') {
           seed.profile.fullName = value;

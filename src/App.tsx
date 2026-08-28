@@ -90,34 +90,9 @@ const TaxHomePage = lazy(() =>
     default: m.TaxHomePage,
   })),
 );
-const TaxFilingEntryPages = lazy(() =>
-  import('./features/tax/TaxFilingEntryPages').then((m) => ({
-    default: m.TaxFilingEntryPages,
-  })),
-);
-const TaxIncomePages = lazy(() =>
-  import('./features/tax/TaxIncomePages').then((m) => ({
-    default: m.TaxIncomePages,
-  })),
-);
-const TaxIncomeDetailsPages = lazy(() =>
-  import('./features/tax/TaxIncomeDetailsPages').then((m) => ({
-    default: m.TaxIncomeDetailsPages,
-  })),
-);
-const TaxDeductionsAndCreditsPage = lazy(() =>
-  import('./features/tax/TaxDeductionsAndCreditsPage').then((m) => ({
-    default: m.TaxDeductionsAndCreditsPage,
-  })),
-);
-const TaxRegimeAndBankPages = lazy(() =>
-  import('./features/tax/TaxRegimeAndBankPages').then((m) => ({
-    default: m.TaxRegimeAndBankPages,
-  })),
-);
-const TaxSummaryPages = lazy(() =>
-  import('./features/tax/TaxSummaryPages').then((m) => ({
-    default: m.TaxSummaryPages,
+const TaxFilingWizardPage = lazy(() =>
+  import('./features/tax/TaxFilingWizardPage').then((m) => ({
+    default: m.TaxFilingWizardPage,
   })),
 );
 const TaxFilingPages = lazy(() =>
@@ -315,27 +290,7 @@ export default function App() {
           />
           <Route
             path="/tax/file"
-            element={<TaxFilingEntryPages />}
-          />
-          <Route
-            path="/tax/file/income"
-            element={<TaxIncomePages />}
-          />
-          <Route
-            path="/tax/file/income-details"
-            element={<TaxIncomeDetailsPages />}
-          />
-          <Route
-            path="/tax/file/deductions"
-            element={<TaxDeductionsAndCreditsPage />}
-          />
-          <Route
-            path="/tax/file/regime"
-            element={<TaxRegimeAndBankPages />}
-          />
-          <Route
-            path="/tax/file/summary"
-            element={<TaxSummaryPages />}
+            element={<TaxFilingWizardPage />}
           />
           <Route
             path="/tax/file/payment"

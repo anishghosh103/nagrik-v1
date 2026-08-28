@@ -1,27 +1,18 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ArrowRight,
   Check,
   CheckCircle2,
-  FileCheck2,
   Fingerprint,
   Landmark,
   LoaderCircle,
   Pencil,
 } from 'lucide-react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { cn } from '../../components/cn';
-import {
-  ArrowLink,
-  Button,
-  ButtonLink,
-  Page,
-  PageHeader,
-  SourceMarker,
-  Status,
-} from '../../components/ui';
+import { formatDate } from '../../components/formatters';
 import {
   DeclarationCheck,
   FieldLabel,
@@ -35,7 +26,15 @@ import {
   ProgressState,
   StepProgress,
 } from '../../components/patterns';
-import { formatDate } from '../../components/formatters';
+import {
+  ArrowLink,
+  Button,
+  ButtonLink,
+  Page,
+  PageHeader,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 import {
   FIELD_AUTHORITY,
   IDENTITY_FIELDS,
@@ -582,13 +581,13 @@ export function MismatchPage() {
               />
             ))}
           </DestinationList>
-          <Notice
+          {/* <Notice
             variant="inline"
             tone="info"
             icon={<FileCheck2 />}
           >
             {t('identity.receiptNotice')}
-          </Notice>
+          </Notice> */}
           <FieldLabel
             htmlFor="verify-otp"
             hint={t('identity.otpHint')}

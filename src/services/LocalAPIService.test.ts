@@ -132,7 +132,7 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
     expect(migrated.epfo.passbook.employers.length).toBeGreaterThan(0);
   });
@@ -164,6 +164,32 @@ describe('LocalAPIService vertical slice', () => {
       (await service.validateClaim('rajesh', 'FINAL_SETTLEMENT')).ready,
     ).toBe(true);
     expect(persona.activity[0].kind).toBe('IDENTITY');
+  });
+
+  it('keeps epfo.bankAccount in sync when a bankAccount mismatch is resolved', async () => {
+    const seeded = structuredClone(PERSONA_SEEDS.rajesh);
+    seeded.mismatches.unshift({
+      id: 'mismatch-bank',
+      field: 'bankAccount',
+      valuesBySource: { EPFO: '50100259032', INCOME_TAX: '50100259032' },
+      severity: 'BLOCKING',
+      affectedServices: ['EPFO', 'INCOME_TAX'],
+      status: 'OPEN',
+    });
+    localStorage.setItem(
+      'nagrik:persona:rajesh:state:v8',
+      JSON.stringify(seeded),
+    );
+    await service.resolveMismatch({
+      personaId: 'rajesh',
+      mismatchId: 'mismatch-bank',
+      canonicalValue: '50100299999',
+    });
+    const persona = await service.getPersona('rajesh');
+    expect(persona.epfo.bankAccount).toBe('•••• 9999');
+    expect(persona.identity.documents.BANK.maskedAccountNumber).toBe(
+      '50100299999',
+    );
   });
 
   it('verifies and syncs a mismatch using the authoritative document without a caller-supplied value', async () => {
@@ -207,6 +233,7 @@ describe('LocalAPIService vertical slice', () => {
     });
     expect(result.canonical.name).toBe('Rajesh Kumar');
     const persona = await service.getPersona('rajesh');
+    expect(persona.identity.valuesBySource.AADHAAR.name).toBe('Rajesh Kumar');
     expect(persona.identity.valuesBySource.EPFO.name).toBe('Rajesh Kumar');
     expect(persona.identity.valuesBySource.INCOME_TAX.name).toBe(
       'Rajesh Kumar',
@@ -218,6 +245,22 @@ describe('LocalAPIService vertical slice', () => {
     expect(
       persona.mismatches.find((item) => item.id === 'mismatch-name')?.status,
     ).toBe('RESOLVED');
+  });
+
+  it('reflects a saved bank account correction in the BANK card immediately, not just the canonical value', async () => {
+    await service.updateIdentityDocument({
+      personaId: 'ananya',
+      source: 'BANK',
+      fields: { bankAccount: '60200311111', ifsc: 'SBIN0009999' },
+      declarationAccepted: true,
+      otp: '123456',
+    });
+    const persona = await service.getPersona('ananya');
+    expect(persona.identity.canonical.bankAccount).toBe('60200311111');
+    expect(persona.identity.valuesBySource.BANK.bankAccount).toBe(
+      '60200311111',
+    );
+    expect(persona.identity.documents.BANK.ifsc).toBe('SBIN0009999');
   });
 
   it('does not flag a mismatch when a non-authoritative document (PAN) diverges', async () => {
@@ -585,7 +628,7 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
     expect(migrated.tax?.assessmentYear).toBe('2026-27');
     expect(migrated.tax?.sources.salary.length).toBeGreaterThan(0);
@@ -637,7 +680,7 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(8);
     expect(migrated.mismatches).toHaveLength(1);
     expect(migrated.mismatches[0].id).toBe('mismatch-name');
     expect(migrated.identityChanges[0].id).toBe('change-mismatch-mobile');

@@ -1,29 +1,17 @@
+import { Languages, LogOut, RotateCcw, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
-import {
-  Languages,
-  LogOut,
-  RotateCcw,
-  ShieldCheck,
-  UserRound,
-} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
-import { Button, Page, PageHeader, SourceMarker } from '../../components/ui';
 import { Notice } from '../../components/patterns';
+import { Button, Page, PageHeader, SourceMarker } from '../../components/ui';
 import { setLanguage, type SupportedLanguage } from '../../i18n/loadLanguage';
-import type { PersonaId } from '../../types/domain';
 
 export function ProfilePage() {
   const { t, i18n } = useTranslation();
-  const { persona, busy, switchPersona, reset, signOut } = useAppStore();
+  const { persona, reset, signOut } = useAppStore();
   const navigate = useNavigate();
   if (!persona) return null;
-  async function switchTo(id: PersonaId) {
-    if (id === persona?.id || !confirm(t('profile.switchConfirm'))) return;
-    await switchPersona(id);
-    navigate('/home');
-  }
   return (
     <Page width="narrow">
       <PageHeader
@@ -54,7 +42,7 @@ export function ProfilePage() {
         </div>
       </section>
       <div className="my-7">
-        <SettingsRow
+        {/* <SettingsRow
           icon={<UserRound />}
           label={t('profile.demoCitizenLabel')}
           hint={t('profile.demoCitizenHint')}
@@ -69,7 +57,7 @@ export function ProfilePage() {
             <option value="ananya">Ananya Sen</option>
             <option value="priya">Priya Menon</option>
           </select>
-        </SettingsRow>
+        </SettingsRow> */}
         <SettingsRow
           icon={<Languages />}
           label={t('profile.languageLabel')}

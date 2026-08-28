@@ -294,6 +294,9 @@ const en = {
     events: {
       correctionComplete: 'Identity correction complete',
       correctionDetail: 'The selected value reached every simulated source.',
+      identityChecked: 'Financial identity checked',
+      identityCheckedDetail:
+        'Your documents matched across every connected service.',
       documentUpdated: 'Document updated',
       documentUpdatedDetail: 'Your {{source}} record was updated.',
       claimReceived: 'PF claim received',

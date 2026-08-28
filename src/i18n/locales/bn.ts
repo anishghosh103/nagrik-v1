@@ -293,6 +293,9 @@ const bn = {
     events: {
       correctionComplete: 'পরিচয় সংশোধন সম্পন্ন',
       correctionDetail: 'নির্বাচিত মান প্রতিটি সিমুলেটেড উৎসে পৌঁছেছে।',
+      identityChecked: 'আর্থিক পরিচয় যাচাই হয়েছে',
+      identityCheckedDetail:
+        'আপনার নথি প্রতিটি সংযুক্ত পরিষেবায় মিলেছে।',
       documentUpdated: 'নথি আপডেট হয়েছে',
       documentUpdatedDetail: 'আপনার {{source}} রেকর্ড আপডেট হয়েছে।',
       claimReceived: 'পিএফ দাবি গৃহীত হয়েছে',
