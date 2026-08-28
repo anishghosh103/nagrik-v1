@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import {
   Activity,
   BadgeIndianRupee,
@@ -15,7 +15,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../components/cn';
 import { PrototypeTag, VisuallyHidden, Wordmark } from '../components/ui';
 import { useAppStore } from './store';
@@ -110,8 +110,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { persona, online, error, busy, signOut } = useAppStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const hasNavigated = useRef(false);
+  useEffect(() => {
+    if (!hasNavigated.current) {
+      hasNavigated.current = true;
+      return;
+    }
+    window.scrollTo(0, 0);
+    mainRef.current?.focus();
+  }, [location.pathname]);
   return (
     <div className="min-h-screen w-full bg-canvas/68">
+      <a
+        href="#main-content"
+        className="absolute top-3 left-3 z-90 -translate-y-20 rounded-[9px] bg-primary px-4 py-2.5 font-bold text-white no-underline transition-transform duration-150 focus:translate-y-0 focus-visible:outline-3 focus-visible:outline-accent focus-visible:outline-offset-4"
+      >
+        {t('shell.skipToContent')}
+      </a>
       <header className="sticky top-0 z-20 flex h-18 items-center justify-between border-b border-border bg-surface/90 px-6 backdrop-blur-md max-[899px]:h-16 max-[899px]:px-5 max-[599px]:px-4">
         <NavLink
           className="no-underline"
@@ -201,7 +218,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
         <main
           id="main-content"
-          className="min-w-0 aria-busy:cursor-progress max-[899px]:pb-19"
+          ref={mainRef}
+          tabIndex={-1}
+          className="min-w-0 outline-none aria-busy:cursor-progress max-[899px]:pb-19"
           aria-busy={busy}
         >
           {children}

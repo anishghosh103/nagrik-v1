@@ -40,7 +40,16 @@ export function ProfilePage() {
           <p className="mt-0 mb-1.5 text-ink-muted">
             {persona.profile.city} · {t('profile.fictionalCitizen')}
           </p>
-          <SourceMarker>{persona.profile.maskedAadhaar}</SourceMarker>
+          <SourceMarker>
+            <span
+              aria-label={t('common.maskedAccessible', {
+                label: t('identity.sourceAadhaar'),
+                digits: persona.profile.maskedAadhaar.slice(-4),
+              })}
+            >
+              {persona.profile.maskedAadhaar}
+            </span>
+          </SourceMarker>
         </div>
       </section>
       <div className="my-7">

@@ -33,6 +33,8 @@ const en = {
     confirmed: 'Confirmed',
     hydrating: 'Restoring your private demo workspace…',
     stepOf: 'Step {{current}} of {{total}}',
+    maskedAccessible: '{{label}} ending in {{digits}}',
+    fixIssues: 'Fix these before continuing',
   },
   errorBoundary: {
     eyebrow: 'Something went wrong',
@@ -63,6 +65,7 @@ const en = {
     resetButton: 'Reset this demo',
   },
   shell: {
+    skipToContent: 'Skip to main content',
     language: 'Language',
     profileLabel: '{{name}} profile',
     demoFallback: 'Demo',
@@ -71,8 +74,7 @@ const en = {
     dismiss: 'Dismiss',
     primaryNav: 'Primary navigation',
     resetDemo: 'Reset demo',
-    resetConfirm:
-      'Reset only this persona to its original fictional scenario?',
+    resetConfirm: 'Reset only this persona to its original fictional scenario?',
     mobileNav: 'Mobile navigation',
   },
   home: {
@@ -398,6 +400,8 @@ const hi = {
     confirmed: 'पुष्टि हो गई',
     hydrating: 'आपका निजी डेमो वर्कस्पेस बहाल किया जा रहा है…',
     stepOf: 'चरण {{current}} / {{total}}',
+    maskedAccessible: '{{digits}} पर समाप्त {{label}}',
+    fixIssues: 'आगे बढ़ने से पहले इन्हें ठीक करें',
   },
   errorBoundary: {
     eyebrow: 'कुछ गलत हो गया',
@@ -408,7 +412,8 @@ const hi = {
   profile: {
     eyebrow: 'प्रोफ़ाइल और सेटिंग्स',
     title: 'आपका डेमो वर्कस्पेस',
-    subtitle: 'सक्रिय काल्पनिक नागरिक, भाषा, गोपनीयता और रीसेट नियंत्रण प्रबंधित करें।',
+    subtitle:
+      'सक्रिय काल्पनिक नागरिक, भाषा, गोपनीयता और रीसेट नियंत्रण प्रबंधित करें।',
     fictionalCitizen: 'काल्पनिक नागरिक',
     switchConfirm:
       'डेमो नागरिक बदलें? सहेजा डेटा हर व्यक्ति के लिए अलग रहता है।',
@@ -422,10 +427,12 @@ const hi = {
     boundariesTitle: 'सिमुलेशन की सीमाएँ',
     boundariesBody:
       'नागरिक पहचान सत्यापित नहीं करता, सरकारी सेवाओं से संपर्क नहीं करता, और यहाँ दिखाए काल्पनिक पहचानकर्ता नहीं भेजता। सुधार और सबमिशन केवल इस ब्राउज़र में मौजूद हैं।',
-    resetConfirm: 'केवल इस नागरिक को उसके मूल काल्पनिक परिदृश्य में रीसेट करें?',
+    resetConfirm:
+      'केवल इस नागरिक को उसके मूल काल्पनिक परिदृश्य में रीसेट करें?',
     resetButton: 'यह डेमो रीसेट करें',
   },
   shell: {
+    skipToContent: 'मुख्य सामग्री पर जाएँ',
     language: 'भाषा',
     profileLabel: '{{name}} प्रोफ़ाइल',
     demoFallback: 'डेमो',
@@ -506,7 +513,8 @@ const hi = {
     tableCaption: 'हर जुड़े पहचान स्रोत में दर्ज मान',
     notAvailable: 'उपलब्ध नहीं',
     nameMismatch: 'नाम मेल नहीं खाता',
-    mismatchWarning: 'यह आपके पीएफ दावे को रोक सकता है और आयकर बैंक सत्यापन में देरी कर सकता है।',
+    mismatchWarning:
+      'यह आपके पीएफ दावे को रोक सकता है और आयकर बैंक सत्यापन में देरी कर सकता है।',
     noLongerOpenEyebrow: 'वित्तीय पहचान',
     noLongerOpenTitle: 'यह अंतर अब खुला नहीं है',
     noLongerOpenSubtitle: 'मौजूदा मान देखने के लिए स्वास्थ्य जाँच पर लौटें।',
@@ -524,7 +532,8 @@ const hi = {
     receiptNotice:
       'इससे एक स्थानीय बदलाव रसीद बनती है। किसी वास्तविक प्रणाली से संपर्क नहीं होता।',
     updatingTitle: 'जुड़े रिकॉर्ड अपडेट हो रहे हैं',
-    updatingDescription: 'हर गंतव्य में चुने नाम को ट्रेस करने योग्य बनाए रखना।',
+    updatingDescription:
+      'हर गंतव्य में चुने नाम को ट्रेस करने योग्य बनाए रखना।',
     propagationInProgress: 'अपडेट भेजना जारी है',
     recordsUpdated: '5 रिकॉर्ड अपडेट हुए',
     savedChangeFallback: 'सहेजा गया बदलाव',
@@ -548,11 +557,13 @@ const hi = {
     illustrationEpfo: 'ईपीएफओ',
     chooseMockAccount: 'एक मॉक खाता चुनें',
     choosePlaceholder: 'एक नागरिक चुनें',
-    identifierInvalid: '10 अंकों का मोबाइल नंबर या 12 अंकों का आधार नंबर दर्ज करें।',
+    identifierInvalid:
+      '10 अंकों का मोबाइल नंबर या 12 अंकों का आधार नंबर दर्ज करें।',
     loginUnavailable:
       'मॉक लॉगिन सेवा अभी अनुपलब्ध है। अपना कनेक्शन जाँचें और फिर कोशिश करें।',
     otpExpired: 'यह मॉक ओटीपी समाप्त हो गया। नया अनुरोध करें।',
-    otpMismatch: 'यह कोड मेल नहीं खाता। दृश्यमान काल्पनिक ओटीपी 123456 उपयोग करें।',
+    otpMismatch:
+      'यह कोड मेल नहीं खाता। दृश्यमान काल्पनिक ओटीपी 123456 उपयोग करें।',
     heroEyebrow: 'एक पहचान · जुड़े परिणाम',
     heroTitle: 'आपके वित्तीय रिकॉर्ड को साथ काम करना चाहिए।',
     heroBody:
@@ -569,12 +580,14 @@ const hi = {
     identifierPlaceholder: '10 या 12 अंकों का नंबर',
     aadhaarReady: 'आधार · {{value}}',
     mobileReady: 'मोबाइल नंबर तैयार है',
-    noRealIdentifier: 'इस डेमो के लिए किसी वास्तविक पहचानकर्ता की जरूरत नहीं है।',
+    noRealIdentifier:
+      'इस डेमो के लिए किसी वास्तविक पहचानकर्ता की जरूरत नहीं है।',
     sendingOtp: 'मॉक ओटीपी भेजा जा रहा है…',
     sendOtp: 'ओटीपी भेजें',
     verificationEyebrow: 'सत्यापन',
     otpTitle: 'ओटीपी दर्ज करें',
-    otpSentTo: 'हमने {{last4}} पर समाप्त होने वाले {{kind}} के लिए छह-अंकों का कोड भेजा है।',
+    otpSentTo:
+      'हमने {{last4}} पर समाप्त होने वाले {{kind}} के लिए छह-अंकों का कोड भेजा है।',
     kindMobile: 'मोबाइल नंबर',
     kindAadhaar: 'आधार नंबर',
     otpFieldLabel: 'छह-अंकों का ओटीपी',
@@ -627,14 +640,16 @@ const hi = {
       taxVerificationPending: 'आयकर रिटर्न दाखिल — ई-सत्यापन अगला चरण है।',
       taxDraftInProgress: 'एक आयकर रिटर्न ड्राफ़्ट प्रगति में है।',
       taxNotice: 'एक आयकर नोटिस को एक जरूरी सुधार कार्रवाई चाहिए।',
-      refundDelayed: 'एक आयकर रिफंड बैंक-लिंकेज पुनः सत्यापन की प्रतीक्षा में है।',
+      refundDelayed:
+        'एक आयकर रिफंड बैंक-लिंकेज पुनः सत्यापन की प्रतीक्षा में है।',
       ready: 'पीएफ दावा जाँच समीक्षा के लिए तैयार है।',
     },
     events: {
       correctionComplete: 'पहचान सुधार पूरा हुआ',
       correctionDetail: 'चुना गया मान हर सिम्युलेटेड स्रोत तक पहुँचा।',
       claimReceived: 'पीएफ दावा मिला',
-      claimReceivedDetail: 'संदर्भ {{reference}} ईपीएफओ सत्यापन की प्रतीक्षा में है।',
+      claimReceivedDetail:
+        'संदर्भ {{reference}} ईपीएफओ सत्यापन की प्रतीक्षा में है।',
       transferReceived: 'पीएफ ट्रांसफर मिला',
       transferReceivedDetail:
         'संदर्भ {{reference}} नियोक्ता समीक्षा की प्रतीक्षा में है।',
@@ -649,7 +664,8 @@ const hi = {
       noticeReceivedDetail:
         'एक सिम्युलेटेड सेक्शन {{section}} नोटिस को एक सुधार कार्रवाई चाहिए।',
       noticeResolved: 'आयकर नोटिस हल हुआ',
-      noticeResolvedDetail: 'सेक्शन {{section}} के लिए जरूरी कार्रवाई पूरी हुई।',
+      noticeResolvedDetail:
+        'सेक्शन {{section}} के लिए जरूरी कार्रवाई पूरी हुई।',
       precheckAttention: 'पीएफ पूर्व-जाँच में ध्यान देने योग्य बात मिली',
       nameBlocksClaim:
         'जुड़े रिकॉर्ड में नाम मेल न खाना दावे की तैयारी को रोक रहा है।',
@@ -749,6 +765,8 @@ const bn = {
     confirmed: 'নিশ্চিত',
     hydrating: 'আপনার ব্যক্তিগত ডেমো ওয়ার্কস্পেস পুনরুদ্ধার করা হচ্ছে…',
     stepOf: 'ধাপ {{current}} / {{total}}',
+    maskedAccessible: '{{digits}}-এ শেষ {{label}}',
+    fixIssues: 'এগিয়ে যাওয়ার আগে এগুলি ঠিক করুন',
   },
   errorBoundary: {
     eyebrow: 'কিছু ভুল হয়েছে',
@@ -778,6 +796,7 @@ const bn = {
     resetButton: 'এই ডেমো রিসেট করুন',
   },
   shell: {
+    skipToContent: 'মূল বিষয়বস্তুতে যান',
     language: 'ভাষা',
     profileLabel: '{{name}} প্রোফাইল',
     demoFallback: 'ডেমো',
@@ -786,7 +805,8 @@ const bn = {
     dismiss: 'বাতিল করুন',
     primaryNav: 'প্রধান নেভিগেশন',
     resetDemo: 'ডেমো রিসেট করুন',
-    resetConfirm: 'শুধু এই ব্যক্তিকে তাঁর মূল কাল্পনিক পরিস্থিতিতে রিসেট করবেন?',
+    resetConfirm:
+      'শুধু এই ব্যক্তিকে তাঁর মূল কাল্পনিক পরিস্থিতিতে রিসেট করবেন?',
     mobileNav: 'মোবাইল নেভিগেশন',
   },
   home: {
@@ -802,8 +822,7 @@ const bn = {
     healthy: 'আপনার সংযুক্ত রেকর্ডগুলি মিলছে।',
     issue: 'একটি অমিল দেখা দরকার।',
     actionsEyebrow: 'আপনার পরিষেবা জুড়ে',
-    actionsSubtitle:
-      'বকেয়া কাজ সেই রেকর্ড থেকে নেওয়া যাতে আপনার নজর দরকার।',
+    actionsSubtitle: 'বকেয়া কাজ সেই রেকর্ড থেকে নেওয়া যাতে আপনার নজর দরকার।',
     emptyTitle: 'এখন নজর দেওয়ার মতো কিছু নেই',
     emptyBody:
       'আপনার সংযুক্ত রেকর্ড ও জমা করা অনুরোধে কোনো বকেয়া ডেমো কাজ নেই।',
@@ -931,7 +950,8 @@ const bn = {
     sendOtp: 'ওটিপি পাঠান',
     verificationEyebrow: 'যাচাই',
     otpTitle: 'ওটিপি লিখুন',
-    otpSentTo: 'আমরা {{last4}}-এ শেষ হওয়া {{kind}}-এর জন্য একটি ছয়-সংখ্যার কোড পাঠিয়েছি।',
+    otpSentTo:
+      'আমরা {{last4}}-এ শেষ হওয়া {{kind}}-এর জন্য একটি ছয়-সংখ্যার কোড পাঠিয়েছি।',
     kindMobile: 'মোবাইল নম্বর',
     kindAadhaar: 'আধার নম্বর',
     otpFieldLabel: 'ছয়-সংখ্যার ওটিপি',
@@ -978,20 +998,24 @@ const bn = {
     current: 'বর্তমান অবস্থা',
     next: 'পরবর্তী প্রত্যাশিত ধাপ: পরিষেবা যাচাই',
     currentStates: {
-      transfer: 'পিএফ ট্রান্সফার গৃহীত হয়েছে — এরপর নিয়োগকর্তার পর্যালোচনা প্রত্যাশিত।',
+      transfer:
+        'পিএফ ট্রান্সফার গৃহীত হয়েছে — এরপর নিয়োগকর্তার পর্যালোচনা প্রত্যাশিত।',
       claim: 'পিএফ দাবি গৃহীত হয়েছে — এরপর যাচাই প্রত্যাশিত।',
       identity: 'পিএফ দাবি চালিয়ে যাওয়ার আগে পরিচয় সংশোধন প্রয়োজন।',
-      taxVerificationPending: 'আয়কর রিটার্ন দাখিল হয়েছে — এরপর ই-যাচাই প্রত্যাশিত।',
+      taxVerificationPending:
+        'আয়কর রিটার্ন দাখিল হয়েছে — এরপর ই-যাচাই প্রত্যাশিত।',
       taxDraftInProgress: 'একটি আয়কর রিটার্ন খসড়া চলমান আছে।',
       taxNotice: 'একটি আয়কর নোটিসে একটি প্রয়োজনীয় সংশোধনী কাজ আছে।',
-      refundDelayed: 'একটি আয়কর রিফান্ড ব্যাংক-সংযোগ পুনঃযাচাইয়ের অপেক্ষায় আছে।',
+      refundDelayed:
+        'একটি আয়কর রিফান্ড ব্যাংক-সংযোগ পুনঃযাচাইয়ের অপেক্ষায় আছে।',
       ready: 'পিএফ দাবির পরীক্ষা পর্যালোচনার জন্য প্রস্তুত।',
     },
     events: {
       correctionComplete: 'পরিচয় সংশোধন সম্পন্ন',
       correctionDetail: 'নির্বাচিত মান প্রতিটি সিমুলেটেড উৎসে পৌঁছেছে।',
       claimReceived: 'পিএফ দাবি গৃহীত হয়েছে',
-      claimReceivedDetail: 'রেফারেন্স {{reference}} ইপিএফও যাচাইয়ের অপেক্ষায়।',
+      claimReceivedDetail:
+        'রেফারেন্স {{reference}} ইপিএফও যাচাইয়ের অপেক্ষায়।',
       transferReceived: 'পিএফ ট্রান্সফার গৃহীত হয়েছে',
       transferReceivedDetail:
         'রেফারেন্স {{reference}} নিয়োগকর্তার পর্যালোচনার অপেক্ষায়।',
@@ -1006,7 +1030,8 @@ const bn = {
       noticeReceivedDetail:
         'একটি সিমুলেটেড সেকশন {{section}} নোটিসে একটি সংশোধনী কাজ প্রয়োজন।',
       noticeResolved: 'আয়কর নোটিস সমাধান হয়েছে',
-      noticeResolvedDetail: 'সেকশন {{section}}-এর জন্য প্রয়োজনীয় কাজ সম্পন্ন হয়েছে।',
+      noticeResolvedDetail:
+        'সেকশন {{section}}-এর জন্য প্রয়োজনীয় কাজ সম্পন্ন হয়েছে।',
       precheckAttention: 'পিএফ প্রাক-পরীক্ষায় নজরের বিষয় চিহ্নিত হয়েছে',
       nameBlocksClaim:
         'সংযুক্ত রেকর্ড জুড়ে নাম অমিল দাবির প্রস্তুতি আটকাচ্ছে।',

@@ -5,17 +5,11 @@ async function login(
   page: import('@playwright/test').Page,
   persona: 'Rajesh' | 'Ananya',
 ) {
+  const name = persona === 'Rajesh' ? 'Rajesh Kumar' : 'Ananya Sen';
   await page.goto('/');
-  await page.getByRole('button', { name: /choose a demo citizen/i }).click();
-  await page
-    .getByRole('button', {
-      name: persona === 'Rajesh' ? /^RK Rajesh Kumar/i : /^AS Ananya Sen/i,
-    })
-    .click();
-  await page
-    .getByRole('button', { name: new RegExp(`continue as ${persona}`, 'i') })
-    .click();
-  await page.getByRole('button', { name: /send mock otp/i }).click();
+  await page.getByRole('combobox', { name: /choose a mock account/i }).click();
+  await page.getByRole('option', { name: new RegExp(name, 'i') }).click();
+  await page.getByRole('button', { name: /send otp/i }).click();
   await page.getByLabel('Six-digit OTP').fill('123456');
   await page.getByRole('button', { name: /enter nagrik/i }).click();
 }

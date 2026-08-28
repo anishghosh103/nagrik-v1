@@ -153,12 +153,22 @@ export function KYCPage() {
       <LedgerList>
         {persona.epfo.kyc.map((record) => {
           const Icon = icons[record.kind];
+          const kindLabel = t(`epfo.kyc.${record.kind.toLowerCase()}`);
           return (
             <LedgerRow
               key={record.kind}
               icon={<Icon />}
-              title={t(`epfo.kyc.${record.kind.toLowerCase()}`)}
-              value={record.maskedValue}
+              title={kindLabel}
+              value={
+                <span
+                  aria-label={t('common.maskedAccessible', {
+                    label: kindLabel,
+                    digits: record.maskedValue.slice(-4),
+                  })}
+                >
+                  {record.maskedValue}
+                </span>
+              }
               meta={
                 <SourceMarker>
                   {t('epfo.kyc.updated', {

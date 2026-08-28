@@ -289,7 +289,19 @@ export function RefundPage() {
       <ReviewList>
         <ReviewRow
           label={t('tax.postFiling.refund.bank')}
-          value={`${refund.bankName} · ${refund.maskedAccountNumber}`}
+          value={
+            <>
+              {refund.bankName}{' '}
+              <span
+                aria-label={t('common.maskedAccessible', {
+                  label: t('tax.bank.accountLabel'),
+                  digits: refund.maskedAccountNumber.slice(-4),
+                })}
+              >
+                · {refund.maskedAccountNumber}
+              </span>
+            </>
+          }
         />
         <ReviewRow
           label={t('tax.postFiling.refund.current')}

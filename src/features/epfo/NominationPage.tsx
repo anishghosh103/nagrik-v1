@@ -18,7 +18,13 @@ import {
   PageHeader,
   Status,
 } from '../../components/ui';
-import { FieldLabel, OtpInput, ValidationAlert } from '../../components/forms';
+import {
+  ErrorSummary,
+  FieldLabel,
+  type FieldIssue,
+  OtpInput,
+  ValidationAlert,
+} from '../../components/forms';
 import {
   OutcomeMark,
   ReadinessBanner,
@@ -58,6 +64,7 @@ export function NominationPage() {
   );
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
+  const [detailIssues, setDetailIssues] = useState<FieldIssue[]>([]);
   const errorRef = useRef<HTMLDivElement>(null);
   if (!persona || !existing) return null;
   const allocation = validateNomineeAllocation(
@@ -75,14 +82,29 @@ export function NominationPage() {
     setNominees((items) => items.filter((_, itemIndex) => itemIndex !== index));
   }
   async function continueToAllocation() {
-    if (
-      nominees.some((nominee) => !nominee.name.trim() || !nominee.dateOfBirth)
-    ) {
-      setError(t('epfo.nomination.detailsError'));
-      errorRef.current?.focus();
+    const issues: FieldIssue[] = [];
+    nominees.forEach((nominee, index) => {
+      if (!nominee.name.trim())
+        issues.push({
+          id: `nominee-name-${index}`,
+          message: t('epfo.nomination.issueMissingName', {
+            number: index + 1,
+          }),
+        });
+      if (!nominee.dateOfBirth)
+        issues.push({
+          id: `nominee-dob-${index}`,
+          message: t('epfo.nomination.issueMissingDob', {
+            number: index + 1,
+          }),
+        });
+    });
+    if (issues.length) {
+      setDetailIssues(issues);
+      queueMicrotask(() => errorRef.current?.focus());
       return;
     }
-    setError('');
+    setDetailIssues([]);
     await saveNominationDraft(nominees);
     setStep('allocation');
   }
@@ -183,7 +205,10 @@ export function NominationPage() {
         <section>
           <h2>{t('epfo.nomination.detailsTitle')}</h2>
           <p className="text-ink-muted">{t('epfo.nomination.detailsHelp')}</p>
-          {error && <ValidationAlert ref={errorRef}>{error}</ValidationAlert>}
+          <ErrorSummary
+            ref={errorRef}
+            issues={detailIssues}
+          />
           <div className="grid gap-4">
             {nominees.map((nominee, index) => (
               <NomineeForm

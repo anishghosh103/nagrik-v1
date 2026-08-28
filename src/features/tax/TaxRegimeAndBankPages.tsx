@@ -247,7 +247,15 @@ export function TaxRegimeAndBankPages() {
                 />
                 <span>
                   <strong>
-                    {account.bankName} {account.maskedAccountNumber}
+                    {account.bankName}{' '}
+                    <span
+                      aria-label={t('common.maskedAccessible', {
+                        label: t('tax.bank.accountLabel'),
+                        digits: account.maskedAccountNumber.slice(-4),
+                      })}
+                    >
+                      {account.maskedAccountNumber}
+                    </span>
                   </strong>
                   <small>
                     <Status

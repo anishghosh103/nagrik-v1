@@ -3,6 +3,7 @@ import {
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from './cn';
 
 export function FieldLabel({
@@ -79,6 +80,48 @@ export const ValidationAlert = forwardRef<
     >
       {children}
       {actions}
+    </div>
+  );
+});
+
+export type FieldIssue = { id: string; message: ReactNode };
+
+export const ErrorSummary = forwardRef<
+  HTMLDivElement,
+  { issues: FieldIssue[]; title?: ReactNode; className?: string }
+>(function ErrorSummary({ issues, title, className }, ref) {
+  const { t } = useTranslation();
+  if (!issues.length) return null;
+  return (
+    <div
+      ref={ref}
+      role="alert"
+      tabIndex={-1}
+      className={cn(
+        'my-3.5 border-l-4 border-danger bg-[#fff3ef] px-3.5 py-3 text-danger',
+        className,
+      )}
+    >
+      <p className="m-0 mb-1.5 font-bold">{title ?? t('common.fixIssues')}</p>
+      <ul className="m-0 grid gap-1 pl-4.5">
+        {issues.map((issue) => (
+          <li key={issue.id}>
+            <a
+              href={`#${issue.id}`}
+              className="font-semibold text-danger underline underline-offset-2"
+              onClick={(event) => {
+                const field = document.getElementById(issue.id);
+                if (!field) return;
+                event.preventDefault();
+                field.focus();
+                field.scrollIntoView({ block: 'center' });
+              }}
+            >
+              {issue.message}
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 });

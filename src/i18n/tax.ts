@@ -278,6 +278,7 @@ export const taxEn = {
     needsValidation: 'Needs validation',
     validate: 'Validate',
     source: 'EPFO and Income Tax bank records',
+    accountLabel: 'Bank account',
   },
   summary: {
     eyebrow: 'Income Tax · Summary',
@@ -866,8 +867,7 @@ export const taxHi = {
     noneTitle: 'कोई स्व-निर्धारण कर बकाया नहीं है',
     noneHelp: 'आपके दर्ज क्रेडिट अंतिम देयता को कवर करते हैं।',
     completeTitle: 'भुगतान दर्ज हुआ और रिटर्न की फिर गणना हुई',
-    completeHelp:
-      'सिम्युलेटेड चालान अब आपकी आय और कटौतियों से अलग शामिल है।',
+    completeHelp: 'सिम्युलेटेड चालान अब आपकी आय और कटौतियों से अलग शामिल है।',
     credited: 'स्व-निर्धारण कर जमा हुआ',
     returnToSummary: 'अंतिम गणना पर लौटें',
   },
@@ -898,6 +898,7 @@ export const taxHi = {
     needsValidation: 'सत्यापन चाहिए',
     validate: 'सत्यापित करें',
     source: 'ईपीएफओ और आयकर बैंक रिकॉर्ड',
+    accountLabel: 'बैंक खाता',
   },
   summary: {
     eyebrow: 'आयकर · सारांश',
@@ -960,8 +961,7 @@ export const taxHi = {
     propertyReviewMessage:
       'हर गृह संपत्ति के पते, उपयोग और राशि की पुष्टि करें।',
     loanDetailsTitle: 'गृह-ऋण विवरण अधूरा है',
-    loanDetailsMessage:
-      'ब्याज दावे के लिए ऋणदाता और ऋण खाता संदर्भ जोड़ें।',
+    loanDetailsMessage: 'ब्याज दावे के लिए ऋणदाता और ऋण खाता संदर्भ जोड़ें।',
     capitalReviewTitle: 'एक पूंजीगत-लाभ बिक्री की समीक्षा बाकी है',
     capitalReviewMessage:
       'परिसंपत्ति, तारीखें, लागत, बिक्री मूल्य और एसटीटी उपचार की पुष्टि करें।',
@@ -1503,6 +1503,7 @@ export const taxBn = {
     needsValidation: 'যাচাই প্রয়োজন',
     validate: 'যাচাই করুন',
     source: 'ইপিএফও ও আয়কর ব্যাংক রেকর্ড',
+    accountLabel: 'ব্যাংক অ্যাকাউন্ট',
   },
   summary: {
     eyebrow: 'আয়কর · সারাংশ',

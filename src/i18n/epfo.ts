@@ -303,7 +303,8 @@ export const epfoEn = {
     remove: 'Remove nominee',
     add: 'Add another nominee',
     allocate: 'Allocate shares',
-    detailsError: 'Enter a name and date of birth for every nominee.',
+    issueMissingName: 'Nominee {{number}}: enter a name.',
+    issueMissingDob: 'Nominee {{number}}: enter a date of birth.',
     allocationTitle: 'Allocate the complete benefit',
     allocationHelp: 'Shares across all nominees must total exactly 100%.',
     total: 'Allocated total',
@@ -435,8 +436,10 @@ export const epfoHi = {
     finalSettlementEyebrow: 'पीएफ और ईपीएफओ · अंतिम निपटान',
     checksUnavailable: 'जाँच अभी अनुपलब्ध है। सुरक्षित रूप से फिर कोशिश करें।',
     checkingTitle: 'सात दावा नियम जाँचे जा रहे हैं',
-    checkingDescription: 'पहचान, केवाईसी, बैंक और सेवा इतिहास साथ जाँचे जा रहे हैं।',
-    otpDeclarationError: 'घोषणा स्वीकार करें और दृश्यमान मॉक ओटीपी 123456 दर्ज करें।',
+    checkingDescription:
+      'पहचान, केवाईसी, बैंक और सेवा इतिहास साथ जाँचे जा रहे हैं।',
+    otpDeclarationError:
+      'घोषणा स्वीकार करें और दृश्यमान मॉक ओटीपी 123456 दर्ज करें।',
     cachedEstimateMeta: 'यह एक सहेजा अनुमान है, निपटान का कोटेशन नहीं।',
     bankAccountValue: 'खाता {{account}}',
     reviewClaimButton: 'दावा समीक्षा करें',
@@ -485,7 +488,8 @@ export const epfoHi = {
     code: 'ईपीएफओ कारण कोड',
     fix: 'पहचान समीक्षा करें और सुधारें',
     none: 'कोई अस्वीकृत दावा नहीं मिला',
-    noneHelp: 'इस व्यक्ति के काल्पनिक सेवा इतिहास में कोई अस्वीकृत दावा नहीं है।',
+    noneHelp:
+      'इस व्यक्ति के काल्पनिक सेवा इतिहास में कोई अस्वीकृत दावा नहीं है।',
   },
   passbook: {
     ...epfoEn.passbook,
@@ -626,13 +630,16 @@ export const epfoHi = {
     remove: 'हटाएँ',
     add: 'एक और जोड़ें',
     allocate: 'हिस्से बाँटें',
-    detailsError: 'हर नामित व्यक्ति के लिए नाम और जन्म तारीख दर्ज करें।',
+    issueMissingName: 'नामित व्यक्ति {{number}}: नाम दर्ज करें।',
+    issueMissingDob: 'नामित व्यक्ति {{number}}: जन्म तारीख दर्ज करें।',
     allocationTitle: 'पूरा लाभ बाँटें',
-    allocationHelp: 'सभी नामित व्यक्तियों के हिस्से मिलाकर ठीक 100% होने चाहिए।',
+    allocationHelp:
+      'सभी नामित व्यक्तियों के हिस्से मिलाकर ठीक 100% होने चाहिए।',
     total: 'कुल आवंटन',
     exact: 'ठीक 100%',
     mustEqual: '100% होना चाहिए',
-    exactHelp: 'कुल 100% से कम या ज़्यादा होने पर नामांकन सत्यापित नहीं हो सकता।',
+    exactHelp:
+      'कुल 100% से कम या ज़्यादा होने पर नामांकन सत्यापित नहीं हो सकता।',
     allocationError:
       'वर्तमान कुल {{total}}% है। हिस्से ऐसे बदलें कि वे ठीक 100% हों।',
     review: 'नामांकन देखें',
@@ -753,12 +760,12 @@ export const epfoBn = {
       'সংযুক্ত পরিচয় রেকর্ড সংশোধন না হওয়া পর্যন্ত ইপিএফও এই দাবি প্রত্যাখ্যান বা বিলম্বিত করতে পারে।',
     submitFailed: 'দাবি পরিষেবা এখন উপলভ্য নয়। বিবরণ সংরক্ষিত আছে।',
     finalSettlementEyebrow: 'পিএফ ও ইপিএফও · চূড়ান্ত নিষ্পত্তি',
-    checksUnavailable: 'পরীক্ষা এই মুহূর্তে অনুপলব্ধ। নিরাপদে আবার চেষ্টা করুন।',
+    checksUnavailable:
+      'পরীক্ষা এই মুহূর্তে অনুপলব্ধ। নিরাপদে আবার চেষ্টা করুন।',
     checkingTitle: 'সাতটি দাবি নিয়ম পরীক্ষা হচ্ছে',
     checkingDescription:
       'পরিচয়, কেওয়াইসি, ব্যাংক ও পরিষেবার ইতিহাস একসঙ্গে পরীক্ষা হচ্ছে।',
-    otpDeclarationError:
-      'ঘোষণা গ্রহণ করুন এবং দৃশ্যমান মক ওটিপি 123456 লিখুন।',
+    otpDeclarationError: 'ঘোষণা গ্রহণ করুন এবং দৃশ্যমান মক ওটিপি 123456 লিখুন।',
     cachedEstimateMeta: 'এটি একটি সংরক্ষিত অনুমান, নিষ্পত্তির উদ্ধৃতি নয়।',
     bankAccountValue: 'অ্যাকাউন্ট {{account}}',
     reviewClaimButton: 'দাবি পর্যালোচনা করুন',
@@ -807,7 +814,8 @@ export const epfoBn = {
     code: 'ইপিএফও কারণ কোড',
     fix: 'পরিচয় পর্যালোচনা করে সংশোধন করুন',
     none: 'কোনো প্রত্যাখ্যাত দাবি পাওয়া যায়নি',
-    noneHelp: 'এই ব্যক্তির কাল্পনিক পরিষেবা ইতিহাসে কোনো প্রত্যাখ্যাত দাবি নেই।',
+    noneHelp:
+      'এই ব্যক্তির কাল্পনিক পরিষেবা ইতিহাসে কোনো প্রত্যাখ্যাত দাবি নেই।',
   },
   passbook: {
     ...epfoEn.passbook,
@@ -906,7 +914,8 @@ export const epfoBn = {
     receivedHelp: 'এরপর নিয়োগকর্তার পর্যালোচনা প্রত্যাশিত।',
     reference: 'ট্রান্সফার রেফারেন্স',
     statusEmployer: 'নিয়োগকর্তার পর্যালোচনা',
-    statusEmployerTitle: 'আগের নিয়োগকর্তার কাছ থেকে অনুরোধ পর্যালোচনা প্রত্যাশিত',
+    statusEmployerTitle:
+      'আগের নিয়োগকর্তার কাছ থেকে অনুরোধ পর্যালোচনা প্রত্যাশিত',
     statusEmployerHelp:
       'এই প্রোটোটাইপ নিয়োগকর্তার কাজকে পরবর্তী ইপিএফও প্রক্রিয়া থেকে আলাদা রাখে।',
     employerReview: 'আগের নিয়োগকর্তার পর্যালোচনা',
@@ -930,7 +939,8 @@ export const epfoBn = {
     effectiveTitle: 'কার্যকর মনোনয়ন নথিভুক্ত আছে',
     effectiveHelp: 'বর্তমান ভাগ দেখুন বা কাল্পনিক মনোনয়ন আপডেট করুন।',
     emptyTitle: 'কোনও কার্যকর মনোনয়ন নেই',
-    emptyHelp: 'অন্তত একজন মনোনীত ব্যক্তি যোগ করুন এবং সম্পূর্ণ সুবিধা ভাগ করুন।',
+    emptyHelp:
+      'অন্তত একজন মনোনীত ব্যক্তি যোগ করুন এবং সম্পূর্ণ সুবিধা ভাগ করুন।',
     start: 'মনোনয়ন যোগ করুন',
     update: 'মনোনয়ন বদলান',
     detailsTitle: 'মনোনীত ব্যক্তির বিবরণ',
@@ -948,7 +958,8 @@ export const epfoBn = {
     remove: 'সরান',
     add: 'আরও একজন যোগ করুন',
     allocate: 'ভাগ বরাদ্দ করুন',
-    detailsError: 'প্রতিটি মনোনীত ব্যক্তির জন্য নাম ও জন্মতারিখ লিখুন।',
+    issueMissingName: 'মনোনীত ব্যক্তি {{number}}: একটি নাম লিখুন।',
+    issueMissingDob: 'মনোনীত ব্যক্তি {{number}}: জন্মতারিখ লিখুন।',
     allocationTitle: 'সম্পূর্ণ সুবিধা ভাগ করুন',
     allocationHelp: 'সব মনোনীত ব্যক্তির ভাগ মিলিয়ে ঠিক ১০০% হতে হবে।',
     total: 'মোট বরাদ্দ',
@@ -964,7 +975,8 @@ export const epfoBn = {
     verifyHelp: 'যাচাই এই কাল্পনিক মনোনয়নকে সঙ্গে সঙ্গে কার্যকর করে।',
     otpError: 'দৃশ্যমান মক ওটিপি 123456 লিখুন।',
     verify: 'মনোনয়ন মক-যাচাই করুন',
-    submitFailed: 'যাচাই এই মুহূর্তে অনুপলব্ধ। আপনার মনোনয়ন খসড়া সংরক্ষিত আছে।',
+    submitFailed:
+      'যাচাই এই মুহূর্তে অনুপলব্ধ। আপনার মনোনয়ন খসড়া সংরক্ষিত আছে।',
     submitting: 'আপনার মনোনয়ন যাচাই হচ্ছে',
     submittingHelp: 'প্রোটোটাইপ একবার ইডেম্পোটেন্ট ফল রেকর্ড করছে।',
     completeEyebrow: 'ইপিএফও মনোনয়ন · সম্পূর্ণ',

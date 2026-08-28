@@ -139,19 +139,36 @@ export function IdentityPage() {
                       </div>
                     )}
                   </th>
-                  {sources.map((source) => (
-                    <td
-                      key={source}
-                      className={cn(
-                        'border-b border-border px-3.5 py-4.5 text-left align-top',
-                        mismatch && 'font-[650] text-danger',
-                      )}
-                    >
-                      {persona.identity.valuesBySource[source][field] ?? (
-                        <span aria-label={t('identity.notAvailable')}>—</span>
-                      )}
-                    </td>
-                  ))}
+                  {sources.map((source) => {
+                    const fieldValue =
+                      persona.identity.valuesBySource[source][field];
+                    return (
+                      <td
+                        key={source}
+                        className={cn(
+                          'border-b border-border px-3.5 py-4.5 text-left align-top',
+                          mismatch && 'font-[650] text-danger',
+                        )}
+                      >
+                        {fieldValue ? (
+                          field === 'name' ? (
+                            fieldValue
+                          ) : (
+                            <span
+                              aria-label={t('common.maskedAccessible', {
+                                label: t(fieldNameKeys[field]),
+                                digits: fieldValue.slice(-4),
+                              })}
+                            >
+                              {fieldValue}
+                            </span>
+                          )
+                        ) : (
+                          <span aria-label={t('identity.notAvailable')}>—</span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })}
@@ -186,18 +203,33 @@ export function IdentityPage() {
                 )
               }
             >
-              {sources.map(
-                (source) =>
-                  persona.identity.valuesBySource[source][field] && (
-                    <ComparisonRow
-                      key={source}
-                      source={
-                        <SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>
-                      }
-                      value={persona.identity.valuesBySource[source][field]}
-                    />
-                  ),
-              )}
+              {sources.map((source) => {
+                const fieldValue =
+                  persona.identity.valuesBySource[source][field];
+                if (!fieldValue) return null;
+                return (
+                  <ComparisonRow
+                    key={source}
+                    source={
+                      <SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>
+                    }
+                    value={
+                      field === 'name' ? (
+                        fieldValue
+                      ) : (
+                        <span
+                          aria-label={t('common.maskedAccessible', {
+                            label: t(fieldNameKeys[field]),
+                            digits: fieldValue.slice(-4),
+                          })}
+                        >
+                          {fieldValue}
+                        </span>
+                      )
+                    }
+                  />
+                );
+              })}
             </ComparisonCard>
           );
         })}
@@ -412,7 +444,9 @@ export function MismatchPage() {
       {step === 'review' && (
         <section>
           <div className="mb-7.5 grid grid-cols-[1fr_auto_auto] items-center gap-4 border-y border-border py-3.5 max-[599px]:grid-cols-[1fr_auto]">
-            <span className="text-ink-muted">{t('identity.canonicalName')}</span>
+            <span className="text-ink-muted">
+              {t('identity.canonicalName')}
+            </span>
             <strong className="text-[1.25rem]">{value}</strong>
             <Button
               variant="text"
@@ -516,7 +550,9 @@ export function MismatchPage() {
               <ReceiptRow
                 key={source}
                 label={<SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>}
-                status={<Status kind="success">{t('identity.updatedStatus')}</Status>}
+                status={
+                  <Status kind="success">{t('identity.updatedStatus')}</Status>
+                }
               />
             ))}
           </ReceiptCard>
