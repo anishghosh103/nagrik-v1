@@ -405,6 +405,43 @@ describe('LocalAPIService vertical slice', () => {
     );
   });
 
+  it('files a grievance, disposes it without change, and resolves it after escalation', async () => {
+    await service.resolveMismatch({
+      personaId: 'rajesh',
+      mismatchId: 'mismatch-name',
+      canonicalValue: 'Rajesh Kumar',
+    });
+    const filed = await service.submitGrievance('rajesh', {
+      service: 'EPFO',
+      category: 'CONTRIBUTION_MISMATCH',
+      description: 'My May contribution is missing from my PF passbook.',
+      evidence: ['Passbook screenshot for May 2026'],
+      source: { kind: 'CONTRIBUTION_ISSUE', reference: 'r-2026-05' },
+    });
+    expect(filed.status).toBe('ACKNOWLEDGED');
+    expect(await service.getGrievances('rajesh')).toHaveLength(1);
+
+    const inReview = await service.refreshGrievanceStatus('rajesh', filed.id);
+    expect(inReview.status).toBe('IN_REVIEW');
+
+    const disposed = await service.refreshGrievanceStatus('rajesh', filed.id);
+    expect(disposed.status).toBe('DISPOSED');
+    expect(disposed.outcome).toBe('NO_CHANGE');
+
+    const blockingActions = await service.getActions('rajesh');
+    expect(blockingActions[0].id).toBe(`action-grievance-${filed.id}`);
+
+    const escalated = await service.escalateGrievance('rajesh', filed.id);
+    expect(escalated.escalation?.status).toBe('IN_REVIEW');
+
+    const resolved = await service.refreshGrievanceStatus('rajesh', filed.id);
+    expect(resolved.escalation?.status).toBe('RESOLVED');
+    expect(resolved.outcome).toBe('RESOLVED');
+
+    const finalActions = await service.getActions('rajesh');
+    expect(finalActions[0].id.startsWith('action-grievance-')).toBe(false);
+  });
+
   it('migrates a version-three persona without discarding identity or tax state', async () => {
     const legacy = structuredClone(PERSONA_SEEDS.rajesh) as unknown as {
       schemaVersion: number;

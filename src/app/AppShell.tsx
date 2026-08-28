@@ -11,6 +11,7 @@ import {
   LogOut,
   type LucideIcon,
   RotateCcw,
+  Scale,
   WifiOff,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,7 @@ const nav = [
   { to: '/identity', key: 'identity', Icon: Fingerprint },
   { to: '/tax', key: 'tax', Icon: Landmark },
   { to: '/epfo', key: 'epfo', Icon: BadgeIndianRupee },
+  { to: '/grievances', key: 'grievances', Icon: Scale },
   { to: '/activity', key: 'activity', Icon: Activity },
 ];
 
@@ -209,7 +211,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
       <nav
-        className="hidden max-[899px]:fixed max-[899px]:bottom-0 max-[899px]:left-0 max-[899px]:right-0 max-[899px]:z-30 max-[899px]:grid max-[899px]:min-h-16.5 max-[899px]:grid-cols-5 max-[899px]:border-t max-[899px]:border-border max-[899px]:bg-[rgba(255,252,245,0.97)] max-[899px]:p-[6px_max(10px,env(safe-area-inset-right))_calc(6px_+_env(safe-area-inset-bottom))_max(10px,env(safe-area-inset-left))] max-[899px]:shadow-[var(--shadow-sheet)]"
+        className="hidden max-[899px]:fixed max-[899px]:bottom-0 max-[899px]:left-0 max-[899px]:right-0 max-[899px]:z-30 max-[899px]:grid max-[899px]:min-h-16.5 max-[899px]:grid-cols-6 max-[899px]:border-t max-[899px]:border-border max-[899px]:bg-[rgba(255,252,245,0.97)] max-[899px]:p-[6px_max(10px,env(safe-area-inset-right))_calc(6px_+_env(safe-area-inset-bottom))_max(10px,env(safe-area-inset-left))] max-[899px]:shadow-[var(--shadow-sheet)]"
         aria-label="Mobile navigation"
       >
         {nav

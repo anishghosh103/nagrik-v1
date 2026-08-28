@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { epfoBn, epfoEn, epfoHi } from './epfo';
 import { taxBn, taxEn, taxHi } from './tax';
+import { grievancesBn, grievancesEn, grievancesHi } from './grievances';
 
 const en = {
   nav: {
@@ -10,6 +11,7 @@ const en = {
     identity: 'Identity',
     tax: 'Income Tax',
     epfo: 'PF & EPFO',
+    grievances: 'Grievances',
     activity: 'Activity',
     profile: 'Profile',
   },
@@ -90,6 +92,7 @@ const en = {
     ...epfoEn,
   },
   tax: taxEn,
+  grievances: grievancesEn,
   activity: {
     title: 'Activity and status',
     subtitle: 'A traceable history across identity and PF services.',
@@ -191,6 +194,12 @@ const en = {
         'Your Income Tax return has unsaved sections that still need review before filing.',
       source: 'Income Tax draft',
     },
+    grievanceEscalate: {
+      title: 'Escalate your grievance {{reference}}',
+      consequence:
+        'This case was closed without changing your record. Escalating asks for another review.',
+      source: 'Grievance Centre',
+    },
   },
 };
 
@@ -201,6 +210,7 @@ const hi = {
     identity: 'पहचान',
     tax: 'आयकर',
     epfo: 'पीएफ और ईपीएफओ',
+    grievances: 'शिकायतें',
     activity: 'गतिविधि',
     profile: 'प्रोफ़ाइल',
   },
@@ -278,6 +288,7 @@ const hi = {
     ...epfoHi,
   },
   tax: taxHi,
+  grievances: grievancesHi,
   activity: {
     ...en.activity,
     title: 'गतिविधि और स्थिति',
@@ -329,6 +340,12 @@ const hi = {
         'आपके आयकर रिटर्न में कुछ सेक्शन अभी भी समीक्षा और सुरक्षित करने बाकी हैं।',
       source: 'आयकर ड्राफ्ट',
     },
+    grievanceEscalate: {
+      title: 'अपनी शिकायत {{reference}} आगे भेजें',
+      consequence:
+        'यह मामला बिना रिकॉर्ड बदले बंद हुआ। आगे भेजने से दोबारा समीक्षा का अनुरोध होता है।',
+      source: 'शिकायत केंद्र',
+    },
   },
 };
 
@@ -339,6 +356,7 @@ const bn = {
     identity: 'পরিচয়',
     tax: 'আয়কর',
     epfo: 'পিএফ ও ইপিএফও',
+    grievances: 'অভিযোগ',
     activity: 'কার্যকলাপ',
     profile: 'প্রোফাইল',
   },
@@ -419,6 +437,7 @@ const bn = {
     ...epfoBn,
   },
   tax: taxBn,
+  grievances: grievancesBn,
   activity: {
     ...en.activity,
     title: 'কার্যকলাপ ও অবস্থা',
@@ -469,6 +488,12 @@ const bn = {
       consequence:
         'আপনার আয়কর রিটার্নে এমন সেকশন আছে যা জমা দেওয়ার আগে দেখা দরকার।',
       source: 'আয়কর খসড়া',
+    },
+    grievanceEscalate: {
+      title: 'আপনার অভিযোগ {{reference}} আরও পাঠান',
+      consequence:
+        'রেকর্ড না বদলেই এই মামলা বন্ধ হয়েছিল। এস্কেলেট করলে আবার পর্যালোচনার অনুরোধ হয়।',
+      source: 'অভিযোগ কেন্দ্র',
     },
   },
 };

@@ -1,4 +1,5 @@
 import type { ActionItem, PersonaSeed } from '../types/domain';
+import { isEscalationEligible } from './grievances';
 
 export function deriveActions(seed: PersonaSeed): ActionItem[] {
   const notice = seed.tax?.draft?.notices.find(
@@ -51,6 +52,22 @@ export function deriveActions(seed: PersonaSeed): ActionItem[] {
         consequence: 'actions.identityMismatch.consequence',
         fixTarget: `/identity/mismatch/${mismatch.id}`,
         source: 'actions.identityMismatch.source',
+      },
+    ];
+  const escalatable = seed.grievances.find((item) =>
+    isEscalationEligible(item.status, item.outcome, item.escalation),
+  );
+  if (escalatable)
+    return [
+      {
+        id: `action-grievance-${escalatable.id}`,
+        service: escalatable.service,
+        severity: 'WARNING',
+        title: 'actions.grievanceEscalate.title',
+        consequence: 'actions.grievanceEscalate.consequence',
+        fixTarget: `/grievances/${escalatable.id}`,
+        source: 'actions.grievanceEscalate.source',
+        values: { reference: escalatable.reference },
       },
     ];
   if (!seed.epfo.claim)

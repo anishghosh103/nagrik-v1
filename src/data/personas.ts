@@ -263,6 +263,7 @@ const ananya: PersonaSeed = {
       occurredAt: baseTime,
     },
   ],
+  grievances: [],
 };
 
 const rajesh: PersonaSeed = {
@@ -541,6 +542,7 @@ const rajesh: PersonaSeed = {
       occurredAt: baseTime,
     },
   ],
+  grievances: [],
 };
 
 export const PERSONA_SEEDS: Record<'ananya' | 'rajesh', PersonaSeed> = {

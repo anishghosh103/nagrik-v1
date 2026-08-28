@@ -3,6 +3,8 @@ import { apiService } from '../services/LocalAPIService';
 import type {
   ClaimSubmission,
   ClaimValidation,
+  GrievanceCase,
+  GrievanceInput,
   MockSession,
   Nominee,
   NominationRecord,
@@ -104,6 +106,9 @@ interface AppState {
   submitNoticePayment: (noticeId: string) => Promise<NoticeItem>;
   submitRectification: (noticeId: string) => Promise<NoticeItem>;
   refreshNoticeOutcome: (noticeId: string) => Promise<NoticeItem>;
+  submitGrievance: (input: GrievanceInput) => Promise<GrievanceCase>;
+  refreshGrievanceStatus: (grievanceId: string) => Promise<GrievanceCase>;
+  escalateGrievance: (grievanceId: string) => Promise<GrievanceCase>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -446,6 +451,39 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = get().session?.personaId;
     if (!id) throw new Error('NO_SESSION');
     const result = await apiService.refreshNoticeOutcome(id, noticeId);
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  submitGrievance: async (input) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.submitGrievance(id, input);
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({
+        busy: false,
+        error:
+          error instanceof Error && error.message === 'OFFLINE'
+            ? 'errors.grievanceOffline'
+            : 'errors.grievanceUnavailable',
+      });
+      throw error;
+    }
+  },
+  refreshGrievanceStatus: async (grievanceId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.refreshGrievanceStatus(id, grievanceId);
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  escalateGrievance: async (grievanceId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.escalateGrievance(id, grievanceId);
     set({ persona: await apiService.getPersona(id), error: null });
     return result;
   },

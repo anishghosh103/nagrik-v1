@@ -1,17 +1,25 @@
 import type { ReactNode } from 'react';
 import {
   Activity,
+  ArrowRight,
   Check,
   CircleDot,
   Clock3,
   Fingerprint,
   Landmark,
+  Scale,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
 import { cn } from '../../components/cn';
 import { formatDate } from '../../components/formatters';
-import { Page, PageHeader, SourceMarker, Status } from '../../components/ui';
+import {
+  ButtonLink,
+  Page,
+  PageHeader,
+  SourceMarker,
+  Status,
+} from '../../components/ui';
 
 export function ActivityPage() {
   const { t, i18n } = useTranslation();
@@ -51,6 +59,14 @@ export function ActivityPage() {
         <h2 className="mb-3">{current}</h2>
         <SourceMarker>Derived from current records</SourceMarker>
       </section>
+      <ButtonLink
+        variant="secondary"
+        to="/grievances"
+        className="mb-7"
+      >
+        <Scale /> {t('grievances.centre.title')}
+        <ArrowRight />
+      </ButtonLink>
       <ol className="m-0 list-none p-0">
         {persona.activity.map((event, index) => (
           <TimelineEvent
@@ -63,6 +79,8 @@ export function ActivityPage() {
                 <Fingerprint />
               ) : event.kind === 'INCOME_TAX' ? (
                 <Landmark />
+              ) : event.kind === 'GRIEVANCE' ? (
+                <Scale />
               ) : event.status === 'IN_PROGRESS' ? (
                 <Clock3 />
               ) : event.status === 'COMPLETE' ? (
@@ -87,7 +105,9 @@ export function ActivityPage() {
                     ? t('nav.epfo')
                     : event.kind === 'INCOME_TAX'
                       ? t('nav.tax')
-                      : 'Nagrik'}
+                      : event.kind === 'GRIEVANCE'
+                        ? t('grievances.centre.title')
+                        : 'Nagrik'}
               </Status>
             }
             time={formatDate(event.occurredAt, i18n.language)}

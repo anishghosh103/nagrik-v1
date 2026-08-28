@@ -47,6 +47,11 @@ import {
   ReturnHistoryPage,
   ReturnStatusPage,
 } from './features/tax/PostFilingPages';
+import {
+  GrievanceCentrePage,
+  GrievanceDetailPage,
+  NewGrievancePage,
+} from './features/grievances/GrievancePages';
 
 function HydrationScreen() {
   return (
@@ -228,6 +233,18 @@ export default function App() {
         <Route
           path="/tax/notices/:noticeId/resolution"
           element={<NoticeResolutionPage />}
+        />
+        <Route
+          path="/grievances"
+          element={<GrievanceCentrePage />}
+        />
+        <Route
+          path="/grievances/new"
+          element={<NewGrievancePage />}
+        />
+        <Route
+          path="/grievances/:grievanceId"
+          element={<GrievanceDetailPage />}
         />
         <Route
           path="/activity"

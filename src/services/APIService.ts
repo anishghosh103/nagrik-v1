@@ -5,6 +5,8 @@ import type {
   ClaimType,
   ClaimValidation,
   EPFOProfile,
+  GrievanceCase,
+  GrievanceInput,
   IdentityMismatch,
   IdentityRecord,
   MockSession,
@@ -150,4 +152,18 @@ export interface APIService {
     personaId: PersonaId,
     noticeId: string,
   ): Promise<NoticeItem>;
+
+  getGrievances(personaId: PersonaId): Promise<GrievanceCase[]>;
+  submitGrievance(
+    personaId: PersonaId,
+    input: GrievanceInput,
+  ): Promise<GrievanceCase>;
+  refreshGrievanceStatus(
+    personaId: PersonaId,
+    grievanceId: string,
+  ): Promise<GrievanceCase>;
+  escalateGrievance(
+    personaId: PersonaId,
+    grievanceId: string,
+  ): Promise<GrievanceCase>;
 }

@@ -174,6 +174,77 @@ export interface EPFOProfile {
   lastUpdatedAt: string;
 }
 
+export type GrievanceService = 'INCOME_TAX' | 'EPFO' | 'IDENTITY';
+
+export type GrievanceCategory =
+  | 'REFUND_DELAY'
+  | 'NOTICE_DISAGREEMENT'
+  | 'PAYMENT_MISMATCH'
+  | 'PORTAL_ACCESS'
+  | 'CONTRIBUTION_MISMATCH'
+  | 'CLAIM_DELAY'
+  | 'KYC_CORRECTION'
+  | 'TRANSFER_DELAY'
+  | 'IDENTITY_MISMATCH'
+  | 'PROPAGATION_FAILURE'
+  | 'OTHER';
+
+export type GrievanceStatus = 'ACKNOWLEDGED' | 'IN_REVIEW' | 'DISPOSED';
+export type GrievanceOutcome = 'RESOLVED' | 'NO_CHANGE';
+
+export interface GrievanceEvidenceItem {
+  id: string;
+  label: string;
+  addedAt: string;
+}
+
+export interface GrievanceTimelineEntry {
+  id: string;
+  kind:
+    | 'SUBMITTED'
+    | 'IN_REVIEW'
+    | 'DISPOSED'
+    | 'ESCALATED'
+    | 'ESCALATION_RESOLVED';
+  occurredAt: string;
+}
+
+export interface GrievanceEscalation {
+  requestedAt: string;
+  status: 'IN_REVIEW' | 'RESOLVED';
+  resolvedAt?: string;
+}
+
+export interface GrievanceSource {
+  kind: 'CONTRIBUTION_ISSUE';
+  reference: string;
+}
+
+export interface GrievanceCase {
+  id: string;
+  personaId: PersonaId;
+  reference: string;
+  service: GrievanceService;
+  category: GrievanceCategory;
+  description: string;
+  evidence: GrievanceEvidenceItem[];
+  status: GrievanceStatus;
+  outcome?: GrievanceOutcome;
+  source?: GrievanceSource;
+  submittedAt: string;
+  updatedAt: string;
+  timeline: GrievanceTimelineEntry[];
+  escalation?: GrievanceEscalation;
+}
+
+export interface GrievanceInput {
+  service: GrievanceService;
+  category: GrievanceCategory;
+  description: string;
+  evidence: string[];
+  source?: GrievanceSource;
+}
+
 export interface ActionItem {
   id: string;
   service: 'IDENTITY' | 'EPFO' | 'INCOME_TAX';
@@ -187,7 +258,7 @@ export interface ActionItem {
 
 export interface ActivityEvent {
   id: string;
-  kind: 'IDENTITY' | 'EPFO' | 'SESSION' | 'INCOME_TAX';
+  kind: 'IDENTITY' | 'EPFO' | 'SESSION' | 'INCOME_TAX' | 'GRIEVANCE';
   title: string;
   detail: string;
   values?: Record<string, string | number>;
@@ -217,6 +288,7 @@ export interface PersonaSeed {
   identityChanges: IdentityChange[];
   actions: ActionItem[];
   activity: ActivityEvent[];
+  grievances: GrievanceCase[];
 }
 
 export interface MockSession {
@@ -285,6 +357,64 @@ export interface PFTransferInput {
   declarationAccepted: boolean;
   otp: string;
 }
+
+const grievanceEvidenceSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  addedAt: z.string(),
+});
+
+const grievanceTimelineEntrySchema = z.object({
+  id: z.string(),
+  kind: z.enum([
+    'SUBMITTED',
+    'IN_REVIEW',
+    'DISPOSED',
+    'ESCALATED',
+    'ESCALATION_RESOLVED',
+  ]),
+  occurredAt: z.string(),
+});
+
+const grievanceCaseSchema = z.object({
+  id: z.string(),
+  personaId: z.enum(['ananya', 'rajesh']),
+  reference: z.string(),
+  service: z.enum(['INCOME_TAX', 'EPFO', 'IDENTITY']),
+  category: z.enum([
+    'REFUND_DELAY',
+    'NOTICE_DISAGREEMENT',
+    'PAYMENT_MISMATCH',
+    'PORTAL_ACCESS',
+    'CONTRIBUTION_MISMATCH',
+    'CLAIM_DELAY',
+    'KYC_CORRECTION',
+    'TRANSFER_DELAY',
+    'IDENTITY_MISMATCH',
+    'PROPAGATION_FAILURE',
+    'OTHER',
+  ]),
+  description: z.string(),
+  evidence: z.array(grievanceEvidenceSchema),
+  status: z.enum(['ACKNOWLEDGED', 'IN_REVIEW', 'DISPOSED']),
+  outcome: z.enum(['RESOLVED', 'NO_CHANGE']).optional(),
+  source: z
+    .object({
+      kind: z.literal('CONTRIBUTION_ISSUE'),
+      reference: z.string(),
+    })
+    .optional(),
+  submittedAt: z.string(),
+  updatedAt: z.string(),
+  timeline: z.array(grievanceTimelineEntrySchema),
+  escalation: z
+    .object({
+      requestedAt: z.string(),
+      status: z.enum(['IN_REVIEW', 'RESOLVED']),
+      resolvedAt: z.string().optional(),
+    })
+    .optional(),
+});
 
 const sourceValueSchema = z.object({
   name: z.string().optional(),
@@ -498,7 +628,7 @@ export const personaSeedSchema = z.object({
   activity: z.array(
     z.object({
       id: z.string(),
-      kind: z.enum(['IDENTITY', 'EPFO', 'SESSION', 'INCOME_TAX']),
+      kind: z.enum(['IDENTITY', 'EPFO', 'SESSION', 'INCOME_TAX', 'GRIEVANCE']),
       title: z.string(),
       detail: z.string(),
       values: z
@@ -508,4 +638,5 @@ export const personaSeedSchema = z.object({
       occurredAt: z.string(),
     }),
   ),
+  grievances: z.array(grievanceCaseSchema).default([]),
 });

@@ -12,11 +12,14 @@ import {
   validateReturn as validateReturnRule,
 } from '../rules/tax';
 import { createSimulatedNotice } from '../rules/tax/notices';
+import { scriptedOutcome } from '../rules/grievances';
 import { getTaxRulesConfig } from '../data/taxRules';
 import type { APIService } from './APIService';
 import type {
   ClaimSubmission,
   ClaimType,
+  GrievanceCase,
+  GrievanceInput,
   IdentitySource,
   MockSession,
   Nominee,
@@ -1160,6 +1163,156 @@ export class LocalAPIService implements APIService {
     });
     this.write(seed);
     return structuredClone(notice);
+  }
+
+  private requireGrievance(seed: PersonaSeed, grievanceId: string) {
+    const grievance = seed.grievances.find((item) => item.id === grievanceId);
+    if (!grievance) throw new Error('GRIEVANCE_NOT_FOUND');
+    return grievance;
+  }
+
+  async getGrievances(id: PersonaId) {
+    await wait(100);
+    return structuredClone(this.read(id).grievances);
+  }
+
+  async submitGrievance(id: PersonaId, input: GrievanceInput) {
+    await wait();
+    requireOnline();
+    const seed = this.read(id);
+    const now = new Date().toISOString();
+    const reference = `NGR-GRV-${Date.now().toString(36).toUpperCase()}`;
+    const grievanceId = `grievance-${reference.toLowerCase()}`;
+    const grievance: GrievanceCase = {
+      id: grievanceId,
+      personaId: id,
+      reference,
+      service: input.service,
+      category: input.category,
+      description: input.description,
+      evidence: input.evidence.map((label, index) => ({
+        id: `${grievanceId}-evidence-${index}`,
+        label,
+        addedAt: now,
+      })),
+      status: 'ACKNOWLEDGED',
+      source: input.source,
+      submittedAt: now,
+      updatedAt: now,
+      timeline: [
+        { id: `${grievanceId}-submitted`, kind: 'SUBMITTED', occurredAt: now },
+      ],
+    };
+    seed.grievances.unshift(grievance);
+    seed.activity.unshift({
+      id: `act-${grievanceId}`,
+      kind: 'GRIEVANCE',
+      title: 'grievances.activity.submittedTitle',
+      detail: 'grievances.activity.submittedDetail',
+      values: { reference },
+      status: 'IN_PROGRESS',
+      occurredAt: now,
+    });
+    this.write(seed);
+    return structuredClone(grievance);
+  }
+
+  async refreshGrievanceStatus(id: PersonaId, grievanceId: string) {
+    await wait(320);
+    requireOnline();
+    const seed = this.read(id);
+    const grievance = this.requireGrievance(seed, grievanceId);
+    const now = new Date().toISOString();
+    if (grievance.escalation?.status === 'IN_REVIEW') {
+      grievance.escalation.status = 'RESOLVED';
+      grievance.escalation.resolvedAt = now;
+      grievance.outcome = 'RESOLVED';
+      grievance.updatedAt = now;
+      grievance.timeline.push({
+        id: `${grievance.id}-escalation-resolved`,
+        kind: 'ESCALATION_RESOLVED',
+        occurredAt: now,
+      });
+      seed.activity.unshift({
+        id: `act-${grievance.id}-escalation-resolved`,
+        kind: 'GRIEVANCE',
+        title: 'grievances.activity.escalationResolvedTitle',
+        detail: 'grievances.activity.escalationResolvedDetail',
+        values: { reference: grievance.reference },
+        status: 'COMPLETE',
+        occurredAt: now,
+      });
+      this.write(seed);
+      return structuredClone(grievance);
+    }
+    if (grievance.status === 'ACKNOWLEDGED') {
+      grievance.status = 'IN_REVIEW';
+      grievance.updatedAt = now;
+      grievance.timeline.push({
+        id: `${grievance.id}-in-review`,
+        kind: 'IN_REVIEW',
+        occurredAt: now,
+      });
+      this.write(seed);
+      return structuredClone(grievance);
+    }
+    if (grievance.status === 'IN_REVIEW') {
+      grievance.status = 'DISPOSED';
+      grievance.outcome = scriptedOutcome(grievance.category);
+      grievance.updatedAt = now;
+      grievance.timeline.push({
+        id: `${grievance.id}-disposed`,
+        kind: 'DISPOSED',
+        occurredAt: now,
+      });
+      seed.activity.unshift({
+        id: `act-${grievance.id}-disposed`,
+        kind: 'GRIEVANCE',
+        title: 'grievances.activity.disposedTitle',
+        detail:
+          grievance.outcome === 'RESOLVED'
+            ? 'grievances.activity.disposedResolvedDetail'
+            : 'grievances.activity.disposedNoChangeDetail',
+        values: { reference: grievance.reference },
+        status: grievance.outcome === 'RESOLVED' ? 'COMPLETE' : 'INFO',
+        occurredAt: now,
+      });
+      this.write(seed);
+      return structuredClone(grievance);
+    }
+    return structuredClone(grievance);
+  }
+
+  async escalateGrievance(id: PersonaId, grievanceId: string) {
+    await wait();
+    requireOnline();
+    const seed = this.read(id);
+    const grievance = this.requireGrievance(seed, grievanceId);
+    if (
+      grievance.status !== 'DISPOSED' ||
+      grievance.outcome !== 'NO_CHANGE' ||
+      grievance.escalation
+    )
+      return structuredClone(grievance);
+    const now = new Date().toISOString();
+    grievance.escalation = { requestedAt: now, status: 'IN_REVIEW' };
+    grievance.updatedAt = now;
+    grievance.timeline.push({
+      id: `${grievance.id}-escalated`,
+      kind: 'ESCALATED',
+      occurredAt: now,
+    });
+    seed.activity.unshift({
+      id: `act-${grievance.id}-escalated`,
+      kind: 'GRIEVANCE',
+      title: 'grievances.activity.escalatedTitle',
+      detail: 'grievances.activity.escalatedDetail',
+      values: { reference: grievance.reference },
+      status: 'IN_PROGRESS',
+      occurredAt: now,
+    });
+    this.write(seed);
+    return structuredClone(grievance);
   }
 
   async resetPersona(id: PersonaId) {

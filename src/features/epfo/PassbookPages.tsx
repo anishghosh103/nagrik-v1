@@ -321,6 +321,11 @@ export function ContributionIssuePage() {
   const { t } = useTranslation();
   const persona = useAppStore((state) => state.persona);
   const issue = persona?.epfo.contributionIssue;
+  const existingGrievance = persona?.grievances.find(
+    (item) =>
+      item.source?.kind === 'CONTRIBUTION_ISSUE' &&
+      item.source.reference === issue?.contributionId,
+  );
   if (!persona || !issue)
     return (
       <Page width="narrow">
@@ -371,18 +376,26 @@ export function ContributionIssuePage() {
       >
         {t('epfo.issue.prefilledHelp')}
       </Notice>
-      <Button
-        disabled
-        aria-describedby="grievance-deferred"
-      >
-        {t('epfo.issue.submit')}
-      </Button>
-      <p
-        id="grievance-deferred"
-        className="text-ink-muted"
-      >
-        {t('epfo.issue.deferred')}
-      </p>
+      {existingGrievance ? (
+        <Notice
+          tone="info"
+          icon={<CircleDot />}
+          title={t('epfo.issue.existingTitle')}
+          actions={
+            <ButtonLink to={`/grievances/${existingGrievance.id}`}>
+              {t('epfo.issue.viewGrievance')}
+              <ArrowRight />
+            </ButtonLink>
+          }
+        >
+          {t('epfo.issue.existingHelp')}
+        </Notice>
+      ) : (
+        <ButtonLink to="/grievances/new?source=contribution-issue">
+          {t('epfo.issue.submit')}
+          <ArrowRight />
+        </ButtonLink>
+      )}
     </Page>
   );
 }

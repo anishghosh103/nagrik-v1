@@ -157,8 +157,7 @@ export const epfoEn = {
   issue: {
     eyebrow: 'Contribution resolution',
     title: 'Prepare a missing-contribution handoff',
-    subtitle:
-      'Review the prefilled EPFO category before the shared grievance service is available.',
+    subtitle: 'Review the prefilled EPFO category before filing a grievance.',
     category: 'Missing contribution',
     consequence: 'An unposted month may make the displayed balance incomplete.',
     service: 'Service',
@@ -166,12 +165,13 @@ export const epfoEn = {
     categoryLabel: 'Suggested category',
     prefilled: 'The handoff is ready',
     prefilledHelp:
-      'Service, employer and issue category have been carried forward. No grievance has been submitted.',
+      'Service, employer and issue category have been carried forward. No grievance has been submitted yet.',
     submit: 'Submit grievance',
-    deferred:
-      'Formal submission and case tracking will be enabled with the shared grievance workstream.',
     none: 'No contribution issue found',
     noneHelp: 'This persona has no seeded missing-contribution issue.',
+    existingTitle: 'A grievance is already tracking this',
+    existingHelp: 'View its current status in the Grievance Centre.',
+    viewGrievance: 'View grievance',
   },
   transfer: {
     eyebrow: 'PF transfer',
@@ -417,7 +417,7 @@ export const epfoHi = {
     ...epfoEn.issue,
     eyebrow: 'अंशदान समाधान',
     title: 'गुम अंशदान का हैंडऑफ़ तैयार करें',
-    subtitle: 'साझा शिकायत सेवा उपलब्ध होने से पहले भरी श्रेणी जाँचें।',
+    subtitle: 'शिकायत दर्ज करने से पहले भरी श्रेणी जाँचें।',
     category: 'गुम अंशदान',
     consequence: 'दर्ज न हुआ माह शेष को अधूरा बना सकता है।',
     service: 'सेवा',
@@ -425,9 +425,11 @@ export const epfoHi = {
     categoryLabel: 'सुझाई श्रेणी',
     prefilled: 'हैंडऑफ़ तैयार है',
     prefilledHelp:
-      'सेवा, नियोक्ता और समस्या आगे लाई गई है। शिकायत भेजी नहीं गई।',
+      'सेवा, नियोक्ता और समस्या आगे लाई गई है। अभी तक शिकायत नहीं भेजी गई।',
     submit: 'शिकायत भेजें',
-    deferred: 'औपचारिक सबमिशन चरण 11 में उपलब्ध होगा।',
+    existingTitle: 'इसके लिए पहले से एक शिकायत ट्रैक हो रही है',
+    existingHelp: 'शिकायत केंद्र में इसकी वर्तमान स्थिति देखें।',
+    viewGrievance: 'शिकायत देखें',
   },
   transfer: {
     ...epfoEn.transfer,
@@ -623,7 +625,7 @@ export const epfoBn = {
     ...epfoEn.issue,
     eyebrow: 'অবদান সমাধান',
     title: 'হারানো অবদানের হ্যান্ডঅফ প্রস্তুত করুন',
-    subtitle: 'যৌথ অভিযোগ পরিষেবা আসার আগে পূরণ করা বিভাগ দেখুন।',
+    subtitle: 'অভিযোগ দাখিলের আগে পূরণ করা বিভাগ দেখুন।',
     category: 'হারানো অবদান',
     consequence: 'নথিভুক্ত না হওয়া মাস ব্যালান্স অসম্পূর্ণ করতে পারে।',
     service: 'পরিষেবা',
@@ -631,9 +633,11 @@ export const epfoBn = {
     categoryLabel: 'প্রস্তাবিত বিভাগ',
     prefilled: 'হ্যান্ডঅফ প্রস্তুত',
     prefilledHelp:
-      'পরিষেবা, নিয়োগকর্তা ও সমস্যা বহন করা হয়েছে। অভিযোগ জমা হয়নি।',
+      'পরিষেবা, নিয়োগকর্তা ও সমস্যা বহন করা হয়েছে। এখনও অভিযোগ জমা হয়নি।',
     submit: 'অভিযোগ জমা দিন',
-    deferred: 'আনুষ্ঠানিক জমা ধাপ ১১-তে উপলভ্য হবে।',
+    existingTitle: 'এটির জন্য ইতিমধ্যে একটি অভিযোগ ট্র্যাক করা হচ্ছে',
+    existingHelp: 'অভিযোগ কেন্দ্রে এর বর্তমান অবস্থা দেখুন।',
+    viewGrievance: 'অভিযোগ দেখুন',
   },
   transfer: {
     ...epfoEn.transfer,
