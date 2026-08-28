@@ -1,19 +1,5 @@
 import { cloneSeed } from '../data/personas';
 import { deriveActions } from '../rules/identity';
-import {
-  validateNomineeAllocation,
-  validatePFClaim,
-  validatePFTransfer,
-} from '../rules/epfo';
-import {
-  compareRegimes as compareRegimesRule,
-  computeReturn as computeReturnRule,
-  determineFilingRoute as determineFilingRouteRule,
-  validateReturn as validateReturnRule,
-} from '../rules/tax';
-import { createSimulatedNotice } from '../rules/tax/notices';
-import { scriptedOutcome } from '../rules/grievances';
-import { getTaxRulesConfig } from '../data/taxRules';
 import type { APIService } from './APIService';
 import type {
   ClaimSubmission,
@@ -96,10 +82,18 @@ export class LocalAPIService implements APIService {
     this.failures = structuredClone(failures);
   }
 
-  private migrate(id: PersonaId, raw: unknown): PersonaSeed | null {
+  private async migrate(
+    id: PersonaId,
+    raw: unknown,
+  ): Promise<PersonaSeed | null> {
     if (!raw || typeof raw !== 'object') return null;
     const legacy = raw as Partial<PersonaSeed>;
     if (legacy.id !== id) return null;
+    // Legacy-schema migration is a rare, one-time path (only hit for users
+    // with pre-v6 cached data), so the tax rule engine loads on demand here
+    // instead of being bundled eagerly for every visit.
+    const { getTaxRulesConfig } = await import('../data/taxRules');
+    const { computeReturn: computeReturnRule } = await import('../rules/tax');
     const seed = cloneSeed(id);
     const legacyTax = legacy.tax;
     const migrateDraft = (candidate: unknown): ReturnDraft | null => {
@@ -234,7 +228,7 @@ export class LocalAPIService implements APIService {
     return parsed.success ? (parsed.data as PersonaSeed) : null;
   }
 
-  private read(id: PersonaId): PersonaSeed {
+  private async read(id: PersonaId): Promise<PersonaSeed> {
     const raw = localStorage.getItem(keyFor(id));
     if (raw) {
       const parsed = personaSeedSchema.safeParse(JSON.parse(raw));
@@ -247,7 +241,7 @@ export class LocalAPIService implements APIService {
     for (const version of [5, 4, 3, 2, 1]) {
       const legacyRaw = localStorage.getItem(keyFor(id, version));
       if (legacyRaw) {
-        const migrated = this.migrate(id, JSON.parse(legacyRaw));
+        const migrated = await this.migrate(id, JSON.parse(legacyRaw));
         if (migrated) {
           this.write(migrated);
           return migrated;
@@ -308,7 +302,7 @@ export class LocalAPIService implements APIService {
   }
   async getPersona(id: PersonaId) {
     await wait();
-    return structuredClone(this.read(id));
+    return structuredClone(await this.read(id));
   }
   async getIdentityRecord(id: PersonaId) {
     return (await this.getPersona(id)).identity;
@@ -321,7 +315,7 @@ export class LocalAPIService implements APIService {
   }
   async getPassbook(id: PersonaId) {
     await wait(100);
-    return structuredClone(this.read(id).epfo.passbook);
+    return structuredClone((await this.read(id)).epfo.passbook);
   }
   async refreshPassbook(id: PersonaId) {
     await wait(520);
@@ -330,7 +324,7 @@ export class LocalAPIService implements APIService {
       this.failures.passbookRefreshOnce = false;
       throw new Error('SERVICE_UNAVAILABLE');
     }
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const now = new Date().toISOString();
     seed.epfo.passbook.capturedAt = now;
     seed.epfo.lastUpdatedAt = now;
@@ -344,7 +338,7 @@ export class LocalAPIService implements APIService {
   ) {
     await wait(260);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const employment = seed.epfo.employment.find(
       (item) => item.id === employmentId,
     );
@@ -372,7 +366,8 @@ export class LocalAPIService implements APIService {
       this.failures.claimValidationOnce = false;
       throw new Error('SERVICE_UNAVAILABLE');
     }
-    return validatePFClaim(this.read(id));
+    const { validatePFClaim } = await import('../rules/epfo');
+    return validatePFClaim(await this.read(id));
   }
   async getActions(id: PersonaId) {
     return (await this.getPersona(id)).actions;
@@ -388,15 +383,16 @@ export class LocalAPIService implements APIService {
   ) {
     await wait(240);
     requireOnline();
+    const { validatePFTransfer } = await import('../rules/epfo');
     return validatePFTransfer(
-      this.read(id),
+      await this.read(id),
       sourceEmploymentId,
       destinationEmploymentId,
     );
   }
 
   async saveTransferDraft(id: PersonaId, transfer: PFTransferInput) {
-    const seed = this.read(id);
+    const seed = await this.read(id);
     seed.epfo.transferDraft = {
       ...transfer,
       updatedAt: new Date().toISOString(),
@@ -424,12 +420,13 @@ export class LocalAPIService implements APIService {
     await this.saveTransferDraft(id, transfer);
     await wait(480);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     if (seed.epfo.transfer) return seed.epfo.transfer;
     if (this.failures.transferSubmissionOnce) {
       this.failures.transferSubmissionOnce = false;
       throw new Error('SERVICE_UNAVAILABLE');
     }
+    const { validatePFTransfer } = await import('../rules/epfo');
     const validation = validatePFTransfer(
       seed,
       transfer.sourceEmploymentId,
@@ -469,7 +466,7 @@ export class LocalAPIService implements APIService {
   }
 
   async saveNominationDraft(id: PersonaId, nominees: Nominee[]) {
-    const seed = this.read(id);
+    const seed = await this.read(id);
     seed.epfo.nomination = {
       ...seed.epfo.nomination,
       status: 'DRAFT',
@@ -507,12 +504,13 @@ export class LocalAPIService implements APIService {
       this.failures.nominationSubmissionOnce = false;
       throw new Error('SERVICE_UNAVAILABLE');
     }
+    const { validateNomineeAllocation } = await import('../rules/epfo');
     if (
       !validateNomineeAllocation(nominees.map((nominee) => nominee.share)).valid
     )
       throw new Error('NOMINATION_ALLOCATION_INVALID');
     if (otp !== '123456') throw new Error('INVALID_OTP');
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const now = new Date().toISOString();
     seed.epfo.nomination = {
       status: 'EFFECTIVE',
@@ -537,7 +535,7 @@ export class LocalAPIService implements APIService {
   ): Promise<PropagationResult> {
     await wait(420);
     requireOnline();
-    const seed = this.read(input.personaId);
+    const seed = await this.read(input.personaId);
     const mismatch = seed.mismatches.find(
       (item) => item.id === input.mismatchId,
     );
@@ -589,7 +587,7 @@ export class LocalAPIService implements APIService {
   ): Promise<PropagationResult> {
     await wait(320);
     requireOnline();
-    const seed = this.read(input.personaId);
+    const seed = await this.read(input.personaId);
     const mismatch = seed.mismatches.find(
       (item) => item.id === input.mismatchId,
     );
@@ -640,7 +638,7 @@ export class LocalAPIService implements APIService {
   }
 
   async saveClaimDraft(personaId: PersonaId, claim: PFClaim) {
-    const seed = this.read(personaId);
+    const seed = await this.read(personaId);
     seed.epfo.claimDraft = { ...claim, updatedAt: new Date().toISOString() };
     this.write(seed);
   }
@@ -665,12 +663,13 @@ export class LocalAPIService implements APIService {
     await this.saveClaimDraft(personaId, claim);
     await wait(480);
     requireOnline();
-    const seed = this.read(personaId);
+    const seed = await this.read(personaId);
     if (seed.epfo.claim) return seed.epfo.claim;
     if (this.failures.claimSubmissionOnce) {
       this.failures.claimSubmissionOnce = false;
       throw new Error('SERVICE_UNAVAILABLE');
     }
+    const { validatePFClaim } = await import('../rules/epfo');
     const validation = validatePFClaim(seed);
     if (!validation.ready) throw new Error('CLAIM_NOT_READY');
     if (
@@ -712,26 +711,27 @@ export class LocalAPIService implements APIService {
 
   async getTaxRules(assessmentYear: string) {
     await wait(150);
+    const { getTaxRulesConfig } = await import('../data/taxRules');
     return getTaxRulesConfig(assessmentYear);
   }
 
   async getTaxSources(id: PersonaId, assessmentYear: string) {
     await wait(200);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     if (!seed.tax || seed.tax.assessmentYear !== assessmentYear)
       throw new Error('ASSESSMENT_YEAR_NOT_SUPPORTED');
     return structuredClone(seed.tax.sources);
   }
 
   async getExistingReturnDraft(id: PersonaId, assessmentYear: string) {
-    const seed = this.read(id);
+    const seed = await this.read(id);
     if (!seed.tax || seed.tax.assessmentYear !== assessmentYear) return null;
     return seed.tax.draft ? structuredClone(seed.tax.draft) : null;
   }
 
   async saveReturnDraft(id: PersonaId, draft: ReturnDraft) {
-    const seed = this.read(id);
+    const seed = await this.read(id);
     if (!seed.tax) throw new Error('TAX_RECORD_NOT_FOUND');
     seed.tax.draft = structuredClone({
       ...draft,
@@ -742,24 +742,33 @@ export class LocalAPIService implements APIService {
 
   async determineFilingRoute(draft: ReturnDraft) {
     await wait(120);
+    const { getTaxRulesConfig } = await import('../data/taxRules');
+    const { determineFilingRoute: determineFilingRouteRule } =
+      await import('../rules/tax');
     const rules = getTaxRulesConfig(draft.assessmentYear);
     return determineFilingRouteRule(draft, rules);
   }
 
   async computeReturn(draft: ReturnDraft, regime: TaxRegime) {
     await wait(180);
+    const { getTaxRulesConfig } = await import('../data/taxRules');
+    const { computeReturn: computeReturnRule } = await import('../rules/tax');
     const rules = getTaxRulesConfig(draft.assessmentYear);
     return computeReturnRule(draft, regime, rules);
   }
 
   async compareRegimes(draft: ReturnDraft) {
     await wait(220);
+    const { getTaxRulesConfig } = await import('../data/taxRules');
+    const { compareRegimes: compareRegimesRule } = await import('../rules/tax');
     const rules = getTaxRulesConfig(draft.assessmentYear);
     return compareRegimesRule(draft, rules);
   }
 
   async validateReturn(draft: ReturnDraft) {
     await wait(160);
+    const { getTaxRulesConfig } = await import('../data/taxRules');
+    const { validateReturn: validateReturnRule } = await import('../rules/tax');
     const rules = getTaxRulesConfig(draft.assessmentYear);
     return validateReturnRule(draft, rules);
   }
@@ -767,7 +776,7 @@ export class LocalAPIService implements APIService {
   async validateTaxBankAccount(id: PersonaId, accountId: string) {
     await wait(300);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const draft = seed.tax?.draft;
     if (!draft) throw new Error('DRAFT_NOT_FOUND');
     const account = draft.bankAccounts.find((item) => item.id === accountId);
@@ -792,7 +801,7 @@ export class LocalAPIService implements APIService {
     await this.saveReturnDraft(id, draft);
     await wait(520);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const tax = seed.tax;
     if (!tax) throw new Error('TAX_RECORD_NOT_FOUND');
     const alreadyFiled = draft.responseToNoticeId
@@ -810,6 +819,11 @@ export class LocalAPIService implements APIService {
         regime: filed.regime,
       };
     }
+    const { getTaxRulesConfig } = await import('../data/taxRules');
+    const {
+      computeReturn: computeReturnRule,
+      validateReturn: validateReturnRule,
+    } = await import('../rules/tax');
     const rules = getTaxRulesConfig(draft.assessmentYear);
     const issues = validateReturnRule(draft, rules);
     if (
@@ -907,7 +921,7 @@ export class LocalAPIService implements APIService {
     await wait(320);
     requireOnline();
     if (input.otp !== '123456') throw new Error('INVALID_OTP');
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const filed = seed.tax?.filedReturns.find(
       (item) => item.acknowledgmentNumber === input.acknowledgmentNumber,
     );
@@ -958,13 +972,13 @@ export class LocalAPIService implements APIService {
 
   async getFiledReturns(id: PersonaId) {
     await wait(120);
-    return structuredClone(this.read(id).tax?.filedReturns ?? []);
+    return structuredClone((await this.read(id)).tax?.filedReturns ?? []);
   }
 
   async refreshFiledReturnStatus(id: PersonaId, acknowledgmentNumber: string) {
     await wait(360);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const filed = seed.tax?.filedReturns.find(
       (item) => item.acknowledgmentNumber === acknowledgmentNumber,
     );
@@ -1003,7 +1017,7 @@ export class LocalAPIService implements APIService {
   async revalidateRefundBank(id: PersonaId, acknowledgmentNumber: string) {
     await wait(320);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const filed = seed.tax?.filedReturns.find(
       (item) => item.acknowledgmentNumber === acknowledgmentNumber,
     );
@@ -1021,13 +1035,13 @@ export class LocalAPIService implements APIService {
 
   async getNotices(id: PersonaId) {
     await wait(120);
-    return structuredClone(this.read(id).tax?.draft?.notices ?? []);
+    return structuredClone((await this.read(id)).tax?.draft?.notices ?? []);
   }
 
   async importNotice(id: PersonaId, fixtureId: NoticeFixtureId) {
     await wait(420);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const tax = seed.tax;
     const filed = tax?.filedReturns.find(
       (item) => item.verification.status === 'VERIFIED',
@@ -1040,6 +1054,7 @@ export class LocalAPIService implements APIService {
         notice.linkedAcknowledgmentNumber === filed.acknowledgmentNumber,
     );
     if (existing) return structuredClone(existing);
+    const { createSimulatedNotice } = await import('../rules/tax/notices');
     const notice = createSimulatedNotice(
       fixtureId,
       filed.acknowledgmentNumber,
@@ -1069,7 +1084,7 @@ export class LocalAPIService implements APIService {
 
   async startNoticeRemedy(id: PersonaId, noticeId: string) {
     await wait(220);
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const notice = this.requireNotice(seed, noticeId);
     const tax = seed.tax!;
     const filed = tax.filedReturns.find(
@@ -1099,7 +1114,7 @@ export class LocalAPIService implements APIService {
   async submitNoticePayment(id: PersonaId, noticeId: string) {
     await wait(420);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const notice = this.requireNotice(seed, noticeId);
     if (notice.action.status === 'COMPLETED') return structuredClone(notice);
     if (notice.remedy !== 'PAY') throw new Error('PAYMENT_NOT_APPLICABLE');
@@ -1126,7 +1141,7 @@ export class LocalAPIService implements APIService {
   async submitRectification(id: PersonaId, noticeId: string) {
     await wait(420);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const notice = this.requireNotice(seed, noticeId);
     if (notice.remedy !== 'RECTIFY')
       throw new Error('RECTIFICATION_NOT_APPLICABLE');
@@ -1144,7 +1159,7 @@ export class LocalAPIService implements APIService {
   async refreshNoticeOutcome(id: PersonaId, noticeId: string) {
     await wait(360);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const notice = this.requireNotice(seed, noticeId);
     if (notice.remedy !== 'RECTIFY' || notice.action.status !== 'SUBMITTED')
       throw new Error('RECTIFICATION_NOT_SUBMITTED');
@@ -1173,13 +1188,13 @@ export class LocalAPIService implements APIService {
 
   async getGrievances(id: PersonaId) {
     await wait(100);
-    return structuredClone(this.read(id).grievances);
+    return structuredClone((await this.read(id)).grievances);
   }
 
   async submitGrievance(id: PersonaId, input: GrievanceInput) {
     await wait();
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const now = new Date().toISOString();
     const reference = `NGR-GRV-${Date.now().toString(36).toUpperCase()}`;
     const grievanceId = `grievance-${reference.toLowerCase()}`;
@@ -1220,7 +1235,7 @@ export class LocalAPIService implements APIService {
   async refreshGrievanceStatus(id: PersonaId, grievanceId: string) {
     await wait(320);
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const grievance = this.requireGrievance(seed, grievanceId);
     const now = new Date().toISOString();
     if (grievance.escalation?.status === 'IN_REVIEW') {
@@ -1257,6 +1272,7 @@ export class LocalAPIService implements APIService {
       return structuredClone(grievance);
     }
     if (grievance.status === 'IN_REVIEW') {
+      const { scriptedOutcome } = await import('../rules/grievances');
       grievance.status = 'DISPOSED';
       grievance.outcome = scriptedOutcome(grievance.category);
       grievance.updatedAt = now;
@@ -1286,7 +1302,7 @@ export class LocalAPIService implements APIService {
   async escalateGrievance(id: PersonaId, grievanceId: string) {
     await wait();
     requireOnline();
-    const seed = this.read(id);
+    const seed = await this.read(id);
     const grievance = this.requireGrievance(seed, grievanceId);
     if (
       grievance.status !== 'DISPOSED' ||

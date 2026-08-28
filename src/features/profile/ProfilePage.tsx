@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { Button, Page, PageHeader, SourceMarker } from '../../components/ui';
 import { Notice } from '../../components/patterns';
+import { setLanguage, type SupportedLanguage } from '../../i18n/loadLanguage';
 import type { PersonaId } from '../../types/domain';
 
 export function ProfilePage() {
@@ -77,8 +78,7 @@ export function ProfilePage() {
             className="border-0 bg-transparent p-2 font-[650] text-ink max-[599px]:max-w-30"
             value={i18n.language}
             onChange={(e) => {
-              void i18n.changeLanguage(e.target.value);
-              localStorage.setItem('nagrik:language', e.target.value);
+              void setLanguage(e.target.value as SupportedLanguage);
             }}
           >
             <option value="en">English</option>

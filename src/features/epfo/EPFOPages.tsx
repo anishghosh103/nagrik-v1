@@ -749,9 +749,7 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
         })}
       />
       <StatusCard
-        status={
-          <Status kind="info">{t('epfo.claim.receivedStatus')}</Status>
-        }
+        status={<Status kind="info">{t('epfo.claim.receivedStatus')}</Status>}
         title={t('epfo.claim.validationNextTitle')}
       >
         {t('epfo.claim.recordedOnce')}

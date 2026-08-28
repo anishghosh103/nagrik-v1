@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../components/cn';
 import { PrototypeTag, VisuallyHidden, Wordmark } from '../components/ui';
+import { setLanguage, type SupportedLanguage } from '../i18n/loadLanguage';
 import { useAppStore } from './store';
 
 const nav = [
@@ -43,8 +44,7 @@ function LanguageSelect() {
         className="border-0 bg-transparent p-2 font-[650] text-ink max-[599px]:max-w-22"
         value={i18n.language}
         onChange={(event) => {
-          void i18n.changeLanguage(event.target.value);
-          localStorage.setItem('nagrik:language', event.target.value);
+          void setLanguage(event.target.value as SupportedLanguage);
         }}
       >
         <option value="en">English</option>

@@ -39,9 +39,7 @@ export function StepProgress({
   }
   return (
     <div className="-mt-3.5 mb-7.5 flex items-center justify-between text-[0.8rem] text-ink-muted">
-      <span>
-        {label ?? t('common.stepOf', { current, total })}
-      </span>
+      <span>{label ?? t('common.stepOf', { current, total })}</span>
       <div className="flex gap-1">
         {steps.map((step) => (
           <i
@@ -128,7 +126,7 @@ export function ProgressState({
 }: {
   variant?: 'spinner' | 'scan';
   icon?: ReactNode;
-  title: ReactNode;
+  title?: ReactNode;
   description?: ReactNode;
   children?: ReactNode;
   className?: string;
@@ -146,7 +144,7 @@ export function ProgressState({
       ) : (
         <LoaderCircle className="mx-auto size-10.5 animate-spin text-primary" />
       )}
-      <h2>{title}</h2>
+      {title && <h2>{title}</h2>}
       {description && <p className="text-ink-muted">{description}</p>}
       {children}
     </section>
