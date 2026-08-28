@@ -132,7 +132,7 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(6);
     expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
     expect(migrated.epfo.passbook.employers.length).toBeGreaterThan(0);
   });
@@ -311,6 +311,100 @@ describe('LocalAPIService vertical slice', () => {
     ).toHaveLength(1);
   });
 
+  it('tracks and recovers a cause-aware delayed refund', async () => {
+    const draft = buildDraftFromSeed('rajesh');
+    const filed = await service.fileReturn('rajesh', draft);
+    await service.verifyReturn('rajesh', {
+      acknowledgmentNumber: filed.acknowledgmentNumber,
+      otp: '123456',
+    });
+    let snapshot = (await service.getFiledReturns('rajesh'))[0];
+    expect(snapshot.refund?.status).toBe('DELAYED');
+    expect(snapshot.refund?.delayReason).toBe('BANK_LINKAGE');
+    snapshot = await service.revalidateRefundBank(
+      'rajesh',
+      filed.acknowledgmentNumber,
+    );
+    expect(snapshot.refund?.status).toBe('PROCESSING');
+    expect(snapshot.refund?.delayReason).toBeUndefined();
+    snapshot = await service.refreshFiledReturnStatus(
+      'rajesh',
+      filed.acknowledgmentNumber,
+    );
+    expect(snapshot.processing.status).toBe('PROCESSED');
+  });
+
+  it('imports notices idempotently and resolves a payment only once', async () => {
+    const filed = await service.fileReturn(
+      'ananya',
+      buildDraftFromSeed('ananya'),
+    );
+    await service.verifyReturn('ananya', {
+      acknowledgmentNumber: filed.acknowledgmentNumber,
+      otp: '123456',
+    });
+    const first = await service.importNotice('ananya', 'DEMAND_CONFIRMED');
+    const duplicate = await service.importNotice('ananya', 'DEMAND_CONFIRMED');
+    expect(duplicate.id).toBe(first.id);
+    expect(await service.getNotices('ananya')).toHaveLength(1);
+    const paid = await service.submitNoticePayment('ananya', first.id);
+    const paidAgain = await service.submitNoticePayment('ananya', first.id);
+    expect(paidAgain.action.reference).toBe(paid.action.reference);
+    expect(paid.state).toBe('RESOLVED');
+  });
+
+  it('keeps rectification pending until the simulated order arrives', async () => {
+    const filed = await service.fileReturn(
+      'ananya',
+      buildDraftFromSeed('ananya'),
+    );
+    await service.verifyReturn('ananya', {
+      acknowledgmentNumber: filed.acknowledgmentNumber,
+      otp: '123456',
+    });
+    const notice = await service.importNotice('ananya', 'TDS_CREDIT_OMITTED');
+    const submitted = await service.submitRectification('ananya', notice.id);
+    expect(submitted.action.status).toBe('SUBMITTED');
+    expect(submitted.state).toBe('ACTION_REQUIRED');
+    const resolved = await service.refreshNoticeOutcome('ananya', notice.id);
+    expect(resolved.action.status).toBe('COMPLETED');
+    expect(resolved.state).toBe('RESOLVED');
+  });
+
+  it('reopens the exact 139(9) section and resolves after refiling and verification', async () => {
+    const filed = await service.fileReturn(
+      'ananya',
+      buildDraftFromSeed('ananya'),
+    );
+    await service.verifyReturn('ananya', {
+      acknowledgmentNumber: filed.acknowledgmentNumber,
+      otp: '123456',
+    });
+    const notice = await service.importNotice('ananya', 'DEFECTIVE_WRONG_FORM');
+    await service.startNoticeRemedy('ananya', notice.id);
+    const reopened = (await service.getExistingReturnDraft(
+      'ananya',
+      '2026-27',
+    ))!;
+    expect(reopened.filingType).toBe('DEFECTIVE_RESPONSE');
+    expect(reopened.responseToNoticeId).toBe(notice.id);
+    expect(reopened.sectionStates.CAPITAL_GAINS.status).toBe('NEEDS_REVIEW');
+    reopened.sectionStates.CAPITAL_GAINS.status = 'COMPLETE';
+    const response = await service.fileReturn('ananya', reopened);
+    expect(response.acknowledgmentNumber).toMatch(/-R1$/);
+    expect((await service.getNotices('ananya'))[0].state).toBe(
+      'ACTION_REQUIRED',
+    );
+    await service.verifyReturn('ananya', {
+      acknowledgmentNumber: response.acknowledgmentNumber,
+      otp: '123456',
+    });
+    expect((await service.getNotices('ananya'))[0].state).toBe('RESOLVED');
+    expect((await service.getFiledReturns('ananya'))[0].draft.salary).toEqual(
+      reopened.salary,
+    );
+  });
+
   it('migrates a version-three persona without discarding identity or tax state', async () => {
     const legacy = structuredClone(PERSONA_SEEDS.rajesh) as unknown as {
       schemaVersion: number;
@@ -323,7 +417,7 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(6);
     expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
     expect(migrated.tax?.assessmentYear).toBe('2026-27');
     expect(migrated.tax?.sources.salary.length).toBeGreaterThan(0);

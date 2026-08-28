@@ -37,7 +37,7 @@ describe('identity and PF rules', () => {
   it('prioritizes the cross-service blocking action', () => {
     const [action] = deriveActions(rajesh);
     expect(action.severity).toBe('BLOCKING');
-    expect(action.consequence).toContain('PF claim');
+    expect(action.consequence).toBe('actions.identityMismatch.consequence');
     expect(identityHealth(rajesh)).toBe(72);
   });
 

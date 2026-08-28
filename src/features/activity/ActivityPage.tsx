@@ -18,17 +18,27 @@ export function ActivityPage() {
   const persona = useAppStore((state) => state.persona);
   if (!persona) return null;
   const filedReturn = persona.tax?.filedReturns[0];
-  const current = persona.epfo.transfer
-    ? t('activity.currentStates.transfer')
-    : persona.epfo.claim
-      ? t('activity.currentStates.claim')
-      : persona.mismatches.some((m) => m.status !== 'RESOLVED')
-        ? t('activity.currentStates.identity')
-        : filedReturn && filedReturn.verification.status === 'PENDING'
-          ? t('activity.currentStates.taxVerificationPending')
-          : persona.tax?.draft && !filedReturn
-            ? t('activity.currentStates.taxDraftInProgress')
-            : t('activity.currentStates.ready');
+  const openNotice = persona.tax?.draft?.notices.some(
+    (notice) => notice.state !== 'RESOLVED',
+  );
+  const delayedRefund = persona.tax?.filedReturns.some(
+    (filed) => filed.refund?.status === 'DELAYED',
+  );
+  const current = openNotice
+    ? t('activity.currentStates.taxNotice')
+    : delayedRefund
+      ? t('activity.currentStates.refundDelayed')
+      : persona.epfo.transfer
+        ? t('activity.currentStates.transfer')
+        : persona.epfo.claim
+          ? t('activity.currentStates.claim')
+          : persona.mismatches.some((m) => m.status !== 'RESOLVED')
+            ? t('activity.currentStates.identity')
+            : filedReturn && filedReturn.verification.status === 'PENDING'
+              ? t('activity.currentStates.taxVerificationPending')
+              : persona.tax?.draft && !filedReturn
+                ? t('activity.currentStates.taxDraftInProgress')
+                : t('activity.currentStates.ready');
   return (
     <Page width="narrow">
       <PageHeader

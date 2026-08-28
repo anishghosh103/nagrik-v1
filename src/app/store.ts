@@ -17,6 +17,9 @@ import type {
 } from '../types/domain';
 import type {
   FilingRoute,
+  FiledReturnSnapshot,
+  NoticeFixtureId,
+  NoticeItem,
   RegimeComparison,
   ReturnComputation,
   ReturnDraft,
@@ -90,6 +93,17 @@ interface AppState {
     acknowledgmentNumber: string,
     otp: string,
   ) => Promise<{ status: 'VERIFIED'; verifiedAt: string }>;
+  refreshFiledReturnStatus: (
+    acknowledgmentNumber: string,
+  ) => Promise<FiledReturnSnapshot>;
+  revalidateRefundBank: (
+    acknowledgmentNumber: string,
+  ) => Promise<FiledReturnSnapshot>;
+  importNotice: (fixtureId: NoticeFixtureId) => Promise<NoticeItem>;
+  startNoticeRemedy: (noticeId: string) => Promise<NoticeItem>;
+  submitNoticePayment: (noticeId: string) => Promise<NoticeItem>;
+  submitRectification: (noticeId: string) => Promise<NoticeItem>;
+  refreshNoticeOutcome: (noticeId: string) => Promise<NoticeItem>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -379,5 +393,60 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ busy: false, error: 'errors.taxVerificationUnavailable' });
       throw error;
     }
+  },
+  refreshFiledReturnStatus: async (acknowledgmentNumber) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.refreshFiledReturnStatus(
+      id,
+      acknowledgmentNumber,
+    );
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  revalidateRefundBank: async (acknowledgmentNumber) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.revalidateRefundBank(
+      id,
+      acknowledgmentNumber,
+    );
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  importNotice: async (fixtureId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.importNotice(id, fixtureId);
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  startNoticeRemedy: async (noticeId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.startNoticeRemedy(id, noticeId);
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  submitNoticePayment: async (noticeId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.submitNoticePayment(id, noticeId);
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  submitRectification: async (noticeId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.submitRectification(id, noticeId);
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
+  },
+  refreshNoticeOutcome: async (noticeId) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    const result = await apiService.refreshNoticeOutcome(id, noticeId);
+    set({ persona: await apiService.getPersona(id), error: null });
+    return result;
   },
 }));

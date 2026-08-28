@@ -103,6 +103,9 @@ const en = {
       taxVerificationPending:
         'Income Tax return filed — e-verification is expected next.',
       taxDraftInProgress: 'An Income Tax return draft is in progress.',
+      taxNotice: 'An Income Tax notice has one required corrective action.',
+      refundDelayed:
+        'An Income Tax refund is waiting for bank-linkage revalidation.',
       ready: 'PF claim checks are ready to review.',
     },
     events: {
@@ -122,6 +125,15 @@ const en = {
         '{{employer}} will be rechecked in dependent PF journeys.',
       taxFiled: 'Income Tax return filed',
       taxFiledDetail: 'Reference {{reference}} is awaiting e-verification.',
+      noticeReceived: 'Income Tax notice received',
+      noticeReceivedDetail:
+        'A simulated section {{section}} notice needs one corrective action.',
+      noticeResolved: 'Income Tax notice resolved',
+      noticeResolvedDetail:
+        'The required action for section {{section}} completed.',
+      precheckAttention: 'PF pre-check flagged attention needed',
+      nameBlocksClaim:
+        'A name mismatch across connected records is blocking claim readiness.',
     },
   },
   rules: {
@@ -144,6 +156,40 @@ const en = {
     transfer: {
       selectionPass: 'Previous and current employment records are selected.',
       selectionFail: 'Select distinct previous and current employment records.',
+    },
+  },
+  actions: {
+    taxNotice: {
+      title: 'Respond to your section {{section}} notice',
+      consequenceDefault:
+        'Nagrik found one required action and preserved the filed return behind it.',
+      consequenceSubmitted:
+        'Your correction request is submitted. Check for the department outcome.',
+      source: 'Simulated Income Tax notice {{reference}}',
+    },
+    refundDelayed: {
+      title: 'Recheck your refund bank linkage',
+      consequence:
+        'Your refund is paused until the selected bank account is linked and validated.',
+      source: 'Income Tax refund and bank validation records',
+    },
+    identityMismatch: {
+      title: 'Correct your name across connected records',
+      consequence:
+        'This difference can block your PF claim and delay Income Tax bank validation.',
+      source: 'Aadhaar, PAN, bank, EPFO and Income Tax records',
+    },
+    pfReady: {
+      title: 'Your PF claim checks are ready',
+      consequence:
+        'Review the checks and decide whether to submit a final settlement claim.',
+      source: 'EPFO and identity records',
+    },
+    taxDraft: {
+      title: 'Continue your Income Tax return',
+      consequence:
+        'Your Income Tax return has unsaved sections that still need review before filing.',
+      source: 'Income Tax draft',
     },
   },
 };
@@ -248,6 +294,40 @@ const hi = {
     exit: {
       pass: 'नौकरी छोड़ने की तारीख दर्ज है।',
       fail: 'पिछली नौकरी छोड़ने की तारीख नहीं है।',
+    },
+  },
+  actions: {
+    taxNotice: {
+      title: 'अपने सेक्शन {{section}} नोटिस का जवाब दें',
+      consequenceDefault:
+        'नागरिक को एक ज़रूरी कार्रवाई मिली है और भरा गया रिटर्न उसके पीछे सुरक्षित रखा गया है।',
+      consequenceSubmitted:
+        'आपका सुधार अनुरोध भेजा जा चुका है। विभाग के परिणाम की जाँच करें।',
+      source: 'सिम्युलेटेड आयकर नोटिस {{reference}}',
+    },
+    refundDelayed: {
+      title: 'अपना रिफंड बैंक लिंकेज फिर जाँचें',
+      consequence:
+        'चुना गया बैंक खाता लिंक और सत्यापित होने तक आपका रिफंड रुका है।',
+      source: 'आयकर रिफंड और बैंक सत्यापन रिकॉर्ड',
+    },
+    identityMismatch: {
+      title: 'जुड़े रिकॉर्ड में अपना नाम सुधारें',
+      consequence:
+        'यह अंतर आपके पीएफ दावे को रोक सकता है और आयकर के बैंक सत्यापन में देरी कर सकता है।',
+      source: 'आधार, पैन, बैंक, ईपीएफओ और आयकर रिकॉर्ड',
+    },
+    pfReady: {
+      title: 'आपकी पीएफ दावा जाँच तैयार है',
+      consequence:
+        'जाँच की समीक्षा करें और तय करें कि अंतिम निपटान दावा भेजना है या नहीं।',
+      source: 'ईपीएफओ और पहचान रिकॉर्ड',
+    },
+    taxDraft: {
+      title: 'अपना आयकर रिटर्न जारी रखें',
+      consequence:
+        'आपके आयकर रिटर्न में कुछ सेक्शन अभी भी समीक्षा और सुरक्षित करने बाकी हैं।',
+      source: 'आयकर ड्राफ्ट',
     },
   },
 };
@@ -355,6 +435,40 @@ const bn = {
     exit: {
       pass: 'চাকরি ছাড়ার তারিখ আছে।',
       fail: 'আগের চাকরি ছাড়ার তারিখ নেই।',
+    },
+  },
+  actions: {
+    taxNotice: {
+      title: 'আপনার সেকশন {{section}} নোটিসের জবাব দিন',
+      consequenceDefault:
+        'নাগরিক একটি প্রয়োজনীয় পদক্ষেপ খুঁজে পেয়েছে এবং জমা দেওয়া রিটার্ন তার পিছনে সুরক্ষিত রেখেছে।',
+      consequenceSubmitted:
+        'আপনার সংশোধন অনুরোধ জমা হয়েছে। বিভাগের ফলাফলের জন্য দেখুন।',
+      source: 'সিমুলেটেড আয়কর নোটিস {{reference}}',
+    },
+    refundDelayed: {
+      title: 'আপনার রিফান্ড ব্যাঙ্ক লিঙ্কেজ আবার পরীক্ষা করুন',
+      consequence:
+        'নির্বাচিত ব্যাঙ্ক অ্যাকাউন্ট লিঙ্ক ও যাচাই না হওয়া পর্যন্ত আপনার রিফান্ড থেমে আছে।',
+      source: 'আয়কর রিফান্ড ও ব্যাঙ্ক যাচাই রেকর্ড',
+    },
+    identityMismatch: {
+      title: 'সংযুক্ত রেকর্ড জুড়ে আপনার নাম ঠিক করুন',
+      consequence:
+        'এই অমিল আপনার পিএফ দাবি আটকাতে এবং আয়কর ব্যাঙ্ক যাচাই দেরি করাতে পারে।',
+      source: 'আধার, প্যান, ব্যাঙ্ক, ইপিএফও ও আয়কর রেকর্ড',
+    },
+    pfReady: {
+      title: 'আপনার পিএফ দাবির পরীক্ষা প্রস্তুত',
+      consequence:
+        'পরীক্ষাগুলি দেখুন এবং ঠিক করুন চূড়ান্ত নিষ্পত্তির দাবি জমা দেবেন কিনা।',
+      source: 'ইপিএফও ও পরিচয় রেকর্ড',
+    },
+    taxDraft: {
+      title: 'আপনার আয়কর রিটার্ন চালিয়ে যান',
+      consequence:
+        'আপনার আয়কর রিটার্নে এমন সেকশন আছে যা জমা দেওয়ার আগে দেখা দরকার।',
+      source: 'আয়কর খসড়া',
     },
   },
 };

@@ -1,6 +1,43 @@
 import type { ActionItem, PersonaSeed } from '../types/domain';
 
 export function deriveActions(seed: PersonaSeed): ActionItem[] {
+  const notice = seed.tax?.draft?.notices.find(
+    (item) => item.state !== 'RESOLVED',
+  );
+  if (notice)
+    return [
+      {
+        id: `action-${notice.id}`,
+        service: 'INCOME_TAX',
+        severity: 'BLOCKING',
+        title: 'actions.taxNotice.title',
+        consequence:
+          notice.action.status === 'SUBMITTED'
+            ? 'actions.taxNotice.consequenceSubmitted'
+            : 'actions.taxNotice.consequenceDefault',
+        fixTarget: `/tax/notices/${notice.id}`,
+        source: 'actions.taxNotice.source',
+        values: {
+          section: notice.section,
+          reference: notice.source.reference,
+        },
+      },
+    ];
+  const delayedRefund = seed.tax?.filedReturns.find(
+    (filed) => filed.refund?.status === 'DELAYED',
+  );
+  if (delayedRefund)
+    return [
+      {
+        id: `action-refund-${delayedRefund.acknowledgmentNumber}`,
+        service: 'INCOME_TAX',
+        severity: 'WARNING',
+        title: 'actions.refundDelayed.title',
+        consequence: 'actions.refundDelayed.consequence',
+        fixTarget: `/tax/returns/${delayedRefund.acknowledgmentNumber}/refund`,
+        source: 'actions.refundDelayed.source',
+      },
+    ];
   const mismatch = seed.mismatches.find(
     (item) => item.status !== 'RESOLVED' && item.severity === 'BLOCKING',
   );
@@ -10,11 +47,10 @@ export function deriveActions(seed: PersonaSeed): ActionItem[] {
         id: `action-${mismatch.id}`,
         service: 'IDENTITY',
         severity: 'BLOCKING',
-        title: 'Correct your name across connected records',
-        consequence:
-          'This difference can block your PF claim and delay Income Tax bank validation.',
+        title: 'actions.identityMismatch.title',
+        consequence: 'actions.identityMismatch.consequence',
         fixTarget: `/identity/mismatch/${mismatch.id}`,
-        source: 'Aadhaar, PAN, bank, EPFO and Income Tax records',
+        source: 'actions.identityMismatch.source',
       },
     ];
   if (!seed.epfo.claim)
@@ -23,11 +59,10 @@ export function deriveActions(seed: PersonaSeed): ActionItem[] {
         id: 'action-pf-ready',
         service: 'EPFO',
         severity: 'INFO',
-        title: 'Your PF claim checks are ready',
-        consequence:
-          'Review the checks and decide whether to submit a final settlement claim.',
+        title: 'actions.pfReady.title',
+        consequence: 'actions.pfReady.consequence',
         fixTarget: '/epfo/claim',
-        source: 'EPFO and identity records',
+        source: 'actions.pfReady.source',
       },
     ];
   if (seed.tax?.draft && seed.tax.filedReturns.length === 0)
@@ -36,11 +71,10 @@ export function deriveActions(seed: PersonaSeed): ActionItem[] {
         id: 'action-tax-draft',
         service: 'INCOME_TAX',
         severity: 'INFO',
-        title: 'Continue your Income Tax return',
-        consequence:
-          'Your Income Tax return has unsaved sections that still need review before filing.',
+        title: 'actions.taxDraft.title',
+        consequence: 'actions.taxDraft.consequence',
         fixTarget: '/tax/file',
-        source: 'Income Tax draft',
+        source: 'actions.taxDraft.source',
       },
     ];
   return [];

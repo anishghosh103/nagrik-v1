@@ -308,10 +308,66 @@ export interface RegimeComparison {
   differenceAmount: number;
 }
 
+export type NoticeState = 'NOTICE_RECEIVED' | 'ACTION_REQUIRED' | 'RESOLVED';
+export type NoticeRemedy = 'REFILE' | 'PAY' | 'RECTIFY' | 'ITR_U';
+export type NoticeFixtureId =
+  | 'DEFECTIVE_WRONG_FORM'
+  | 'DEMAND_CONFIRMED'
+  | 'TDS_CREDIT_OMITTED'
+  | 'UPDATED_RETURN_CANDIDATE';
+
+export interface NoticeDiscrepancy {
+  id: string;
+  code:
+    'WRONG_FORM' | 'UNPAID_DEMAND' | 'TDS_CREDIT_MISSING' | 'OMITTED_INCOME';
+  labelKey: string;
+  declaredAmount: number;
+  departmentAmount: number;
+  source: 'CPC' | 'FILED_RETURN';
+  target?: { sectionId: SectionId; route: string; focusId?: string };
+}
+
+export interface NoticeItem {
+  id: string;
+  linkedAcknowledgmentNumber: string;
+  fixtureId: NoticeFixtureId;
+  section: '139(9)' | '143(1)';
+  issuedOn: string;
+  responseDeadline?: string;
+  importedAt: string;
+  source: { kind: 'SIMULATED_IMPORT'; reference: string };
+  discrepancies: NoticeDiscrepancy[];
+  remedy: NoticeRemedy;
+  state: NoticeState;
+  action: {
+    status: 'NOT_STARTED' | 'IN_PROGRESS' | 'SUBMITTED' | 'COMPLETED';
+    reference?: string;
+    updatedAt?: string;
+  };
+}
+
+export interface ReturnStatusEvent {
+  id: string;
+  kind:
+    'FILED' | 'VERIFIED' | 'PROCESSED' | 'REFUND_ISSUED' | 'REFUND_CREDITED';
+  occurredAt: string;
+}
+
+export interface RefundRecord {
+  amount: number;
+  bankName: string;
+  maskedAccountNumber: string;
+  status: 'PROCESSING' | 'DELAYED' | 'ISSUED' | 'CREDITED';
+  delayReason?: 'BANK_LINKAGE';
+  expectedNextEventOn?: string;
+  updatedAt: string;
+}
+
 export interface ReturnDraft {
   assessmentYear: string;
   rulesVersion: string;
-  filingType: 'ORIGINAL';
+  filingType: 'ORIGINAL' | 'DEFECTIVE_RESPONSE';
+  responseToNoticeId?: string;
   filingRoute: FilingRoute;
   residentialStatus: ResidentialStatus;
   eligibilityAnswers: EligibilityAnswers;
@@ -336,8 +392,7 @@ export interface ReturnDraft {
   filingDate: string;
   validationIssues: ValidationIssue[];
   sectionStates: Record<SectionId, SectionState>;
-  /** Reserved for section 10 (post-filing notices). */
-  notices: unknown[];
+  notices: NoticeItem[];
   computation: { OLD: ReturnComputation; NEW: ReturnComputation } | null;
   updatedAt: string;
 }
@@ -347,6 +402,8 @@ export interface FiledReturnSnapshot {
   filedAt: string;
   rulesVersion: string;
   regime: TaxRegime;
+  filingType: 'ORIGINAL' | 'DEFECTIVE_RESPONSE';
+  parentAcknowledgmentNumber?: string;
   draft: ReturnDraft;
   computation: ReturnComputation;
   verification: {
@@ -354,6 +411,12 @@ export interface FiledReturnSnapshot {
     method?: 'AADHAAR_OTP';
     verifiedAt?: string;
   };
+  processing: {
+    status: 'FILED' | 'VERIFIED' | 'PROCESSED';
+    expectedNextEventOn?: string;
+    events: ReturnStatusEvent[];
+  };
+  refund?: RefundRecord;
 }
 
 export interface SuggestedDeduction {
@@ -380,6 +443,7 @@ export interface TaxRecord {
   sources: TaxSourceSnapshot;
   draft: ReturnDraft | null;
   filedReturns: FiledReturnSnapshot[];
+  refundScenario: 'STANDARD' | 'BANK_LINKAGE_DELAY';
 }
 
 export interface SlabBand {
@@ -668,6 +732,66 @@ const sectionStateSchema = z.object({
   blockingIssues: z.array(validationIssueSchema),
 });
 
+const noticeDiscrepancySchema = z.object({
+  id: z.string(),
+  code: z.enum([
+    'WRONG_FORM',
+    'UNPAID_DEMAND',
+    'TDS_CREDIT_MISSING',
+    'OMITTED_INCOME',
+  ]),
+  labelKey: z.string(),
+  declaredAmount: z.number(),
+  departmentAmount: z.number(),
+  source: z.enum(['CPC', 'FILED_RETURN']),
+  target: z
+    .object({
+      sectionId: z.enum([
+        'ELIGIBILITY',
+        'INCOME_SOURCES',
+        'SALARY',
+        'HOUSE_PROPERTY',
+        'CAPITAL_GAINS',
+        'BUSINESS',
+        'INTEREST',
+        'DEDUCTIONS',
+        'TAX_CREDITS',
+        'REGIME',
+        'BANK',
+      ]),
+      route: z.string(),
+      focusId: z.string().optional(),
+    })
+    .optional(),
+});
+
+const noticeItemSchema = z.object({
+  id: z.string(),
+  linkedAcknowledgmentNumber: z.string(),
+  fixtureId: z.enum([
+    'DEFECTIVE_WRONG_FORM',
+    'DEMAND_CONFIRMED',
+    'TDS_CREDIT_OMITTED',
+    'UPDATED_RETURN_CANDIDATE',
+  ]),
+  section: z.enum(['139(9)', '143(1)']),
+  issuedOn: z.string(),
+  responseDeadline: z.string().optional(),
+  importedAt: z.string(),
+  source: z.object({
+    kind: z.literal('SIMULATED_IMPORT'),
+    reference: z.string(),
+  }),
+  discrepancies: z.array(noticeDiscrepancySchema),
+  remedy: z.enum(['REFILE', 'PAY', 'RECTIFY', 'ITR_U']),
+  state: z.enum(['NOTICE_RECEIVED', 'ACTION_REQUIRED', 'RESOLVED']),
+  action: z.object({
+    status: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'SUBMITTED', 'COMPLETED']),
+    reference: z.string().optional(),
+    updatedAt: z.string().optional(),
+  }),
+});
+
 const deductionResultSchema = z.object({
   section: z.enum(['80C', '80D', '80TTA', '80TTB']),
   label: z.string(),
@@ -741,7 +865,8 @@ const returnComputationSchema = z.object({
 const returnDraftSchema = z.object({
   assessmentYear: z.string(),
   rulesVersion: z.string(),
-  filingType: z.literal('ORIGINAL'),
+  filingType: z.enum(['ORIGINAL', 'DEFECTIVE_RESPONSE']),
+  responseToNoticeId: z.string().optional(),
   filingRoute: z.enum([
     'ITR1_LIKE',
     'ITR2_LIKE',
@@ -773,7 +898,7 @@ const returnDraftSchema = z.object({
   filingDate: z.string(),
   validationIssues: z.array(validationIssueSchema),
   sectionStates: z.record(z.string(), sectionStateSchema),
-  notices: z.array(z.unknown()),
+  notices: z.array(noticeItemSchema),
   computation: z
     .object({ OLD: returnComputationSchema, NEW: returnComputationSchema })
     .nullable(),
@@ -785,6 +910,8 @@ const filedReturnSnapshotSchema = z.object({
   filedAt: z.string(),
   rulesVersion: z.string(),
   regime: z.enum(['OLD', 'NEW']),
+  filingType: z.enum(['ORIGINAL', 'DEFECTIVE_RESPONSE']),
+  parentAcknowledgmentNumber: z.string().optional(),
   draft: returnDraftSchema,
   computation: returnComputationSchema,
   verification: z.object({
@@ -792,6 +919,34 @@ const filedReturnSnapshotSchema = z.object({
     method: z.literal('AADHAAR_OTP').optional(),
     verifiedAt: z.string().optional(),
   }),
+  processing: z.object({
+    status: z.enum(['FILED', 'VERIFIED', 'PROCESSED']),
+    expectedNextEventOn: z.string().optional(),
+    events: z.array(
+      z.object({
+        id: z.string(),
+        kind: z.enum([
+          'FILED',
+          'VERIFIED',
+          'PROCESSED',
+          'REFUND_ISSUED',
+          'REFUND_CREDITED',
+        ]),
+        occurredAt: z.string(),
+      }),
+    ),
+  }),
+  refund: z
+    .object({
+      amount: z.number(),
+      bankName: z.string(),
+      maskedAccountNumber: z.string(),
+      status: z.enum(['PROCESSING', 'DELAYED', 'ISSUED', 'CREDITED']),
+      delayReason: z.literal('BANK_LINKAGE').optional(),
+      expectedNextEventOn: z.string().optional(),
+      updatedAt: z.string(),
+    })
+    .optional(),
 });
 
 const suggestedDeductionSchema = z.object({
@@ -817,4 +972,5 @@ export const taxRecordSchema = z.object({
   sources: taxSourceSnapshotSchema,
   draft: returnDraftSchema.nullable(),
   filedReturns: z.array(filedReturnSnapshotSchema),
+  refundScenario: z.enum(['STANDARD', 'BANK_LINKAGE_DELAY']),
 });

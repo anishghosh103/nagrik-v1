@@ -1,4 +1,4 @@
-import { ArrowRight, Info } from 'lucide-react';
+import { ArrowRight, FileSearch, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
 import {
@@ -49,6 +49,21 @@ export function TaxHomePage() {
             {t('tax.home.viewReturn')}
             <ArrowRight />
           </ButtonLink>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <ButtonLink
+              variant="secondary"
+              to="/tax/returns"
+            >
+              {t('tax.postFiling.returns.title')}
+              <ArrowRight />
+            </ButtonLink>
+            <ButtonLink
+              variant="secondary"
+              to="/tax/notices"
+            >
+              <FileSearch /> {t('tax.postFiling.notices.title')}
+            </ButtonLink>
+          </div>
         </section>
       ) : (
         <section className="mt-7">

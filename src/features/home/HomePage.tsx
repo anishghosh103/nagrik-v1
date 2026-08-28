@@ -32,6 +32,12 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
   const health = identityHealth(persona);
   const action = persona.actions[0];
   const taxFiled = persona.tax?.filedReturns[0];
+  const openTaxNotice = persona.tax?.draft?.notices.find(
+    (notice) => notice.state !== 'RESOLVED',
+  );
+  const delayedRefund = persona.tax?.filedReturns.find(
+    (filed) => filed.refund?.status === 'DELAYED',
+  );
   if (actionsOnly)
     return (
       <Page width="narrow">
@@ -90,13 +96,17 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
             tone="tax"
             label="Income Tax"
             title={
-              taxFiled
-                ? taxFiled.verification.status === 'VERIFIED'
-                  ? 'Filed and verified'
-                  : 'Filed — verification needed'
-                : persona.tax?.draft
-                  ? 'Continue your return'
-                  : 'Start your return'
+              openTaxNotice
+                ? `Section ${openTaxNotice.section} notice needs a response`
+                : delayedRefund
+                  ? 'Refund bank check needed'
+                  : taxFiled
+                    ? taxFiled.verification.status === 'VERIFIED'
+                      ? 'Filed and verified'
+                      : 'Filed — verification needed'
+                    : persona.tax?.draft
+                      ? 'Continue your return'
+                      : 'Start your return'
             }
             meta={
               taxFiled ? (
@@ -115,20 +125,26 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
             status={
               <Status
                 kind={
-                  taxFiled
-                    ? taxFiled.verification.status === 'VERIFIED'
-                      ? 'success'
-                      : 'warning'
-                    : 'info'
+                  openTaxNotice || delayedRefund
+                    ? 'warning'
+                    : taxFiled
+                      ? taxFiled.verification.status === 'VERIFIED'
+                        ? 'success'
+                        : 'warning'
+                      : 'info'
                 }
               >
-                {taxFiled
-                  ? taxFiled.verification.status === 'VERIFIED'
-                    ? 'Verified'
-                    : 'Pending'
-                  : persona.tax?.draft
-                    ? 'In progress'
-                    : 'Ready'}
+                {openTaxNotice
+                  ? 'Action needed'
+                  : delayedRefund
+                    ? 'Delayed'
+                    : taxFiled
+                      ? taxFiled.verification.status === 'VERIFIED'
+                        ? 'Verified'
+                        : 'Pending'
+                      : persona.tax?.draft
+                        ? 'In progress'
+                        : 'Ready'}
               </Status>
             }
           />
@@ -194,8 +210,8 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
                   <Activity />
                 )
               }
-              title={event.title}
-              detail={event.detail}
+              title={t(event.title, event.values)}
+              detail={t(event.detail, event.values)}
               time={formatDate(event.occurredAt, i18n.language)}
             />
           ))}
@@ -290,6 +306,7 @@ function ActionCard({
     ReturnType<typeof useAppStore.getState>['persona']
   >['actions'][number];
 }) {
+  const { t } = useTranslation();
   return (
     <Link
       to={action.fixTarget}
@@ -304,9 +321,11 @@ function ActionCard({
             ? 'Affects 2 services'
             : 'Ready to review'}
         </Status>
-        <h2 className="mt-1.75 mb-1.25">{action.title}</h2>
-        <p className="mb-2.5 text-ink-muted">{action.consequence}</p>
-        <SourceMarker>{action.source}</SourceMarker>
+        <h2 className="mt-1.75 mb-1.25">{t(action.title, action.values)}</h2>
+        <p className="mb-2.5 text-ink-muted">
+          {t(action.consequence, action.values)}
+        </p>
+        <SourceMarker>{t(action.source, action.values)}</SourceMarker>
       </div>
       <span className="flex items-center gap-2 font-bold whitespace-nowrap text-primary max-[599px]:col-start-2">
         Open task

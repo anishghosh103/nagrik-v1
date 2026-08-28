@@ -182,6 +182,7 @@ export interface ActionItem {
   consequence: string;
   fixTarget: string;
   source: string;
+  values?: Record<string, string | number>;
 }
 
 export interface ActivityEvent {
@@ -489,6 +490,9 @@ export const personaSeedSchema = z.object({
       consequence: z.string(),
       fixTarget: z.string(),
       source: z.string(),
+      values: z
+        .record(z.string(), z.union([z.string(), z.number()]))
+        .optional(),
     }),
   ),
   activity: z.array(

@@ -7,7 +7,7 @@ const historyTime = '2025-11-18T08:10:00.000Z';
 
 const ananya: PersonaSeed = {
   id: 'ananya',
-  schemaVersion: 5,
+  schemaVersion: 6,
   profile: {
     fullName: 'Ananya Sen',
     firstName: 'Ananya',
@@ -248,6 +248,7 @@ const ananya: PersonaSeed = {
     },
     draft: null,
     filedReturns: [],
+    refundScenario: 'STANDARD',
   },
   mismatches: [],
   identityChanges: [],
@@ -266,7 +267,7 @@ const ananya: PersonaSeed = {
 
 const rajesh: PersonaSeed = {
   id: 'rajesh',
-  schemaVersion: 5,
+  schemaVersion: 6,
   profile: {
     fullName: 'Rajesh Kumar',
     firstName: 'Rajesh',
@@ -510,6 +511,7 @@ const rajesh: PersonaSeed = {
     },
     draft: null,
     filedReturns: [],
+    refundScenario: 'BANK_LINKAGE_DELAY',
   },
   mismatches: [
     {

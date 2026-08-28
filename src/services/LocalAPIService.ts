@@ -11,6 +11,7 @@ import {
   determineFilingRoute as determineFilingRouteRule,
   validateReturn as validateReturnRule,
 } from '../rules/tax';
+import { createSimulatedNotice } from '../rules/tax/notices';
 import { getTaxRulesConfig } from '../data/taxRules';
 import type { APIService } from './APIService';
 import type {
@@ -31,9 +32,15 @@ import type {
   RetryPropagationInput,
 } from '../types/domain';
 import { personaSeedSchema } from '../types/domain';
-import type { FiledReturnSnapshot, ReturnDraft, TaxRegime } from '../types/tax';
+import type {
+  FiledReturnSnapshot,
+  NoticeFixtureId,
+  NoticeItem,
+  ReturnDraft,
+  TaxRegime,
+} from '../types/tax';
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 const SESSION_KEY = 'nagrik:app:session';
 const keyFor = (id: PersonaId, version = SCHEMA_VERSION) =>
   `nagrik:persona:${id}:state:v${version}`;
@@ -98,6 +105,8 @@ export class LocalAPIService implements APIService {
       const now = new Date().toISOString();
       return {
         ...old,
+        filingType: old.filingType ?? 'ORIGINAL',
+        responseToNoticeId: old.responseToNoticeId,
         rulesVersion: getTaxRulesConfig(old.assessmentYear).rulesVersion,
         properties: Array.isArray(old.properties) ? old.properties : [],
         capitalGains: Array.isArray(old.capitalGains) ? old.capitalGains : [],
@@ -110,6 +119,14 @@ export class LocalAPIService implements APIService {
                 capitalLossCarriedForward: 0,
               },
         filingDate: old.filingDate ?? now.slice(0, 10),
+        notices: Array.isArray(old.notices)
+          ? (old.notices.filter(
+              (notice): notice is NoticeItem =>
+                !!notice &&
+                typeof notice === 'object' &&
+                'linkedAcknowledgmentNumber' in notice,
+            ) as NoticeItem[])
+          : [],
         sectionStates: {
           ...old.sectionStates,
           HOUSE_PROPERTY: old.sectionStates?.HOUSE_PROPERTY ?? {
@@ -139,9 +156,32 @@ export class LocalAPIService implements APIService {
         return [
           {
             ...filed,
+            filingType: filed.filingType ?? 'ORIGINAL',
             rulesVersion: rules.rulesVersion,
             draft: { ...draft, computation: null },
             computation,
+            processing: filed.processing ?? {
+              status:
+                filed.verification.status === 'VERIFIED'
+                  ? ('VERIFIED' as const)
+                  : ('FILED' as const),
+              events: [
+                {
+                  id: `return-filed-${filed.acknowledgmentNumber}`,
+                  kind: 'FILED' as const,
+                  occurredAt: filed.filedAt,
+                },
+                ...(filed.verification.verifiedAt
+                  ? [
+                      {
+                        id: `return-verified-${filed.acknowledgmentNumber}`,
+                        kind: 'VERIFIED' as const,
+                        occurredAt: filed.verification.verifiedAt,
+                      },
+                    ]
+                  : []),
+              ],
+            },
           },
         ];
       },
@@ -181,6 +221,9 @@ export class LocalAPIService implements APIService {
               .rulesVersion,
             draft: migratedDraft,
             filedReturns: migratedFiledReturns,
+            refundScenario:
+              legacyTax.refundScenario ??
+              (id === 'rajesh' ? 'BANK_LINKAGE_DELAY' : 'STANDARD'),
           }
         : seed.tax,
     };
@@ -198,7 +241,7 @@ export class LocalAPIService implements APIService {
         return data;
       }
     }
-    for (const version of [4, 3, 2, 1]) {
+    for (const version of [5, 4, 3, 2, 1]) {
       const legacyRaw = localStorage.getItem(keyFor(id, version));
       if (legacyRaw) {
         const migrated = this.migrate(id, JSON.parse(legacyRaw));
@@ -749,8 +792,14 @@ export class LocalAPIService implements APIService {
     const seed = this.read(id);
     const tax = seed.tax;
     if (!tax) throw new Error('TAX_RECORD_NOT_FOUND');
-    if (tax.filedReturns.length > 0) {
-      const filed = tax.filedReturns[0];
+    const alreadyFiled = draft.responseToNoticeId
+      ? tax.filedReturns.find(
+          (filed) =>
+            filed.draft.responseToNoticeId === draft.responseToNoticeId,
+        )
+      : tax.filedReturns.find((filed) => filed.filingType === 'ORIGINAL');
+    if (alreadyFiled) {
+      const filed = alreadyFiled;
       return {
         acknowledgmentNumber: filed.acknowledgmentNumber,
         filedAt: filed.filedAt,
@@ -775,16 +824,61 @@ export class LocalAPIService implements APIService {
       rajesh: 'NGR-ITR-260825-4471',
       ananya: 'NGR-ITR-260825-3382',
     };
+    const baseReference = references[id];
+    const acknowledgmentNumber =
+      draft.filingType === 'ORIGINAL'
+        ? baseReference
+        : `${baseReference}-R${tax.filedReturns.length}`;
+    const refundAccount = draft.bankAccounts.find(
+      (account) => account.id === draft.refundAccountId,
+    );
+    const expectedNextEventOn = new Date(
+      Date.now() + 9 * 86_400_000,
+    ).toISOString();
+    const linkedNotice = draft.responseToNoticeId
+      ? draft.notices.find((notice) => notice.id === draft.responseToNoticeId)
+      : undefined;
     const snapshot: FiledReturnSnapshot = {
-      acknowledgmentNumber: references[id],
+      acknowledgmentNumber,
       filedAt: now,
       rulesVersion: draft.rulesVersion,
       regime,
+      filingType: draft.filingType,
+      parentAcknowledgmentNumber: linkedNotice?.linkedAcknowledgmentNumber,
       draft: structuredClone(draft),
       computation,
       verification: { status: 'PENDING' },
+      processing: {
+        status: 'FILED',
+        expectedNextEventOn,
+        events: [
+          {
+            id: `return-filed-${acknowledgmentNumber}`,
+            kind: 'FILED',
+            occurredAt: now,
+          },
+        ],
+      },
+      refund:
+        computation.refund > 0 && refundAccount
+          ? {
+              amount: computation.refund,
+              bankName: refundAccount.bankName,
+              maskedAccountNumber: refundAccount.maskedAccountNumber,
+              status:
+                tax.refundScenario === 'BANK_LINKAGE_DELAY'
+                  ? 'DELAYED'
+                  : 'PROCESSING',
+              delayReason:
+                tax.refundScenario === 'BANK_LINKAGE_DELAY'
+                  ? 'BANK_LINKAGE'
+                  : undefined,
+              expectedNextEventOn,
+              updatedAt: now,
+            }
+          : undefined,
     };
-    tax.filedReturns.push(snapshot);
+    tax.filedReturns.unshift(snapshot);
     seed.activity.unshift({
       id: `act-tax-filed-${id}-${tax.assessmentYear}`,
       kind: 'INCOME_TAX',
@@ -821,11 +915,251 @@ export class LocalAPIService implements APIService {
       method: 'AADHAAR_OTP',
       verifiedAt: now,
     };
+    filed.processing.status = 'VERIFIED';
+    filed.processing.expectedNextEventOn = new Date(
+      Date.now() + 9 * 86_400_000,
+    ).toISOString();
+    if (!filed.processing.events.some((event) => event.kind === 'VERIFIED'))
+      filed.processing.events.push({
+        id: `return-verified-${filed.acknowledgmentNumber}`,
+        kind: 'VERIFIED',
+        occurredAt: now,
+      });
+    const noticeId = filed.draft.responseToNoticeId;
+    const notice = seed.tax?.draft?.notices.find(
+      (item) => item.id === noticeId,
+    );
+    if (notice) {
+      notice.action = {
+        status: 'COMPLETED',
+        reference: filed.acknowledgmentNumber,
+        updatedAt: now,
+      };
+      notice.state = 'RESOLVED';
+      seed.activity.unshift({
+        id: `act-notice-resolved-${notice.id}`,
+        kind: 'INCOME_TAX',
+        title: 'activity.events.noticeResolved',
+        detail: 'activity.events.noticeResolvedDetail',
+        values: { section: notice.section },
+        status: 'COMPLETE',
+        occurredAt: now,
+      });
+    }
     const activityId = `act-tax-filed-${id}-${seed.tax?.assessmentYear}`;
     const event = seed.activity.find((item) => item.id === activityId);
     if (event) event.status = 'COMPLETE';
     this.write(seed);
     return { status: 'VERIFIED' as const, verifiedAt: now };
+  }
+
+  async getFiledReturns(id: PersonaId) {
+    await wait(120);
+    return structuredClone(this.read(id).tax?.filedReturns ?? []);
+  }
+
+  async refreshFiledReturnStatus(id: PersonaId, acknowledgmentNumber: string) {
+    await wait(360);
+    requireOnline();
+    const seed = this.read(id);
+    const filed = seed.tax?.filedReturns.find(
+      (item) => item.acknowledgmentNumber === acknowledgmentNumber,
+    );
+    if (!filed) throw new Error('FILED_RETURN_NOT_FOUND');
+    if (filed.verification.status !== 'VERIFIED')
+      throw new Error('RETURN_NOT_VERIFIED');
+    const now = new Date().toISOString();
+    if (filed.processing.status !== 'PROCESSED') {
+      filed.processing.status = 'PROCESSED';
+      filed.processing.events.push({
+        id: `return-processed-${acknowledgmentNumber}`,
+        kind: 'PROCESSED',
+        occurredAt: now,
+      });
+    } else if (filed.refund?.status === 'PROCESSING') {
+      filed.refund.status = 'ISSUED';
+      filed.refund.updatedAt = now;
+      filed.processing.events.push({
+        id: `refund-issued-${acknowledgmentNumber}`,
+        kind: 'REFUND_ISSUED',
+        occurredAt: now,
+      });
+    } else if (filed.refund?.status === 'ISSUED') {
+      filed.refund.status = 'CREDITED';
+      filed.refund.updatedAt = now;
+      filed.processing.events.push({
+        id: `refund-credited-${acknowledgmentNumber}`,
+        kind: 'REFUND_CREDITED',
+        occurredAt: now,
+      });
+    }
+    this.write(seed);
+    return structuredClone(filed);
+  }
+
+  async revalidateRefundBank(id: PersonaId, acknowledgmentNumber: string) {
+    await wait(320);
+    requireOnline();
+    const seed = this.read(id);
+    const filed = seed.tax?.filedReturns.find(
+      (item) => item.acknowledgmentNumber === acknowledgmentNumber,
+    );
+    if (!filed?.refund) throw new Error('REFUND_NOT_FOUND');
+    const now = new Date().toISOString();
+    filed.refund.status = 'PROCESSING';
+    filed.refund.delayReason = undefined;
+    filed.refund.updatedAt = now;
+    filed.refund.expectedNextEventOn = new Date(
+      Date.now() + 9 * 86_400_000,
+    ).toISOString();
+    this.write(seed);
+    return structuredClone(filed);
+  }
+
+  async getNotices(id: PersonaId) {
+    await wait(120);
+    return structuredClone(this.read(id).tax?.draft?.notices ?? []);
+  }
+
+  async importNotice(id: PersonaId, fixtureId: NoticeFixtureId) {
+    await wait(420);
+    requireOnline();
+    const seed = this.read(id);
+    const tax = seed.tax;
+    const filed = tax?.filedReturns.find(
+      (item) => item.verification.status === 'VERIFIED',
+    );
+    if (!tax || !filed) throw new Error('VERIFIED_RETURN_REQUIRED');
+    if (!tax.draft) tax.draft = structuredClone(filed.draft);
+    const existing = tax.draft.notices.find(
+      (notice) =>
+        notice.fixtureId === fixtureId &&
+        notice.linkedAcknowledgmentNumber === filed.acknowledgmentNumber,
+    );
+    if (existing) return structuredClone(existing);
+    const notice = createSimulatedNotice(
+      fixtureId,
+      filed.acknowledgmentNumber,
+      new Date(),
+    );
+    tax.draft.notices.unshift(notice);
+    seed.activity.unshift({
+      id: `act-notice-${notice.id}`,
+      kind: 'INCOME_TAX',
+      title: 'activity.events.noticeReceived',
+      detail: 'activity.events.noticeReceivedDetail',
+      values: { section: notice.section },
+      status: 'IN_PROGRESS',
+      occurredAt: notice.importedAt,
+    });
+    this.write(seed);
+    return structuredClone(notice);
+  }
+
+  private requireNotice(seed: PersonaSeed, noticeId: string) {
+    const notice = seed.tax?.draft?.notices.find(
+      (item) => item.id === noticeId,
+    );
+    if (!notice) throw new Error('NOTICE_NOT_FOUND');
+    return notice;
+  }
+
+  async startNoticeRemedy(id: PersonaId, noticeId: string) {
+    await wait(220);
+    const seed = this.read(id);
+    const notice = this.requireNotice(seed, noticeId);
+    const tax = seed.tax!;
+    const filed = tax.filedReturns.find(
+      (item) => item.acknowledgmentNumber === notice.linkedAcknowledgmentNumber,
+    );
+    if (!filed) throw new Error('FILED_RETURN_NOT_FOUND');
+    const now = new Date().toISOString();
+    notice.action = { status: 'IN_PROGRESS', updatedAt: now };
+    if (notice.remedy === 'REFILE') {
+      const target = notice.discrepancies[0]?.target;
+      const reopened = structuredClone(filed.draft);
+      reopened.filingType = 'DEFECTIVE_RESPONSE';
+      reopened.responseToNoticeId = notice.id;
+      reopened.notices = structuredClone(tax.draft?.notices ?? []);
+      reopened.updatedAt = now;
+      if (target)
+        reopened.sectionStates[target.sectionId] = {
+          status: 'NEEDS_REVIEW',
+          blockingIssues: [],
+        };
+      tax.draft = reopened;
+    }
+    this.write(seed);
+    return structuredClone(notice);
+  }
+
+  async submitNoticePayment(id: PersonaId, noticeId: string) {
+    await wait(420);
+    requireOnline();
+    const seed = this.read(id);
+    const notice = this.requireNotice(seed, noticeId);
+    if (notice.action.status === 'COMPLETED') return structuredClone(notice);
+    if (notice.remedy !== 'PAY') throw new Error('PAYMENT_NOT_APPLICABLE');
+    const now = new Date().toISOString();
+    notice.action = {
+      status: 'COMPLETED',
+      reference: `NGR-DEM-${notice.id.slice(-8).toUpperCase()}`,
+      updatedAt: now,
+    };
+    notice.state = 'RESOLVED';
+    seed.activity.unshift({
+      id: `act-notice-resolved-${notice.id}`,
+      kind: 'INCOME_TAX',
+      title: 'activity.events.noticeResolved',
+      detail: 'activity.events.noticeResolvedDetail',
+      values: { section: notice.section },
+      status: 'COMPLETE',
+      occurredAt: now,
+    });
+    this.write(seed);
+    return structuredClone(notice);
+  }
+
+  async submitRectification(id: PersonaId, noticeId: string) {
+    await wait(420);
+    requireOnline();
+    const seed = this.read(id);
+    const notice = this.requireNotice(seed, noticeId);
+    if (notice.remedy !== 'RECTIFY')
+      throw new Error('RECTIFICATION_NOT_APPLICABLE');
+    if (notice.action.status === 'SUBMITTED') return structuredClone(notice);
+    const now = new Date().toISOString();
+    notice.action = {
+      status: 'SUBMITTED',
+      reference: `NGR-154-${notice.id.slice(-7).toUpperCase()}`,
+      updatedAt: now,
+    };
+    this.write(seed);
+    return structuredClone(notice);
+  }
+
+  async refreshNoticeOutcome(id: PersonaId, noticeId: string) {
+    await wait(360);
+    requireOnline();
+    const seed = this.read(id);
+    const notice = this.requireNotice(seed, noticeId);
+    if (notice.remedy !== 'RECTIFY' || notice.action.status !== 'SUBMITTED')
+      throw new Error('RECTIFICATION_NOT_SUBMITTED');
+    const now = new Date().toISOString();
+    notice.action.status = 'COMPLETED';
+    notice.action.updatedAt = now;
+    notice.state = 'RESOLVED';
+    seed.activity.unshift({
+      id: `act-notice-resolved-${notice.id}`,
+      kind: 'INCOME_TAX',
+      title: 'activity.events.noticeResolved',
+      detail: 'activity.events.noticeResolvedDetail',
+      values: { section: notice.section },
+      status: 'COMPLETE',
+      occurredAt: now,
+    });
+    this.write(seed);
+    return structuredClone(notice);
   }
 
   async resetPersona(id: PersonaId) {
@@ -834,6 +1168,7 @@ export class LocalAPIService implements APIService {
     localStorage.removeItem(keyFor(id, 3));
     localStorage.removeItem(keyFor(id, 2));
     localStorage.removeItem(keyFor(id, 1));
+    localStorage.removeItem(keyFor(id, 5));
     const seed = cloneSeed(id);
     seed.actions = deriveActions(seed);
     this.write(seed);

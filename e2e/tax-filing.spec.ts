@@ -58,6 +58,9 @@ async function reviewAdditionalIncomeHeads(
 test('Ananya files and e-verifies a clean Income Tax return', async ({
   page,
 }) => {
+  // Filing plus four post-filing notice round trips comfortably exceeds the
+  // default 30s budget under parallel viewport workers.
+  test.slow();
   await login(page, 'Ananya');
   await startFiling(page);
 
@@ -125,6 +128,91 @@ test('Ananya files and e-verifies a clean Income Tax return', async ({
   await page.getByRole('link', { name: /unified activity/i }).click();
   await expect(
     page.getByRole('heading', { name: 'Income Tax return filed', exact: true }),
+  ).toBeVisible();
+
+  // Post-filing return and refund tracking preserves the frozen filing.
+  await page.goto('/tax/returns');
+  await expect(
+    page.getByRole('heading', { name: 'Return history', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /NGR-ITR-260825-3382/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /return is being processed/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /view refund tracker/i }).click();
+  await expect(page.getByText(/expected refund/i)).toBeVisible();
+  await expect(page.getByText(/State Bank of India/i)).toBeVisible();
+
+  // A recognised 143(1) discrepancy offers rectification only and remains
+  // pending until the simulated CPC outcome arrives.
+  await page.goto('/tax/notices/import');
+  await page
+    .getByRole('button', { name: /intimation · missing TDS credit/i })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: /request rectification/i, level: 1 }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: /compare filed and department values/i })
+    .click();
+  await expect(page.getByText(/Form 26AS tax credit/i)).toBeVisible();
+  await page.getByRole('button', { name: /close/i }).click();
+  await page.getByRole('link', { name: /request rectification/i }).click();
+  await expect(page).toHaveURL(/\/rectify-review$/);
+  await page.getByRole('button', { name: /request rectification/i }).click();
+  await expect(page).toHaveURL(/\/rectify-confirmation$/);
+  await expect(
+    page.getByText(/rectification request submitted/i),
+  ).toBeVisible();
+  await page.getByRole('button', { name: /check simulated outcome/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /required action is complete/i }),
+  ).toBeVisible();
+
+  // A 139(9) notice deep-links to the exact affected section with saved data.
+  await page.goto('/tax/notices/import');
+  await page
+    .getByRole('button', { name: /defective return · wrong form/i })
+    .click();
+  await page.getByRole('link', { name: /fix and refile/i }).click();
+  await page.getByRole('button', { name: /fix and refile/i }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Capital gains', exact: true }),
+  ).toBeVisible();
+
+  // A confirmed 143(1) demand is paid once and closed out.
+  await page.goto('/tax/notices/import');
+  await page
+    .getByRole('button', { name: /intimation · confirmed demand/i })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: /pay and close out the demand/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /pay and close out/i }).click();
+  await expect(page.getByText(/demand to pay/i)).toBeVisible();
+  await page.getByRole('button', { name: /pay and close out/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /required action is complete/i }),
+  ).toBeVisible();
+
+  // ITR-U is shown as a gated, non-default dead end, never the default path.
+  await page.goto('/tax/notices/import');
+  await page
+    .getByRole('button', { name: /older omitted-income example/i })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: /check updated-return eligibility/i }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: /review itr-u consequences/i }).click();
+  await expect(
+    page.getByRole('heading', {
+      name: /itr-u is not an ordinary correction/i,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText('25%')).toBeVisible();
+  await expect(page.getByText('70%')).toBeVisible();
+  await expect(
+    page.getByText(/stops before an unsupported updated-return filing/i),
   ).toBeVisible();
 
   const results = await new AxeBuilder({ page }).analyze();

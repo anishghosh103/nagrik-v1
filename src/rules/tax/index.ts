@@ -17,3 +17,9 @@ export {
 } from './business';
 export { computeSurchargeAndMarginalRelief } from './surcharge';
 export { computeInterestAndFee } from './interest';
+export {
+  createSimulatedNotice,
+  getDeadlineState,
+  getItruAdditionalTaxRate,
+  remedyForFixture,
+} from './notices';

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   Building2,
@@ -9,7 +9,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { Button, Page, PageHeader, Status } from '../../components/ui';
 import { FieldLabel } from '../../components/forms';
@@ -122,12 +122,25 @@ function MoneyField(props: {
 export function TaxIncomeDetailsPages() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const determineFilingRoute = useAppStore(
     (state) => state.determineFilingRoute,
   );
   const { draft, loading, save, setDraft } = useReturnDraft();
-  const [step, setStep] = useState<DetailStep>('property');
+  const [step, setStep] = useState<DetailStep>(() => {
+    const requested = searchParams.get('step');
+    return requested === 'capital' || requested === 'business'
+      ? requested
+      : 'property';
+  });
   const [resolvedRoute, setResolvedRoute] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('step') !== 'capital') return;
+    window.requestAnimationFrame(() =>
+      document.getElementById('capital-gains-heading')?.focus(),
+    );
+  }, [loading, searchParams]);
 
   if (loading || !draft)
     return <ProgressState title={t('tax.entry.loading')} />;
@@ -405,7 +418,13 @@ export function TaxIncomeDetailsPages() {
           <div className="mb-5 flex items-start gap-3">
             <TrendingUp className="mt-1 size-6 text-primary" />
             <div>
-              <h2 className="m-0">{t('tax.capital.title')}</h2>
+              <h2
+                id="capital-gains-heading"
+                className="m-0"
+                tabIndex={-1}
+              >
+                {t('tax.capital.title')}
+              </h2>
               <p className="text-ink-muted">{t('tax.capital.help')}</p>
             </div>
           </div>

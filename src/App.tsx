@@ -34,6 +34,19 @@ import { TaxRegimeAndBankPages } from './features/tax/TaxRegimeAndBankPages';
 import { TaxSummaryPages } from './features/tax/TaxSummaryPages';
 import { TaxFilingPages } from './features/tax/TaxFilingPages';
 import { TaxPaymentPage } from './features/tax/TaxPaymentPage';
+import {
+  LatestReturnRedirect,
+  NoticeDetailPage,
+  NoticeImportPage,
+  NoticeInboxPage,
+  NoticeRemedyPage,
+  NoticeResolutionPage,
+  RectificationConfirmationPage,
+  RectificationReviewPage,
+  RefundPage,
+  ReturnHistoryPage,
+  ReturnStatusPage,
+} from './features/tax/PostFilingPages';
 
 function HydrationScreen() {
   return (
@@ -174,7 +187,47 @@ export default function App() {
         />
         <Route
           path="/tax/file/status"
-          element={<TaxFilingPages statusOnly />}
+          element={<LatestReturnRedirect />}
+        />
+        <Route
+          path="/tax/returns"
+          element={<ReturnHistoryPage />}
+        />
+        <Route
+          path="/tax/returns/:acknowledgmentNumber"
+          element={<ReturnStatusPage />}
+        />
+        <Route
+          path="/tax/returns/:acknowledgmentNumber/refund"
+          element={<RefundPage />}
+        />
+        <Route
+          path="/tax/notices"
+          element={<NoticeInboxPage />}
+        />
+        <Route
+          path="/tax/notices/import"
+          element={<NoticeImportPage />}
+        />
+        <Route
+          path="/tax/notices/:noticeId"
+          element={<NoticeDetailPage />}
+        />
+        <Route
+          path="/tax/notices/:noticeId/remedy"
+          element={<NoticeRemedyPage />}
+        />
+        <Route
+          path="/tax/notices/:noticeId/rectify-review"
+          element={<RectificationReviewPage />}
+        />
+        <Route
+          path="/tax/notices/:noticeId/rectify-confirmation"
+          element={<RectificationConfirmationPage />}
+        />
+        <Route
+          path="/tax/notices/:noticeId/resolution"
+          element={<NoticeResolutionPage />}
         />
         <Route
           path="/activity"

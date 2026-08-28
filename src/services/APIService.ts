@@ -23,6 +23,9 @@ import type {
 } from '../types/domain';
 import type {
   FilingRoute,
+  FiledReturnSnapshot,
+  NoticeFixtureId,
+  NoticeItem,
   RegimeComparison,
   ReturnComputation,
   ReturnDraft,
@@ -117,4 +120,34 @@ export interface APIService {
     personaId: PersonaId,
     input: { acknowledgmentNumber: string; otp: string },
   ): Promise<{ status: 'VERIFIED'; verifiedAt: string }>;
+  getFiledReturns(personaId: PersonaId): Promise<FiledReturnSnapshot[]>;
+  refreshFiledReturnStatus(
+    personaId: PersonaId,
+    acknowledgmentNumber: string,
+  ): Promise<FiledReturnSnapshot>;
+  revalidateRefundBank(
+    personaId: PersonaId,
+    acknowledgmentNumber: string,
+  ): Promise<FiledReturnSnapshot>;
+  getNotices(personaId: PersonaId): Promise<NoticeItem[]>;
+  importNotice(
+    personaId: PersonaId,
+    fixtureId: NoticeFixtureId,
+  ): Promise<NoticeItem>;
+  startNoticeRemedy(
+    personaId: PersonaId,
+    noticeId: string,
+  ): Promise<NoticeItem>;
+  submitNoticePayment(
+    personaId: PersonaId,
+    noticeId: string,
+  ): Promise<NoticeItem>;
+  submitRectification(
+    personaId: PersonaId,
+    noticeId: string,
+  ): Promise<NoticeItem>;
+  refreshNoticeOutcome(
+    personaId: PersonaId,
+    noticeId: string,
+  ): Promise<NoticeItem>;
 }
