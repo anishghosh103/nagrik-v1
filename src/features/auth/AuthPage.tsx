@@ -38,6 +38,11 @@ const MOCK_ACCOUNTS: Record<
     aadhaar: '444444441038',
     descriptionKey: 'auth.mockAnanyaDescription',
   },
+  priya: {
+    name: 'Priya Menon',
+    aadhaar: '444444445540',
+    descriptionKey: 'auth.mockPriyaDescription',
+  },
 };
 
 function useMockAccountOptions() {

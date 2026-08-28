@@ -185,6 +185,8 @@ const hi = {
   auth: {
     mockRajeshDescription: 'नाम मेल न खाने से उसका पीएफ दावा रुकता है',
     mockAnanyaDescription: 'जुड़े रिकॉर्ड स्वस्थ हैं',
+    mockPriyaDescription:
+      'अनुरोध से लेकर निपटान तक पूरी पीएफ दावा यात्रा आज़माएँ',
     illustrationTax: 'आयकर',
     illustrationEpfo: 'ईपीएफओ',
     chooseMockAccount: 'एक मॉक खाता चुनें',
@@ -282,6 +284,8 @@ const hi = {
       claimReceived: 'पीएफ दावा मिला',
       claimReceivedDetail:
         'संदर्भ {{reference}} ईपीएफओ सत्यापन की प्रतीक्षा में है।',
+      claimSettled: 'पीएफ दावा निपटाया गया',
+      claimSettledDetail: 'संदर्भ {{reference}} निपटाया हुआ दर्ज किया गया है।',
       transferReceived: 'पीएफ ट्रांसफर मिला',
       transferReceivedDetail:
         'संदर्भ {{reference}} नियोक्ता समीक्षा की प्रतीक्षा में है।',

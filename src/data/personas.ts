@@ -1,4 +1,4 @@
-import type { PersonaSeed } from '../types/domain';
+import type { PersonaId, PersonaSeed } from '../types/domain';
 import { personaSeedSchema } from '../types/domain';
 import { TAX_RULES_VERSION } from './taxRules';
 
@@ -545,11 +545,144 @@ const rajesh: PersonaSeed = {
   grievances: [],
 };
 
-export const PERSONA_SEEDS: Record<'ananya' | 'rajesh', PersonaSeed> = {
-  ananya: personaSeedSchema.parse(ananya) as PersonaSeed,
-  rajesh: personaSeedSchema.parse(rajesh) as PersonaSeed,
+const priya: PersonaSeed = {
+  id: 'priya',
+  schemaVersion: 6,
+  profile: {
+    fullName: 'Priya Menon',
+    firstName: 'Priya',
+    city: 'Bengaluru',
+    maskedAadhaar: 'XXXX XXXX 5540',
+    maskedPan: 'PRM•••27L',
+  },
+  identity: {
+    personaId: 'priya',
+    canonical: {
+      name: 'Priya Menon',
+      mobile: '•••• ••6630',
+      bankAccount: '•••• 7714',
+    },
+    updatedAt: baseTime,
+    valuesBySource: {
+      AADHAAR: { name: 'Priya Menon', mobile: '•••• ••6630' },
+      PAN: { name: 'Priya Menon' },
+      BANK: { name: 'Priya Menon', bankAccount: '•••• 7714' },
+      EPFO: {
+        name: 'Priya Menon Nair',
+        mobile: '•••• ••6630',
+        bankAccount: '•••• 7714',
+      },
+      INCOME_TAX: { name: 'Priya Menon', bankAccount: '•••• 7714' },
+    },
+  },
+  epfo: {
+    personaId: 'priya',
+    maskedUan: 'XXXX XXXX 8825',
+    balance: 214300,
+    bankAccount: '•••• 7714',
+    aadhaarKyc: true,
+    panKyc: true,
+    bankKyc: true,
+    employment: [
+      {
+        id: 'emp-p-1',
+        memberId: 'KA/BLR/•••/205',
+        employer: 'Whitefield Software Labs',
+        joinedOn: '2019-02-01',
+        exitedOn: '2026-06-30',
+        current: false,
+        balance: 214300,
+      },
+    ],
+    kyc: [
+      {
+        kind: 'AADHAAR',
+        maskedValue: 'XXXX XXXX 5540',
+        status: 'VALIDATED',
+        updatedAt: baseTime,
+      },
+      {
+        kind: 'PAN',
+        maskedValue: 'PRM•••27L',
+        status: 'VALIDATED',
+        updatedAt: baseTime,
+      },
+      {
+        kind: 'BANK',
+        maskedValue: 'Account ending 7714',
+        status: 'VALIDATED',
+        updatedAt: baseTime,
+      },
+    ],
+    passbook: {
+      capturedAt: baseTime,
+      employers: [
+        {
+          employmentId: 'emp-p-1',
+          employer: 'Whitefield Software Labs',
+          openingBalance: 190000,
+          contributions: [
+            {
+              id: 'p-2026-05',
+              month: '2026-05-01',
+              employee: 5400,
+              employer: 3600,
+              pension: 1800,
+              status: 'POSTED',
+            },
+            {
+              id: 'p-2026-06',
+              month: '2026-06-01',
+              employee: 5400,
+              employer: 3600,
+              pension: 1800,
+              status: 'POSTED',
+            },
+          ],
+        },
+      ],
+    },
+    claimHistory: [],
+    nomination: { status: 'NOT_STARTED', nominees: [], updatedAt: baseTime },
+    lastUpdatedAt: baseTime,
+  },
+  mismatches: [
+    {
+      id: 'mismatch-name',
+      field: 'name',
+      valuesBySource: {
+        AADHAAR: 'Priya Menon',
+        PAN: 'Priya Menon',
+        BANK: 'Priya Menon',
+        EPFO: 'Priya Menon Nair',
+        INCOME_TAX: 'Priya Menon',
+      },
+      severity: 'BLOCKING',
+      affectedServices: ['EPFO'],
+      status: 'OPEN',
+    },
+  ],
+  identityChanges: [],
+  actions: [],
+  activity: [
+    {
+      id: 'act-p-1',
+      kind: 'EPFO',
+      title: 'activity.events.precheckAttention',
+      detail: 'activity.events.nameBlocksClaim',
+      status: 'INFO',
+      occurredAt: baseTime,
+    },
+  ],
+  grievances: [],
 };
 
-export function cloneSeed(id: 'ananya' | 'rajesh'): PersonaSeed {
+export const PERSONA_SEEDS: Record<PersonaId, PersonaSeed> = {
+  ananya: personaSeedSchema.parse(ananya) as PersonaSeed,
+  rajesh: personaSeedSchema.parse(rajesh) as PersonaSeed,
+  priya: personaSeedSchema.parse(priya) as PersonaSeed,
+};
+
+export function cloneSeed(id: PersonaId): PersonaSeed {
   return structuredClone(PERSONA_SEEDS[id]);
 }

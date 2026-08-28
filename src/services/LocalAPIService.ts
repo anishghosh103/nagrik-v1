@@ -2,8 +2,11 @@ import { cloneSeed } from '../data/personas';
 import { deriveActions } from '../rules/identity';
 import type { APIService } from './APIService';
 import type {
+  ClaimHistoryEntry,
+  ClaimStage,
   ClaimSubmission,
   ClaimType,
+  EPFOProfile,
   GrievanceCase,
   GrievanceInput,
   IdentitySource,
@@ -669,9 +672,6 @@ export class LocalAPIService implements APIService {
       this.failures.claimSubmissionOnce = false;
       throw new Error('SERVICE_UNAVAILABLE');
     }
-    const { validatePFClaim } = await import('../rules/epfo');
-    const validation = validatePFClaim(seed);
-    if (!validation.ready) throw new Error('CLAIM_NOT_READY');
     if (
       !claim.bankConfirmed ||
       !claim.declarationAccepted ||
@@ -682,6 +682,7 @@ export class LocalAPIService implements APIService {
     const references: Record<PersonaId, string> = {
       rajesh: 'NGR-PF-260825-1042',
       ananya: 'NGR-PF-260825-1186',
+      priya: 'NGR-PF-260827-3390',
     };
     const submission: ClaimSubmission = {
       id: `claim-${personaId}`,
@@ -690,6 +691,7 @@ export class LocalAPIService implements APIService {
       type: claim.type,
       amount: claim.amount,
       submittedAt: now,
+      stage: 'IDENTITY_CHECK',
       status: 'RECEIVED',
     };
     seed.epfo.claim = submission;
@@ -707,6 +709,102 @@ export class LocalAPIService implements APIService {
       });
     this.write(seed);
     return submission;
+  }
+
+  private static readonly CLAIM_STAGE_RULE_CODES: Record<ClaimStage, string[]> =
+    {
+      IDENTITY_CHECK: ['NAME_MATCH'],
+      ELIGIBILITY_CHECK: [
+        'PAN_KYC_VALID',
+        'AADHAAR_KYC_VALID',
+        'BANK_KYC_MATCH',
+        'SERVICE_EXIT_PRESENT',
+        'DATE_OVERLAP',
+        'CLAIM_ELIGIBILITY',
+      ],
+      SETTLEMENT: [],
+    };
+
+  private static readonly CLAIM_STAGE_ORDER: ClaimStage[] = [
+    'IDENTITY_CHECK',
+    'ELIGIBILITY_CHECK',
+    'SETTLEMENT',
+  ];
+
+  async refreshClaimStatus(id: PersonaId): Promise<EPFOProfile> {
+    await wait(360);
+    requireOnline();
+    const seed = await this.read(id);
+    const claim = seed.epfo.claim;
+    if (!claim) throw new Error('CLAIM_NOT_FOUND');
+    const now = new Date().toISOString();
+    if (claim.stage === 'SETTLEMENT') {
+      const historyEntry: ClaimHistoryEntry = {
+        id: claim.id,
+        personaId: id,
+        reference: claim.reference,
+        type: claim.type,
+        amount: claim.amount,
+        submittedAt: claim.submittedAt,
+        decidedAt: now,
+        status: 'SETTLED',
+        source: { system: 'EPFO', reference: claim.reference, capturedAt: now },
+      };
+      seed.epfo.claimHistory.unshift(historyEntry);
+      seed.epfo.claim = undefined;
+      seed.epfo.lastUpdatedAt = now;
+      const receivedEvent = seed.activity.find(
+        (event) => event.id === `act-claim-${id}`,
+      );
+      if (receivedEvent) receivedEvent.status = 'COMPLETE';
+      seed.activity.unshift({
+        id: `act-claim-${id}-settled`,
+        kind: 'EPFO',
+        title: 'activity.events.claimSettled',
+        detail: 'activity.events.claimSettledDetail',
+        values: { reference: claim.reference },
+        status: 'COMPLETE',
+        occurredAt: now,
+      });
+      this.write(seed);
+      return structuredClone(seed.epfo);
+    }
+    const { validatePFClaim } = await import('../rules/epfo');
+    const stageCodes = LocalAPIService.CLAIM_STAGE_RULE_CODES[claim.stage];
+    const failing = validatePFClaim(seed).results.find(
+      (rule) =>
+        stageCodes.includes(rule.code) &&
+        !rule.passed &&
+        rule.severity === 'BLOCKING',
+    );
+    if (failing) {
+      claim.status = 'ISSUE';
+      claim.issue = failing;
+    } else {
+      claim.status = 'RECEIVED';
+      claim.issue = undefined;
+      const currentIndex = LocalAPIService.CLAIM_STAGE_ORDER.indexOf(
+        claim.stage,
+      );
+      claim.stage = LocalAPIService.CLAIM_STAGE_ORDER[currentIndex + 1];
+    }
+    seed.epfo.lastUpdatedAt = now;
+    this.write(seed);
+    return structuredClone(seed.epfo);
+  }
+
+  async resubmitClaim(id: PersonaId): Promise<EPFOProfile> {
+    await wait(320);
+    requireOnline();
+    const seed = await this.read(id);
+    const claim = seed.epfo.claim;
+    if (!claim || claim.status !== 'ISSUE')
+      throw new Error('CLAIM_NOT_BLOCKED');
+    claim.status = 'RECEIVED';
+    claim.issue = undefined;
+    seed.epfo.lastUpdatedAt = new Date().toISOString();
+    this.write(seed);
+    return structuredClone(seed.epfo);
   }
 
   async getTaxRules(assessmentYear: string) {
@@ -840,6 +938,7 @@ export class LocalAPIService implements APIService {
     const references: Record<PersonaId, string> = {
       rajesh: 'NGR-ITR-260825-4471',
       ananya: 'NGR-ITR-260825-3382',
+      priya: 'NGR-ITR-260827-9010',
     };
     const baseReference = references[id];
     const acknowledgmentNumber =

@@ -67,6 +67,7 @@ export function ProfilePage() {
           >
             <option value="rajesh">Rajesh Kumar</option>
             <option value="ananya">Ananya Sen</option>
+            <option value="priya">Priya Menon</option>
           </select>
         </SettingsRow>
         <SettingsRow

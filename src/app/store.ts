@@ -3,6 +3,7 @@ import { apiService } from '../services/LocalAPIService';
 import type {
   ClaimSubmission,
   ClaimValidation,
+  EPFOProfile,
   GrievanceCase,
   GrievanceInput,
   MockSession,
@@ -52,6 +53,8 @@ interface AppState {
   validateClaim: () => Promise<ClaimValidation>;
   submitClaim: (amount: number, otp: string) => Promise<ClaimSubmission>;
   saveClaimDraft: (draft: PFClaim) => Promise<void>;
+  refreshClaimStatus: () => Promise<EPFOProfile>;
+  resubmitClaim: () => Promise<EPFOProfile>;
   refreshPassbook: () => Promise<PassbookSnapshot>;
   updateEmploymentExit: (
     employmentId: string,
@@ -229,6 +232,44 @@ export const useAppStore = create<AppState>((set, get) => ({
   saveClaimDraft: async (draft) => {
     const id = get().session?.personaId;
     if (id) await apiService.saveClaimDraft(id, draft);
+  },
+  refreshClaimStatus: async () => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.refreshClaimStatus(id);
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({
+        busy: false,
+        error:
+          error instanceof Error && error.message === 'OFFLINE'
+            ? 'errors.claimOffline'
+            : 'errors.claimUnavailable',
+      });
+      throw error;
+    }
+  },
+  resubmitClaim: async () => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.resubmitClaim(id);
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({
+        busy: false,
+        error:
+          error instanceof Error && error.message === 'OFFLINE'
+            ? 'errors.claimOffline'
+            : 'errors.claimUnavailable',
+      });
+      throw error;
+    }
   },
   refreshPassbook: async () => {
     const id = get().session?.personaId;

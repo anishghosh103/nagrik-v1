@@ -186,6 +186,8 @@ const en = {
   auth: {
     mockRajeshDescription: 'Name mismatch blocks his PF claim',
     mockAnanyaDescription: 'Connected records are healthy',
+    mockPriyaDescription:
+      'Try a full PF claim journey, from request to settlement',
     illustrationTax: 'Income Tax',
     illustrationEpfo: 'EPFO',
     chooseMockAccount: 'Choose a mock account',
@@ -283,6 +285,9 @@ const en = {
       claimReceived: 'PF claim received',
       claimReceivedDetail:
         'Reference {{reference}} is awaiting EPFO validation.',
+      claimSettled: 'PF claim settled',
+      claimSettledDetail:
+        'Reference {{reference}} has been recorded as settled.',
       transferReceived: 'PF transfer received',
       transferReceivedDetail:
         'Reference {{reference}} is awaiting employer review.',

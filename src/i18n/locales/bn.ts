@@ -186,6 +186,8 @@ const bn = {
   auth: {
     mockRajeshDescription: 'নাম অমিলের কারণে তাঁর পিএফ দাবি আটকে আছে',
     mockAnanyaDescription: 'সংযুক্ত রেকর্ড সুস্থ আছে',
+    mockPriyaDescription:
+      'অনুরোধ থেকে নিষ্পত্তি পর্যন্ত সম্পূর্ণ পিএফ দাবির যাত্রা চেষ্টা করুন',
     illustrationTax: 'আয়কর',
     illustrationEpfo: 'ইপিএফও',
     chooseMockAccount: 'একটি মক অ্যাকাউন্ট বেছে নিন',
@@ -283,6 +285,9 @@ const bn = {
       claimReceived: 'পিএফ দাবি গৃহীত হয়েছে',
       claimReceivedDetail:
         'রেফারেন্স {{reference}} ইপিএফও যাচাইয়ের অপেক্ষায়।',
+      claimSettled: 'পিএফ দাবি নিষ্পত্তি হয়েছে',
+      claimSettledDetail:
+        'রেফারেন্স {{reference}} নিষ্পত্তি হিসেবে রেকর্ড করা হয়েছে।',
       transferReceived: 'পিএফ ট্রান্সফার গৃহীত হয়েছে',
       transferReceivedDetail:
         'রেফারেন্স {{reference}} নিয়োগকর্তার পর্যালোচনার অপেক্ষায়।',

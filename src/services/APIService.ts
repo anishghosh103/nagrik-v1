@@ -62,6 +62,8 @@ export interface APIService {
   ): Promise<ClaimValidation>;
   submitClaim(personaId: PersonaId, claim: PFClaim): Promise<ClaimSubmission>;
   saveClaimDraft(personaId: PersonaId, claim: PFClaim): Promise<void>;
+  refreshClaimStatus(personaId: PersonaId): Promise<EPFOProfile>;
+  resubmitClaim(personaId: PersonaId): Promise<EPFOProfile>;
   validateTransfer(
     personaId: PersonaId,
     sourceEmploymentId: string,

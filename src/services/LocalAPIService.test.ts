@@ -159,7 +159,7 @@ describe('LocalAPIService vertical slice', () => {
     expect(persona.activity[0].kind).toBe('IDENTITY');
   });
 
-  it('blocks an unready claim and prevents duplicate submission', async () => {
+  it('submits unconditionally, prevents duplicate submission, and settles after a staged issue is rectified and resubmitted', async () => {
     const claim = {
       type: 'FINAL_SETTLEMENT' as const,
       amount: 120000,
@@ -167,22 +167,64 @@ describe('LocalAPIService vertical slice', () => {
       declarationAccepted: true,
       otp: '123456',
     };
-    await expect(service.submitClaim('rajesh', claim)).rejects.toThrow(
-      'CLAIM_NOT_READY',
+    const first = await service.submitClaim('rajesh', claim);
+    const duplicate = await service.submitClaim('rajesh', claim);
+    expect(duplicate.reference).toBe(first.reference);
+    expect(first.stage).toBe('IDENTITY_CHECK');
+    expect(first.status).toBe('RECEIVED');
+
+    const afterFirstCheck = await service.refreshClaimStatus('rajesh');
+    expect(afterFirstCheck.claim?.status).toBe('ISSUE');
+    expect(afterFirstCheck.claim?.issue?.code).toBe('NAME_MATCH');
+    await expect(service.resubmitClaim('rajesh')).resolves.toBeDefined();
+    expect((await service.getEPFOProfile('rajesh')).claim?.status).toBe(
+      'RECEIVED',
     );
+
     await service.resolveMismatch({
       personaId: 'rajesh',
       mismatchId: 'mismatch-name',
       canonicalValue: 'Rajesh Kumar',
     });
-    const first = await service.submitClaim('rajesh', claim);
-    const duplicate = await service.submitClaim('rajesh', claim);
-    expect(duplicate.reference).toBe(first.reference);
+
+    const afterIdentityPass = await service.refreshClaimStatus('rajesh');
+    expect(afterIdentityPass.claim?.stage).toBe('ELIGIBILITY_CHECK');
+    expect(afterIdentityPass.claim?.status).toBe('RECEIVED');
+
+    const afterEligibilityPass = await service.refreshClaimStatus('rajesh');
+    expect(afterEligibilityPass.claim?.stage).toBe('SETTLEMENT');
+
+    const settled = await service.refreshClaimStatus('rajesh');
+    expect(settled.claim).toBeUndefined();
+    expect(settled.claimHistory[0]).toMatchObject({
+      reference: first.reference,
+      status: 'SETTLED',
+    });
+
     expect(
       (await service.getActivity('rajesh')).filter(
         (event) => event.title === 'activity.events.claimReceived',
       ),
     ).toHaveLength(1);
+    expect(
+      (await service.getActivity('rajesh')).some(
+        (event) => event.title === 'activity.events.claimSettled',
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects resubmission when the claim has no outstanding issue', async () => {
+    const claim = {
+      type: 'FINAL_SETTLEMENT' as const,
+      amount: 120000,
+      bankConfirmed: true,
+      declarationAccepted: true,
+      otp: '123456',
+    };
+    await service.submitClaim('ananya', claim);
+    await expect(service.resubmitClaim('ananya')).rejects.toThrow(
+      'CLAIM_NOT_BLOCKED',
+    );
   });
 
   it('restores a verified mock session', async () => {

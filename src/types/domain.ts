@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { taxRecordSchema, type TaxRecord } from './tax';
 
-export type PersonaId = 'ananya' | 'rajesh';
+export type PersonaId = 'ananya' | 'rajesh' | 'priya';
 export type IdentityField = 'name' | 'mobile' | 'bankAccount';
 export type IdentitySource = 'AADHAAR' | 'PAN' | 'BANK' | 'EPFO' | 'INCOME_TAX';
 export type Severity = 'INFO' | 'WARNING' | 'BLOCKING';
@@ -73,6 +73,8 @@ export interface PassbookSnapshot {
   capturedAt: string;
 }
 
+export type ClaimStage = 'IDENTITY_CHECK' | 'ELIGIBILITY_CHECK' | 'SETTLEMENT';
+
 export interface ClaimSubmission {
   id: string;
   personaId: PersonaId;
@@ -80,7 +82,9 @@ export interface ClaimSubmission {
   type: ClaimType;
   amount: number;
   submittedAt: string;
-  status: 'RECEIVED' | 'VALIDATING';
+  stage: ClaimStage;
+  status: 'RECEIVED' | 'ISSUE';
+  issue?: RuleResult;
 }
 
 export interface ClaimDraft {
@@ -378,7 +382,7 @@ const grievanceTimelineEntrySchema = z.object({
 
 const grievanceCaseSchema = z.object({
   id: z.string(),
-  personaId: z.enum(['ananya', 'rajesh']),
+  personaId: z.enum(['ananya', 'rajesh', 'priya']),
   reference: z.string(),
   service: z.enum(['INCOME_TAX', 'EPFO', 'IDENTITY']),
   category: z.enum([
@@ -423,7 +427,7 @@ const sourceValueSchema = z.object({
 });
 
 export const personaSeedSchema = z.object({
-  id: z.enum(['ananya', 'rajesh']),
+  id: z.enum(['ananya', 'rajesh', 'priya']),
   schemaVersion: z.number(),
   profile: z.object({
     fullName: z.string(),
@@ -434,7 +438,7 @@ export const personaSeedSchema = z.object({
     dateOfBirth: z.string().optional(),
   }),
   identity: z.object({
-    personaId: z.enum(['ananya', 'rajesh']),
+    personaId: z.enum(['ananya', 'rajesh', 'priya']),
     canonical: z.object({
       name: z.string(),
       mobile: z.string(),
@@ -450,7 +454,7 @@ export const personaSeedSchema = z.object({
     updatedAt: z.string(),
   }),
   epfo: z.object({
-    personaId: z.enum(['ananya', 'rajesh']),
+    personaId: z.enum(['ananya', 'rajesh', 'priya']),
     maskedUan: z.string(),
     balance: z.number(),
     bankAccount: z.string(),
@@ -507,12 +511,23 @@ export const personaSeedSchema = z.object({
     claim: z
       .object({
         id: z.string(),
-        personaId: z.enum(['ananya', 'rajesh']),
+        personaId: z.enum(['ananya', 'rajesh', 'priya']),
         reference: z.string(),
         type: z.literal('FINAL_SETTLEMENT'),
         amount: z.number(),
         submittedAt: z.string(),
-        status: z.enum(['RECEIVED', 'VALIDATING']),
+        stage: z.enum(['IDENTITY_CHECK', 'ELIGIBILITY_CHECK', 'SETTLEMENT']),
+        status: z.enum(['RECEIVED', 'ISSUE']),
+        issue: z
+          .object({
+            code: z.string(),
+            passed: z.boolean(),
+            severity: z.enum(['INFO', 'WARNING', 'BLOCKING']),
+            messageKey: z.string(),
+            sourceRefs: z.array(z.string()),
+            fixTarget: z.string().optional(),
+          })
+          .optional(),
       })
       .optional(),
     claimDraft: z
@@ -528,7 +543,7 @@ export const personaSeedSchema = z.object({
     claimHistory: z.array(
       z.object({
         id: z.string(),
-        personaId: z.enum(['ananya', 'rajesh']),
+        personaId: z.enum(['ananya', 'rajesh', 'priya']),
         reference: z.string(),
         type: z.literal('FINAL_SETTLEMENT'),
         amount: z.number(),
@@ -556,7 +571,7 @@ export const personaSeedSchema = z.object({
     transfer: z
       .object({
         id: z.string(),
-        personaId: z.enum(['ananya', 'rajesh']),
+        personaId: z.enum(['ananya', 'rajesh', 'priya']),
         reference: z.string(),
         sourceEmploymentId: z.string(),
         destinationEmploymentId: z.string(),

@@ -243,7 +243,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
   if (!persona) return null;
   const savedSubmission = submission ?? persona.epfo.claim;
   if (step === 'done' && savedSubmission)
-    return <ClaimStatus submission={savedSubmission} />;
+    return <ClaimStatus reference={savedSubmission.reference} />;
   const currentNumber =
     step === 'type'
       ? 1
@@ -408,15 +408,10 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               >
                 {t('common.details')}
               </Button>
-              <ButtonLink
-                to={
-                  validation.results.find((r) => !r.passed)?.fixTarget ??
-                  '/identity'
-                }
-              >
-                {t('epfo.claim.fixMismatch')}
+              <Button onClick={() => setStep('details')}>
+                {t('epfo.claim.continueAnyway')}
                 <ArrowRight />
-              </ButtonLink>
+              </Button>
             </StickyActions>
           )}
           {issueOpen && (
@@ -498,9 +493,13 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
             <ReviewRow
               label={t('epfo.claim.readinessLabel')}
               value={
-                <Status kind="success">
-                  {t('epfo.claim.checksPassedShort')}
-                </Status>
+                validation?.ready === false ? (
+                  <Status kind="warning">{t('epfo.claim.oneFailed')}</Status>
+                ) : (
+                  <Status kind="success">
+                    {t('epfo.claim.checksPassedShort')}
+                  </Status>
+                )
               }
             />
           </ReviewList>
@@ -727,8 +726,98 @@ export function RejectedClaimPage() {
   );
 }
 
-function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
+function ClaimStatus({ reference }: { reference: string }) {
   const { t, i18n } = useTranslation();
+  const persona = useAppStore((state) => state.persona);
+  const busy = useAppStore((state) => state.busy);
+  const refreshClaimStatus = useAppStore((state) => state.refreshClaimStatus);
+  const resubmitClaim = useAppStore((state) => state.resubmitClaim);
+  if (!persona) return null;
+
+  const live =
+    persona.epfo.claim?.reference === reference
+      ? persona.epfo.claim
+      : undefined;
+  const settled = persona.epfo.claimHistory.find(
+    (entry) => entry.reference === reference && entry.status === 'SETTLED',
+  );
+
+  if (settled)
+    return (
+      <Page
+        width="narrow"
+        mode="completion"
+      >
+        <PageHeader
+          eyebrow={t('epfo.claim.statusEyebrow')}
+          title={t('epfo.claim.settledTitle')}
+          subtitle={t('epfo.claim.settledHelp')}
+          back="/epfo"
+        />
+        <OutcomeMark icon={<Check />} />
+        <ReferenceBand
+          label={t('epfo.reference')}
+          reference={settled.reference}
+          meta={t('epfo.claim.submittedMeta', {
+            date: formatDate(settled.submittedAt, i18n.language),
+          })}
+        />
+        <StatusCard
+          tone="success"
+          status={
+            <Status kind="success">{t('epfo.claim.settledStatus')}</Status>
+          }
+          title={t('epfo.claim.settledTitle')}
+        >
+          {t('epfo.claim.settledHelp')}
+        </StatusCard>
+        <StatusTimeline>
+          <StatusTimelineItem
+            state="complete"
+            icon={<Check />}
+            title={t('epfo.claim.timelineReceived')}
+            meta={formatDate(settled.submittedAt, i18n.language)}
+          />
+          <StatusTimelineItem
+            state="complete"
+            icon={<Check />}
+            title={t('epfo.claim.timelineValidation')}
+            meta={undefined}
+          />
+          <StatusTimelineItem
+            state="complete"
+            icon={<Check />}
+            title={t('epfo.claim.timelineDecision')}
+            meta={undefined}
+          />
+          <StatusTimelineItem
+            state="complete"
+            icon={<Check />}
+            title={t('epfo.claim.timelinePayment')}
+            meta={formatDate(settled.decidedAt, i18n.language)}
+          />
+        </StatusTimeline>
+        <ButtonLink
+          wide
+          to="/activity"
+        >
+          {t('tax.status.viewActivity')}
+          <ArrowRight />
+        </ButtonLink>
+      </Page>
+    );
+
+  if (!live) return null;
+
+  const validationDone = live.stage !== 'IDENTITY_CHECK';
+  const decisionCurrent = live.stage === 'SETTLEMENT';
+  const stageTitleKey =
+    live.stage === 'IDENTITY_CHECK'
+      ? 'epfo.claim.stageIdentityTitle'
+      : live.stage === 'ELIGIBILITY_CHECK'
+        ? 'epfo.claim.stageEligibilityTitle'
+        : 'epfo.claim.stageSettlementTitle';
+
   return (
     <Page
       width="narrow"
@@ -743,48 +832,89 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
       <OutcomeMark icon={<Check />} />
       <ReferenceBand
         label={t('epfo.reference')}
-        reference={submission.reference}
+        reference={live.reference}
         meta={t('epfo.claim.submittedMeta', {
-          date: formatDate(submission.submittedAt, i18n.language),
+          date: formatDate(live.submittedAt, i18n.language),
         })}
       />
-      <StatusCard
-        status={<Status kind="info">{t('epfo.claim.receivedStatus')}</Status>}
-        title={t('epfo.claim.validationNextTitle')}
-      >
-        {t('epfo.claim.recordedOnce')}
-      </StatusCard>
-      <StatusTimeline>
-        <StatusTimelineItem
-          state="complete"
-          icon={<Check />}
-          title={t('epfo.claim.timelineReceived')}
-          meta={formatDate(submission.submittedAt, i18n.language)}
-        />
-        <StatusTimelineItem
-          state="current"
-          icon={<Clock3 />}
-          title={t('epfo.claim.timelineValidation')}
-          meta={t('epfo.claim.timelineValidationMeta')}
-        />
-        <StatusTimelineItem
-          icon={<CircleDot />}
-          title={t('epfo.claim.timelineDecision')}
-          meta={t('epfo.claim.timelineNotStarted')}
-        />
-        <StatusTimelineItem
-          icon={<CircleDot />}
-          title={t('epfo.claim.timelinePayment')}
-          meta={t('epfo.claim.timelineNotStarted')}
-        />
-      </StatusTimeline>
-      <ButtonLink
-        wide
-        to="/activity"
-      >
-        {t('tax.status.viewActivity')}
-        <ArrowRight />
-      </ButtonLink>
+      {live.status === 'ISSUE' && live.issue ? (
+        <>
+          <StatusCard
+            status={<Status kind="danger">{t('epfo.claim.issueFound')}</Status>}
+            title={t(live.issue.messageKey)}
+          >
+            <SourceMarker>{live.issue.sourceRefs.join(' + ')}</SourceMarker>
+          </StatusCard>
+          <div className="mt-6 grid gap-3">
+            <ButtonLink to={live.issue.fixTarget ?? '/identity'}>
+              {t('epfo.claim.fixMismatch')}
+              <ArrowRight />
+            </ButtonLink>
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => void resubmitClaim()}
+            >
+              {t('epfo.claim.resubmit')}
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <StatusCard
+            status={
+              <Status kind="info">{t('epfo.claim.receivedStatus')}</Status>
+            }
+            title={t(stageTitleKey)}
+          >
+            {t('epfo.claim.recordedOnce')}
+          </StatusCard>
+          <StatusTimeline>
+            <StatusTimelineItem
+              state="complete"
+              icon={<Check />}
+              title={t('epfo.claim.timelineReceived')}
+              meta={formatDate(live.submittedAt, i18n.language)}
+            />
+            <StatusTimelineItem
+              state={validationDone ? 'complete' : 'current'}
+              icon={validationDone ? <Check /> : <Clock3 />}
+              title={t('epfo.claim.timelineValidation')}
+              meta={
+                validationDone
+                  ? undefined
+                  : t('epfo.claim.timelineValidationMeta')
+              }
+            />
+            <StatusTimelineItem
+              state={decisionCurrent ? 'current' : undefined}
+              icon={decisionCurrent ? <Clock3 /> : <CircleDot />}
+              title={t('epfo.claim.timelineDecision')}
+              meta={t('epfo.claim.timelineNotStarted')}
+            />
+            <StatusTimelineItem
+              icon={<CircleDot />}
+              title={t('epfo.claim.timelinePayment')}
+              meta={t('epfo.claim.timelineNotStarted')}
+            />
+          </StatusTimeline>
+          <div className="mt-6 grid gap-3">
+            <Button
+              disabled={busy}
+              onClick={() => void refreshClaimStatus()}
+            >
+              {t('epfo.claim.checkUpdates')}
+              <ArrowRight />
+            </Button>
+            <ButtonLink
+              variant="secondary"
+              to="/activity"
+            >
+              {t('tax.status.viewActivity')}
+            </ButtonLink>
+          </div>
+        </>
+      )}
     </Page>
   );
 }
