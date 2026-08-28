@@ -12,6 +12,7 @@ import {
   Database,
   XCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link, type LinkProps } from 'react-router-dom';
 import { cn } from './cn';
 
@@ -96,33 +97,35 @@ const backActionClass =
 
 export function BackLink({
   to,
-  children = 'Back',
+  children,
   className,
 }: {
   to: string;
   children?: ReactNode;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <Link
       to={to}
       className={cn(backActionClass, className)}
     >
       <ArrowLeft size={18} />
-      {children}
+      {children ?? t('common.back')}
     </Link>
   );
 }
 
 export function BackButton({
   onClick,
-  children = 'Back',
+  children,
   className,
 }: {
   onClick: () => void;
   children?: ReactNode;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
@@ -130,7 +133,7 @@ export function BackButton({
       className={cn(backActionClass, className)}
     >
       <ArrowLeft size={18} />
-      {children}
+      {children ?? t('common.back')}
     </button>
   );
 }

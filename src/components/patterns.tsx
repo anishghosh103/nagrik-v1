@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { AlertTriangle, CheckCircle2, LoaderCircle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { cn } from './cn';
 import { Eyebrow } from './ui';
@@ -19,6 +20,7 @@ export function StepProgress({
   label?: string;
   variant?: 'journey' | 'compact';
 }) {
+  const { t } = useTranslation();
   const steps = Array.from({ length: total }, (_, index) => index + 1);
   if (variant === 'compact') {
     return (
@@ -37,7 +39,9 @@ export function StepProgress({
   }
   return (
     <div className="-mt-3.5 mb-7.5 flex items-center justify-between text-[0.8rem] text-ink-muted">
-      <span>{label ?? `Step ${current} of ${total}`}</span>
+      <span>
+        {label ?? t('common.stepOf', { current, total })}
+      </span>
       <div className="flex gap-1">
         {steps.map((step) => (
           <i
@@ -449,7 +453,7 @@ export function DetailSheet({
   eyebrow,
   title,
   children,
-  closeLabel = 'Close',
+  closeLabel,
 }: {
   onClose: () => void;
   labelledBy: string;
@@ -458,6 +462,7 @@ export function DetailSheet({
   children: ReactNode;
   closeLabel?: string;
 }) {
+  const { t } = useTranslation();
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     closeRef.current?.focus();
@@ -479,7 +484,7 @@ export function DetailSheet({
         <button
           ref={closeRef}
           onClick={onClose}
-          aria-label={closeLabel}
+          aria-label={closeLabel ?? t('common.close')}
           className="absolute top-5 right-5 grid size-10.5 place-items-center rounded-full border border-border bg-surface [&_svg]:size-5"
         >
           <X />

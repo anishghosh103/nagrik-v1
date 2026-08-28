@@ -120,7 +120,7 @@ export function EPFOPage() {
               className="flex items-center gap-1.5 text-[0.86rem] font-[650] [&>svg]:size-4.25 [&>svg]:text-success"
             >
               <Check />
-              {record.kind} KYC
+              {t('epfo.home.kycStatus', { kind: record.kind })}
             </span>
           ))}
         </div>
@@ -130,7 +130,7 @@ export function EPFOPage() {
               digits: persona.epfo.maskedUan.slice(-4),
             })}
           >
-            EPFO snapshot · {persona.epfo.maskedUan}
+            {t('epfo.home.snapshotLabel', { uan: persona.epfo.maskedUan })}
           </span>
         </SourceMarker>
       </section>
@@ -233,13 +233,12 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
         }
       })
       .catch(() => {
-        if (active)
-          setFormError('Checks are temporarily unavailable. Retry safely.');
+        if (active) setFormError(t('epfo.claim.checksUnavailable'));
       });
     return () => {
       active = false;
     };
-  }, [step, validateClaim]);
+  }, [step, validateClaim, t]);
 
   if (!persona) return null;
   const savedSubmission = submission ?? persona.epfo.claim;
@@ -256,9 +255,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
 
   async function sendClaim() {
     if (!declared || otp !== '123456') {
-      setFormError(
-        'Accept the declaration and enter the visible mock OTP 123456.',
-      );
+      setFormError(t('epfo.claim.otpDeclarationError'));
       return;
     }
     setStep('submitting');
@@ -279,7 +276,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
       mode="journey"
     >
       <PageHeader
-        eyebrow="PF & EPFO · Final settlement"
+        eyebrow={t('epfo.claim.finalSettlementEyebrow')}
         title={t('epfo.title')}
         subtitle={t('epfo.subtitle')}
         back="/epfo"
@@ -354,8 +351,8 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
         <ProgressState
           variant="scan"
           icon={<ShieldCheck />}
-          title="Checking seven claim rules"
-          description="Identity, KYC, bank and service history are being checked together."
+          title={t('epfo.claim.checkingTitle')}
+          description={t('epfo.claim.checkingDescription')}
         >
           {formError && (
             <div
@@ -367,7 +364,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
                 variant="secondary"
                 onClick={() => setStep('checking')}
               >
-                Retry
+                {t('common.retry')}
               </Button>
             </div>
           )}
@@ -435,7 +432,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
           <AmountContext
             label={t('epfo.balance')}
             amount={formatMoney(persona.epfo.balance, i18n.language)}
-            meta="This is a cached estimate, not a settlement quote."
+            meta={t('epfo.claim.cachedEstimateMeta')}
           />
           <FieldLabel htmlFor="claim-amount">
             {t('epfo.claimAmount')}
@@ -457,22 +454,26 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
           <BankConfirmation
             icon={<Banknote />}
             label={t('epfo.bank')}
-            value={`Account ${persona.epfo.bankAccount}`}
-            meta={<SourceMarker>EPFO bank KYC</SourceMarker>}
-            status={<Status kind="success">Validated</Status>}
+            value={t('epfo.claim.bankAccountValue', {
+              account: persona.epfo.bankAccount,
+            })}
+            meta={<SourceMarker>{t('epfo.profile.bankSource')}</SourceMarker>}
+            status={
+              <Status kind="success">{t('epfo.profile.validated')}</Status>
+            }
           />
           <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('checks')}
             >
-              Back
+              {t('common.back')}
             </Button>
             <Button
               disabled={amount < 1000 || amount > persona.epfo.balance}
               onClick={() => setStep('review')}
             >
-              Review claim
+              {t('epfo.claim.reviewClaimButton')}
               <ArrowRight />
             </Button>
           </StickyActions>
@@ -480,23 +481,27 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
       )}
       {step === 'review' && (
         <section>
-          <h2>Review and mock verify</h2>
+          <h2>{t('epfo.claim.reviewAndVerifyTitle')}</h2>
           <ReviewList>
             <ReviewRow
-              label="Claim type"
-              value="Final PF settlement"
+              label={t('epfo.claim.claimTypeLabel')}
+              value={t('epfo.claim.finalSettlement')}
             />
             <ReviewRow
-              label="Amount requested"
+              label={t('epfo.claim.amountRequestedLabel')}
               value={formatMoney(amount, i18n.language)}
             />
             <ReviewRow
-              label="Bank account"
+              label={t('identity.fieldBankAccount')}
               value={persona.epfo.bankAccount}
             />
             <ReviewRow
-              label="Readiness"
-              value={<Status kind="success">7 checks passed</Status>}
+              label={t('epfo.claim.readinessLabel')}
+              value={
+                <Status kind="success">
+                  {t('epfo.claim.checksPassedShort')}
+                </Status>
+              }
             />
           </ReviewList>
           <label className="grid cursor-pointer grid-cols-[22px_1fr] gap-3 rounded-lg bg-surface-muted p-4">
@@ -532,7 +537,7 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
               variant="secondary"
               onClick={() => setStep('details')}
             >
-              Back
+              {t('common.back')}
             </Button>
             <Button
               disabled={busy}
@@ -546,24 +551,24 @@ export function ClaimPage({ statusOnly = false }: { statusOnly?: boolean }) {
       )}
       {step === 'submitting' && (
         <ProgressState
-          title="Sending your mock claim"
-          description="Duplicate submission is prevented while this request is in progress."
+          title={t('epfo.claim.sendingTitle')}
+          description={t('epfo.claim.sendingDescription')}
         >
           <SubmissionStages>
             <SubmissionStage
               status="done"
               icon={<Check />}
             >
-              Details sealed
+              {t('epfo.claim.stageSealed')}
             </SubmissionStage>
             <SubmissionStage
               status="active"
               icon={<Clock3 />}
             >
-              Reference being created
+              {t('epfo.claim.stageReference')}
             </SubmissionStage>
             <SubmissionStage icon={<CircleDot />}>
-              Activity awaiting update
+              {t('epfo.claim.stageActivity')}
             </SubmissionStage>
           </SubmissionStages>
         </ProgressState>
@@ -730,7 +735,7 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
       mode="completion"
     >
       <PageHeader
-        eyebrow="PF & EPFO · Claim status"
+        eyebrow={t('epfo.claim.statusEyebrow')}
         title={t('epfo.received')}
         subtitle={t('epfo.expected')}
         back="/epfo"
@@ -739,44 +744,47 @@ function ClaimStatus({ submission }: { submission: ClaimSubmission }) {
       <ReferenceBand
         label={t('epfo.reference')}
         reference={submission.reference}
-        meta={`Submitted ${formatDate(submission.submittedAt, i18n.language)}`}
+        meta={t('epfo.claim.submittedMeta', {
+          date: formatDate(submission.submittedAt, i18n.language),
+        })}
       />
       <StatusCard
-        status={<Status kind="info">Claim received</Status>}
-        title="EPFO validation is next"
+        status={
+          <Status kind="info">{t('epfo.claim.receivedStatus')}</Status>
+        }
+        title={t('epfo.claim.validationNextTitle')}
       >
-        The prototype has recorded your claim once. No real EPFO system was
-        contacted.
+        {t('epfo.claim.recordedOnce')}
       </StatusCard>
       <StatusTimeline>
         <StatusTimelineItem
           state="complete"
           icon={<Check />}
-          title="Claim received"
+          title={t('epfo.claim.timelineReceived')}
           meta={formatDate(submission.submittedAt, i18n.language)}
         />
         <StatusTimelineItem
           state="current"
           icon={<Clock3 />}
-          title="Validation"
-          meta="Expected next · about 9 days"
+          title={t('epfo.claim.timelineValidation')}
+          meta={t('epfo.claim.timelineValidationMeta')}
         />
         <StatusTimelineItem
           icon={<CircleDot />}
-          title="Decision"
-          meta="Not started"
+          title={t('epfo.claim.timelineDecision')}
+          meta={t('epfo.claim.timelineNotStarted')}
         />
         <StatusTimelineItem
           icon={<CircleDot />}
-          title="Payment"
-          meta="Not started"
+          title={t('epfo.claim.timelinePayment')}
+          meta={t('epfo.claim.timelineNotStarted')}
         />
       </StatusTimeline>
       <ButtonLink
         wide
         to="/activity"
       >
-        View in Unified Activity
+        {t('tax.status.viewActivity')}
         <ArrowRight />
       </ButtonLink>
     </Page>

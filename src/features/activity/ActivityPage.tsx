@@ -50,14 +50,14 @@ export function ActivityPage() {
   return (
     <Page width="narrow">
       <PageHeader
-        eyebrow="Across your services"
+        eyebrow={t('activity.eyebrow')}
         title={t('activity.title')}
         subtitle={t('activity.subtitle')}
       />
       <section className="mb-8 border-y border-border py-5">
         <p className="mb-1 text-ink-muted">{t('activity.current')}</p>
         <h2 className="mb-3">{current}</h2>
-        <SourceMarker>Derived from current records</SourceMarker>
+        <SourceMarker>{t('activity.sourceMarker')}</SourceMarker>
       </section>
       <ButtonLink
         variant="secondary"
@@ -107,7 +107,7 @@ export function ActivityPage() {
                       ? t('nav.tax')
                       : event.kind === 'GRIEVANCE'
                         ? t('grievances.centre.title')
-                        : 'Nagrik'}
+                        : t('activity.brandFallback')}
               </Status>
             }
             time={formatDate(event.occurredAt, i18n.language)}

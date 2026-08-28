@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
 import {
   Button,
@@ -25,27 +26,28 @@ import type { MockSession, PersonaId } from '../../types/domain';
 
 const MOCK_ACCOUNTS: Record<
   PersonaId,
-  { name: string; aadhaar: string; description: string }
+  { name: string; aadhaar: string; descriptionKey: string }
 > = {
   rajesh: {
     name: 'Rajesh Kumar',
     aadhaar: '444444447712',
-    description: 'Name mismatch blocks his PF claim',
+    descriptionKey: 'auth.mockRajeshDescription',
   },
   ananya: {
     name: 'Ananya Sen',
     aadhaar: '444444441038',
-    description: 'Connected records are healthy',
+    descriptionKey: 'auth.mockAnanyaDescription',
   },
 };
 
-const MOCK_ACCOUNT_OPTIONS = (Object.keys(MOCK_ACCOUNTS) as PersonaId[]).map(
-  (value) => ({
+function useMockAccountOptions() {
+  const { t } = useTranslation();
+  return (Object.keys(MOCK_ACCOUNTS) as PersonaId[]).map((value) => ({
     value,
     label: MOCK_ACCOUNTS[value].name,
-    description: MOCK_ACCOUNTS[value].description,
-  }),
-);
+    description: t(MOCK_ACCOUNTS[value].descriptionKey),
+  }));
+}
 
 function isValidIdentifier(value: string) {
   return value.length === 10 || value.length === 12;
@@ -56,6 +58,7 @@ function formatAadhaar(value: string) {
 }
 
 function IdentityIllustration() {
+  const { t } = useTranslation();
   return (
     <div
       className="relative my-3 grid h-40 place-items-center max-[899px]:hidden [@media(min-width:900px)_and_(max-height:1100px)]:my-2 [@media(min-width:900px)_and_(max-height:1100px)]:h-35"
@@ -71,11 +74,11 @@ function IdentityIllustration() {
       <div className="absolute -bottom-0.75 flex gap-22 [&>span]:flex [&>span]:items-center [&>span]:gap-1.75 [&>span]:text-[0.76rem] [&>span]:text-white/70">
         <span>
           <Landmark size={20} />
-          Income Tax
+          {t('auth.illustrationTax')}
         </span>
         <span>
           <ShieldCheck size={20} />
-          EPFO
+          {t('auth.illustrationEpfo')}
         </span>
       </div>
     </div>
@@ -89,19 +92,21 @@ function MockAccountPicker({
   value: PersonaId | '';
   onChange: (value: PersonaId | null) => void;
 }) {
+  const { t } = useTranslation();
+  const options = useMockAccountOptions();
   return (
     <div className="mt-3.5 w-full [@media(min-width:900px)_and_(max-height:1100px)]:mt-3">
       <Select.Root
-        items={MOCK_ACCOUNT_OPTIONS}
+        items={options}
         value={value || null}
         onValueChange={onChange}
       >
         <Select.Trigger
-          aria-label="Choose a mock account"
+          aria-label={t('auth.chooseMockAccount')}
           className="flex h-14 w-full cursor-pointer items-center justify-between gap-3 rounded-[9px] border border-border bg-surface py-2.25 pr-2.75 pl-3.75 text-left text-ink shadow-[0_5px_18px_rgba(23,35,29,0.045)] transition-[border-color,box-shadow] duration-180 hover:border-[#bdb5a3] data-[popup-open]:border-primary data-[popup-open]:shadow-[0_0_0_4px_rgba(38,91,67,0.08)] data-[popup-open]:[&_[data-slot=mock-icon]]:bg-primary data-[popup-open]:[&_[data-slot=mock-icon]]:text-white"
         >
           <Select.Value
-            placeholder="Choose a citizen"
+            placeholder={t('auth.choosePlaceholder')}
             className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[1rem] font-[650] data-[placeholder]:font-semibold data-[placeholder]:text-ink-muted"
           />
           <Select.Icon
@@ -119,7 +124,7 @@ function MockAccountPicker({
           >
             <Select.Popup className="w-[var(--anchor-width)] rounded-[10px] border border-border bg-surface p-1.5 text-ink shadow-[0_18px_48px_rgba(23,35,29,0.16),0_3px_10px_rgba(23,35,29,0.08)] [transform-origin:var(--transform-origin)] transition-[opacity,transform] duration-160 data-[ending-style]:-translate-y-1 data-[ending-style]:scale-98 data-[ending-style]:opacity-0 data-[starting-style]:-translate-y-1 data-[starting-style]:scale-98 data-[starting-style]:opacity-0">
               <Select.List className="outline-none">
-                {MOCK_ACCOUNT_OPTIONS.map((account) => (
+                {options.map((account) => (
                   <Select.Item
                     key={account.value}
                     value={account.value}
@@ -144,6 +149,7 @@ function MockAccountPicker({
 }
 
 export function AuthPage() {
+  const { t } = useTranslation();
   const authenticate = useAppStore((state) => state.authenticate);
   const [step, setStep] = useState<'identifier' | 'otp'>('identifier');
   const [persona, setPersona] = useState<PersonaId>('rajesh');
@@ -189,7 +195,7 @@ export function AuthPage() {
 
   async function sendOtp() {
     if (!isValidIdentifier(identifier)) {
-      setError('Enter a 10-digit mobile number or a 12-digit Aadhaar number.');
+      setError(t('auth.identifierInvalid'));
       return;
     }
     setBusy(true);
@@ -201,9 +207,7 @@ export function AuthPage() {
       setSeconds(90);
       setStep('otp');
     } catch {
-      setError(
-        'The mock login service is unavailable. Check your connection and try again.',
-      );
+      setError(t('auth.loginUnavailable'));
     } finally {
       setBusy(false);
     }
@@ -219,8 +223,8 @@ export function AuthPage() {
     } catch (cause) {
       setError(
         cause instanceof Error && cause.message === 'OTP_EXPIRED'
-          ? 'This mock OTP expired. Request a new one.'
-          : 'That code does not match. Use the visible fictional OTP 123456.',
+          ? t('auth.otpExpired')
+          : t('auth.otpMismatch'),
       );
     } finally {
       setBusy(false);
@@ -232,25 +236,24 @@ export function AuthPage() {
       <div className="relative flex min-h-screen flex-col justify-between gap-14 overflow-hidden p-[clamp(32px,4.5vw,72px)] text-[#fdfaf1] [background:var(--color-primary-strong)] after:absolute after:-top-32.5 after:-right-45 after:size-105 after:rounded-full after:border after:border-white/8 after:shadow-[0_0_0_54px_rgba(255,255,255,0.025),0_0_0_110px_rgba(255,255,255,0.02)] after:content-[''] max-[899px]:min-h-0 max-[899px]:p-[32px_7vw] max-[599px]:p-[28px_20px_34px] [@media(min-width:900px)_and_(max-height:1100px)]:py-[clamp(24px,4vh,40px)]">
         <Wordmark
           tone="inverse"
-          tag={<PrototypeTag tone="inverse">Prototype</PrototypeTag>}
+          tag={
+            <PrototypeTag tone="inverse">{t('common.prototype')}</PrototypeTag>
+          }
         />
         <IdentityIllustration />
         <div>
-          <Eyebrow tone="inverse">One identity · connected outcomes</Eyebrow>
+          <Eyebrow tone="inverse">{t('auth.heroEyebrow')}</Eyebrow>
           <h1 className="max-w-200 text-[clamp(2.5rem,4vw,4rem)] text-white max-[899px]:text-[clamp(2.5rem,8vw,4rem)] max-[599px]:text-[2.45rem] [@media(min-width:900px)_and_(max-height:1100px)]:mb-2.5 [@media(min-width:900px)_and_(max-height:1100px)]:text-[clamp(2.35rem,3.5vw,3.6rem)]">
-            Your financial records should work together.
+            {t('auth.heroTitle')}
           </h1>
           <p className="max-w-155 text-[1.08rem] text-white/74 max-[599px]:text-[1rem] [@media(min-width:900px)_and_(max-height:1100px)]:mb-0 [@media(min-width:900px)_and_(max-height:1100px)]:text-[1rem]">
-            See what needs attention, fix it once, and follow what changes
-            across services.
+            {t('auth.heroBody')}
           </p>
         </div>
         <div className="flex gap-2.5 border-t border-white/16 pt-4 text-[0.8rem] text-white/72 max-[599px]:pt-4.5 [&>p]:m-0 [&>p]:max-w-145 [&_strong]:text-white [@media(min-width:900px)_and_(max-height:1100px)]:pt-3">
           <Eye size={19} />
           <p>
-            <strong>A safe, fictional prototype.</strong> Login, integrations,
-            corrections and submissions are simulated. Nothing is sent to a
-            government service.
+            <strong>{t('auth.safeTitle')}</strong> {t('auth.safeBody')}
           </p>
         </div>
       </div>
@@ -270,20 +273,20 @@ export function AuthPage() {
           current={step === 'identifier' ? 1 : 2}
           total={2}
           variant="compact"
-          label={`Step ${step === 'identifier' ? 1 : 2} of 2`}
+          label={t('auth.stepLabel', {
+            current: step === 'identifier' ? 1 : 2,
+            total: 2,
+          })}
         />
 
         {step === 'identifier' && (
           <>
-            <Eyebrow>Identify yourself</Eyebrow>
-            <h2>Sign in to your records</h2>
-            <p>
-              Use a mobile number or Aadhaar number. For this prototype, you can
-              pick a mock account to fill the field.
-            </p>
+            <Eyebrow>{t('auth.identifyEyebrow')}</Eyebrow>
+            <h2>{t('auth.signInTitle')}</h2>
+            <p>{t('auth.signInBody')}</p>
 
             <FieldLabel htmlFor="identifier">
-              Mobile or Aadhaar number
+              {t('auth.identifierLabel')}
             </FieldLabel>
             <input
               id="identifier"
@@ -293,7 +296,7 @@ export function AuthPage() {
               maxLength={12}
               value={identifier}
               onChange={(event) => updateIdentifier(event.target.value)}
-              placeholder="10 or 12 digit number"
+              placeholder={t('auth.identifierPlaceholder')}
               aria-describedby="identifier-help"
               aria-invalid={
                 Boolean(identifier) && !isValidIdentifier(identifier)
@@ -304,10 +307,10 @@ export function AuthPage() {
               className="my-1.5 mb-4.5 min-h-5 text-[0.78rem] text-ink-muted [font-variant-numeric:tabular-nums] [@media(min-width:900px)_and_(max-height:1100px)]:mb-3.5"
             >
               {identifier.length === 12
-                ? `Aadhaar · ${formatAadhaar(identifier)}`
+                ? t('auth.aadhaarReady', { value: formatAadhaar(identifier) })
                 : identifier.length === 10
-                  ? 'Mobile number ready'
-                  : 'No real identifier is needed for this demo.'}
+                  ? t('auth.mobileReady')
+                  : t('auth.noRealIdentifier')}
             </p>
 
             {error && <ValidationAlert>{error}</ValidationAlert>}
@@ -316,7 +319,7 @@ export function AuthPage() {
               disabled={busy || !isValidIdentifier(identifier)}
               onClick={() => void sendOtp()}
             >
-              {busy ? 'Sending mock OTP…' : 'Send OTP'}
+              {busy ? t('auth.sendingOtp') : t('auth.sendOtp')}
               <ArrowRight size={18} />
             </Button>
             <MockAccountPicker
@@ -328,14 +331,18 @@ export function AuthPage() {
 
         {step === 'otp' && (
           <>
-            <Eyebrow>Verification</Eyebrow>
-            <h2>Enter the OTP</h2>
+            <Eyebrow>{t('auth.verificationEyebrow')}</Eyebrow>
+            <h2>{t('auth.otpTitle')}</h2>
             <p>
-              We sent a six-digit code for the{' '}
-              {identifier.length === 10 ? 'mobile number' : 'Aadhaar number'}{' '}
-              ending in {identifier.slice(-4)}.
+              {t('auth.otpSentTo', {
+                kind:
+                  identifier.length === 10
+                    ? t('auth.kindMobile')
+                    : t('auth.kindAadhaar'),
+                last4: identifier.slice(-4),
+              })}
             </p>
-            <FieldLabel htmlFor="otp">Six-digit OTP</FieldLabel>
+            <FieldLabel htmlFor="otp">{t('auth.otpFieldLabel')}</FieldLabel>
             <OtpInput
               id="otp"
               value={otp}
@@ -346,9 +353,13 @@ export function AuthPage() {
             <div className="my-5 flex justify-between text-[0.8rem] text-ink-muted max-[599px]:items-start max-[599px]:gap-2 [&>span]:flex [&>span]:items-center [&>span]:gap-1.5 max-[599px]:[&>span:last-child]:whitespace-nowrap">
               <span>
                 <KeyRound size={16} />
-                Demo OTP: <strong>123456</strong>
+                {t('auth.demoOtpLabel')} <strong>123456</strong>
               </span>
-              <span>{seconds > 0 ? `Expires in ${seconds}s` : 'Expired'}</span>
+              <span>
+                {seconds > 0
+                  ? t('auth.expiresIn', { seconds })
+                  : t('auth.expired')}
+              </span>
             </div>
             {error && <ValidationAlert>{error}</ValidationAlert>}
             <Button
@@ -356,7 +367,7 @@ export function AuthPage() {
               disabled={busy || otp.length !== 6 || seconds === 0}
               onClick={() => void verify()}
             >
-              {busy ? 'Verifying…' : 'Enter Nagrik'}
+              {busy ? t('auth.verifying') : t('auth.enterNagrik')}
               <ArrowRight size={18} />
             </Button>
             {seconds === 0 && (
@@ -365,7 +376,7 @@ export function AuthPage() {
                 wide
                 onClick={() => void sendOtp()}
               >
-                Resend mock OTP
+                {t('auth.resendOtp')}
               </Button>
             )}
           </>

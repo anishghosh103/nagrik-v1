@@ -42,20 +42,17 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
     return (
       <Page width="narrow">
         <PageHeader
-          eyebrow="Across your services"
+          eyebrow={t('home.actionsEyebrow')}
           title={t('nav.actions')}
-          subtitle="Outstanding work is derived from the records that need your attention."
+          subtitle={t('home.actionsSubtitle')}
         />
         {action ? (
           <ActionCard action={action} />
         ) : (
           <section className="border-y border-border py-12 text-center [&>svg]:mx-auto [&>svg]:size-10.5 [&>svg]:text-success">
             <CheckCircle2 />
-            <h2>Nothing needs your attention</h2>
-            <p>
-              Your connected records and submitted requests have no outstanding
-              demo action.
-            </p>
+            <h2>{t('home.emptyTitle')}</h2>
+            <p>{t('home.emptyBody')}</p>
           </section>
         )}
       </Page>
@@ -94,19 +91,19 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
           <ServiceRow
             icon={<Landmark />}
             tone="tax"
-            label="Income Tax"
+            label={t('home.taxLabel')}
             title={
               openTaxNotice
-                ? `Section ${openTaxNotice.section} notice needs a response`
+                ? t('home.noticeResponse', { section: openTaxNotice.section })
                 : delayedRefund
-                  ? 'Refund bank check needed'
+                  ? t('home.refundCheck')
                   : taxFiled
                     ? taxFiled.verification.status === 'VERIFIED'
-                      ? 'Filed and verified'
-                      : 'Filed — verification needed'
+                      ? t('home.filedVerified')
+                      : t('home.filedPending')
                     : persona.tax?.draft
-                      ? 'Continue your return'
-                      : 'Start your return'
+                      ? t('home.continueReturn')
+                      : t('home.startReturn')
             }
             meta={
               taxFiled ? (
@@ -119,7 +116,7 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
                   )}
                 </p>
               ) : (
-                <SourceMarker>Income Tax profile</SourceMarker>
+                <SourceMarker>{t('home.taxProfileSource')}</SourceMarker>
               )
             }
             status={
@@ -135,29 +132,29 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
                 }
               >
                 {openTaxNotice
-                  ? 'Action needed'
+                  ? t('home.statusActionNeeded')
                   : delayedRefund
-                    ? 'Delayed'
+                    ? t('home.statusDelayed')
                     : taxFiled
                       ? taxFiled.verification.status === 'VERIFIED'
-                        ? 'Verified'
-                        : 'Pending'
+                        ? t('home.statusVerified')
+                        : t('home.statusPending')
                       : persona.tax?.draft
-                        ? 'In progress'
-                        : 'Ready'}
+                        ? t('home.statusInProgress')
+                        : t('home.statusReady')}
               </Status>
             }
           />
           <ServiceRow
             icon={<BadgeIndianRupee />}
             tone="pf"
-            label="EPFO"
+            label={t('home.epfoLabel')}
             title={
               persona.epfo.claim
-                ? 'Claim received'
+                ? t('home.claimReceived')
                 : health === 100
-                  ? 'Claim checks ready'
-                  : 'Claim is blocked'
+                  ? t('home.claimReady')
+                  : t('home.claimBlocked')
             }
             meta={
               <p className="m-0 text-ink-muted [font-variant-numeric:tabular-nums]">
@@ -175,10 +172,10 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
                 }
               >
                 {persona.epfo.claim
-                  ? 'Tracking'
+                  ? t('home.statusTracking')
                   : health === 100
-                    ? 'Ready'
-                    : 'Blocked'}
+                    ? t('home.statusReady')
+                    : t('home.statusBlocked')}
               </Status>
             }
           />
@@ -186,14 +183,14 @@ export function HomePage({ actionsOnly = false }: { actionsOnly?: boolean }) {
       </div>
       <section>
         <SectionHeading
-          eyebrow="Traceable by design"
+          eyebrow={t('home.recentEyebrow')}
           title={t('home.recent')}
           action={
             <Link
               to="/activity"
               className="flex items-center gap-1.25 font-[650] text-primary no-underline"
             >
-              View all <ArrowRight size={17} />
+              {t('home.viewAll')} <ArrowRight size={17} />
             </Link>
           }
         />
@@ -318,8 +315,8 @@ function ActionCard({
       <div>
         <Status kind={action.severity === 'BLOCKING' ? 'danger' : 'info'}>
           {action.service === 'IDENTITY'
-            ? 'Affects 2 services'
-            : 'Ready to review'}
+            ? t('home.affectsTwoServices')
+            : t('home.readyToReview')}
         </Status>
         <h2 className="mt-1.75 mb-1.25">{t(action.title, action.values)}</h2>
         <p className="mb-2.5 text-ink-muted">
@@ -328,7 +325,7 @@ function ActionCard({
         <SourceMarker>{t(action.source, action.values)}</SourceMarker>
       </div>
       <span className="flex items-center gap-2 font-bold whitespace-nowrap text-primary max-[599px]:col-start-2">
-        Open task
+        {t('home.openTask')}
         <ArrowRight />
       </span>
     </Link>

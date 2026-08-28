@@ -31,14 +31,14 @@ const nav = [
 ];
 
 function LanguageSelect() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <label className="flex items-center gap-1.5">
       <Languages
         size={17}
         aria-hidden="true"
       />
-      <VisuallyHidden>Language</VisuallyHidden>
+      <VisuallyHidden>{t('shell.language')}</VisuallyHidden>
       <select
         className="border-0 bg-transparent p-2 font-[650] text-ink max-[599px]:max-w-22"
         value={i18n.language}
@@ -126,7 +126,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavLink
             to="/profile"
             className="flex items-center gap-1.75 border-l border-border px-2.5 py-1.75 font-[650] no-underline max-[599px]:pl-2"
-            aria-label={`${persona?.profile.firstName ?? 'Demo'} profile`}
+            aria-label={t('shell.profileLabel', {
+              name: persona?.profile.firstName ?? t('shell.demoFallback'),
+            })}
           >
             <CircleUserRound size={19} />
             <span className="max-[599px]:hidden">
@@ -141,8 +143,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           role="status"
         >
           <WifiOff size={17} />
-          You’re offline. Saved information is available, but corrections and
-          claims need a connection.
+          {t('shell.offline')}
         </div>
       )}
       {error && (
@@ -155,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="ml-3.5 rounded-[5px] border border-white/50 bg-transparent text-inherit"
             onClick={() => useAppStore.getState().clearError()}
           >
-            Dismiss
+            {t('shell.dismiss')}
           </button>
         </div>
       )}
@@ -163,7 +164,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-18 flex h-[calc(100vh-72px)] flex-col justify-between border-r border-border px-4 pt-7 pb-5.5 max-[899px]:hidden">
           <nav
             className="grid gap-1.25"
-            aria-label="Primary navigation"
+            aria-label={t('shell.primaryNav')}
           >
             {nav.map(({ to, key, Icon }) => (
               <NavItem
@@ -182,13 +183,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
             <NavItem
               icon={RotateCcw}
-              label="Reset demo"
+              label={t('shell.resetDemo')}
               onClick={() => {
-                if (
-                  confirm(
-                    'Reset only this persona to its original fictional scenario?',
-                  )
-                )
+                if (confirm(t('shell.resetConfirm')))
                   void useAppStore.getState().reset();
               }}
             />
@@ -212,7 +209,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
       <nav
         className="hidden max-[899px]:fixed max-[899px]:bottom-0 max-[899px]:left-0 max-[899px]:right-0 max-[899px]:z-30 max-[899px]:grid max-[899px]:min-h-16.5 max-[899px]:grid-cols-6 max-[899px]:border-t max-[899px]:border-border max-[899px]:bg-[rgba(255,252,245,0.97)] max-[899px]:p-[6px_max(10px,env(safe-area-inset-right))_calc(6px_+_env(safe-area-inset-bottom))_max(10px,env(safe-area-inset-left))] max-[899px]:shadow-[var(--shadow-sheet)]"
-        aria-label="Mobile navigation"
+        aria-label={t('shell.mobileNav')}
       >
         {nav
           .filter((item) => item.key !== 'actions')

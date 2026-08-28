@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './app/AppShell';
 import { useAppStore } from './app/store';
@@ -54,13 +55,14 @@ import {
 } from './features/grievances/GrievancePages';
 
 function HydrationScreen() {
+  const { t } = useTranslation();
   return (
     <main
       className="grid min-h-screen place-content-center justify-items-center gap-3.5"
       aria-live="polite"
     >
       <BrandMark />
-      <p className="text-ink-muted">Restoring your private demo workspace…</p>
+      <p className="text-ink-muted">{t('common.hydrating')}</p>
       <div className="h-0.75 w-55 overflow-hidden bg-border after:block after:h-full after:w-[45%] after:animate-[loading_1s_ease-in-out_infinite_alternate] after:bg-primary" />
     </main>
   );

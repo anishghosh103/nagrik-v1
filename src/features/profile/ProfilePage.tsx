@@ -19,22 +19,16 @@ export function ProfilePage() {
   const navigate = useNavigate();
   if (!persona) return null;
   async function switchTo(id: PersonaId) {
-    if (
-      id === persona?.id ||
-      !confirm(
-        'Switch demo citizen? Saved data remains isolated for each persona.',
-      )
-    )
-      return;
+    if (id === persona?.id || !confirm(t('profile.switchConfirm'))) return;
     await switchPersona(id);
     navigate('/home');
   }
   return (
     <Page width="narrow">
       <PageHeader
-        eyebrow="Profile and settings"
-        title="Your demo workspace"
-        subtitle="Manage the active fictional citizen, language, privacy and reset controls."
+        eyebrow={t('profile.eyebrow')}
+        title={t('profile.title')}
+        subtitle={t('profile.subtitle')}
       />
       <section className="flex items-center gap-4.5 border-y border-border py-5.5">
         <span className="grid size-15.5 place-items-center rounded-full bg-primary text-[1.3rem] font-[750] text-white">
@@ -44,7 +38,7 @@ export function ProfilePage() {
         <div>
           <h2 className="mt-0 mb-0.5">{persona.profile.fullName}</h2>
           <p className="mt-0 mb-1.5 text-ink-muted">
-            {persona.profile.city} · Fictional citizen
+            {persona.profile.city} · {t('profile.fictionalCitizen')}
           </p>
           <SourceMarker>{persona.profile.maskedAadhaar}</SourceMarker>
         </div>
@@ -52,8 +46,8 @@ export function ProfilePage() {
       <div className="my-7">
         <SettingsRow
           icon={<UserRound />}
-          label="Demo citizen"
-          hint="Switch without carrying claim or identity data"
+          label={t('profile.demoCitizenLabel')}
+          hint={t('profile.demoCitizenHint')}
         >
           <select
             className="border-0 bg-transparent p-2 font-[650] text-ink max-[599px]:max-w-30"
@@ -67,8 +61,8 @@ export function ProfilePage() {
         </SettingsRow>
         <SettingsRow
           icon={<Languages />}
-          label="Language"
-          hint="Journey copy updates immediately"
+          label={t('profile.languageLabel')}
+          hint={t('profile.languageHint')}
         >
           <select
             className="border-0 bg-transparent p-2 font-[650] text-ink max-[599px]:max-w-30"
@@ -85,35 +79,28 @@ export function ProfilePage() {
         </SettingsRow>
         <SettingsRow
           icon={<ShieldCheck />}
-          label="Prototype privacy"
-          hint="Data stays in localStorage on this device"
+          label={t('profile.privacyLabel')}
+          hint={t('profile.privacyHint')}
         >
-          <span>Device only</span>
+          <span>{t('profile.deviceOnly')}</span>
         </SettingsRow>
       </div>
       <Notice
         icon={<ShieldCheck />}
-        title="Simulation boundaries"
+        title={t('profile.boundariesTitle')}
       >
-        Nagrik does not authenticate identity, contact government services, or
-        transmit the fictional identifiers shown here. Corrections and
-        submissions exist only in this browser.
+        {t('profile.boundariesBody')}
       </Notice>
       <div className="mt-7 flex justify-between max-[599px]:grid max-[599px]:gap-2.5">
         <Button
           variant="secondary"
           className="max-[599px]:w-full"
           onClick={() => {
-            if (
-              confirm(
-                'Reset only this citizen to their original fictional scenario?',
-              )
-            )
-              void reset();
+            if (confirm(t('profile.resetConfirm'))) void reset();
           }}
         >
           <RotateCcw size={18} />
-          Reset this demo
+          {t('profile.resetButton')}
         </Button>
         <Button
           variant="text"

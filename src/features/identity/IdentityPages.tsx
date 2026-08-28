@@ -43,17 +43,17 @@ const sources: IdentitySource[] = [
   'INCOME_TAX',
 ];
 const fields: IdentityField[] = ['name', 'mobile', 'bankAccount'];
-const sourceNames: Record<IdentitySource, string> = {
-  AADHAAR: 'Aadhaar',
-  PAN: 'PAN',
-  BANK: 'Bank',
-  EPFO: 'EPFO',
-  INCOME_TAX: 'Income Tax',
+const sourceNameKeys: Record<IdentitySource, string> = {
+  AADHAAR: 'identity.sourceAadhaar',
+  PAN: 'identity.sourcePan',
+  BANK: 'identity.sourceBank',
+  EPFO: 'identity.sourceEpfo',
+  INCOME_TAX: 'identity.sourceIncomeTax',
 };
-const fieldNames: Record<IdentityField, string> = {
-  name: 'Name',
-  mobile: 'Mobile',
-  bankAccount: 'Bank account',
+const fieldNameKeys: Record<IdentityField, string> = {
+  name: 'identity.fieldName',
+  mobile: 'identity.fieldMobile',
+  bankAccount: 'identity.fieldBankAccount',
 };
 
 export function IdentityPage() {
@@ -67,7 +67,7 @@ export function IdentityPage() {
   return (
     <Page width="wide">
       <PageHeader
-        eyebrow="Financial identity · Health check"
+        eyebrow={t('identity.healthCheckEyebrow')}
         title={t('identity.title')}
         subtitle={t('identity.subtitle')}
       />
@@ -84,12 +84,12 @@ export function IdentityPage() {
         <div className="flex items-center gap-3 max-[599px]:col-span-full max-[599px]:order-3 max-[599px]:justify-center max-[599px]:border-t max-[599px]:border-border max-[599px]:pt-3.5">
           <span className="grid justify-items-center gap-1.25 text-[0.75rem] [&>svg]:text-primary">
             <Fingerprint />
-            <b>Aadhaar-led identity</b>
+            <b>{t('identity.aadhaarLed')}</b>
           </span>
           <span className="relative h-px min-w-15 bg-border after:absolute after:top-[-3px] after:right-[45%] after:size-1.75 after:rounded-full after:bg-accent" />
           <span className="grid justify-items-center gap-1.25 text-[0.75rem] [&>svg]:text-primary">
             <Landmark />
-            <b>5 connected records</b>
+            <b>{t('identity.connectedRecords')}</b>
           </span>
         </div>
         <Status kind={openMismatch ? 'danger' : 'success'}>
@@ -99,12 +99,12 @@ export function IdentityPage() {
       <div
         className="overflow-x-auto rounded-[var(--radius-sheet)] border border-border bg-surface max-[599px]:hidden"
         role="region"
-        aria-label="Identity source comparison"
+        aria-label={t('identity.comparisonRegion')}
         tabIndex={0}
       >
         <table className="w-full border-collapse [min-width:780px]">
           <caption className="absolute -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap [clip:rect(0,_0,_0,_0)]">
-            Values held by each connected identity source
+            {t('identity.tableCaption')}
           </caption>
           <thead>
             <tr>
@@ -116,7 +116,7 @@ export function IdentityPage() {
                   key={source}
                   className="border-b border-border bg-surface-muted px-3.5 py-4.5 text-left align-top text-[0.78rem]"
                 >
-                  <SourceMarker>{sourceNames[source]}</SourceMarker>
+                  <SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>
                 </th>
               ))}
             </tr>
@@ -132,7 +132,7 @@ export function IdentityPage() {
                   className={cn(mismatch && 'bg-[#fff7ef]')}
                 >
                   <th className="w-37.5 border-b border-border px-3.5 py-4.5 text-left align-top">
-                    {fieldNames[field]}
+                    {t(fieldNameKeys[field])}
                     {mismatch && (
                       <div className="mt-1">
                         <Status kind="danger">{t('identity.attention')}</Status>
@@ -148,7 +148,7 @@ export function IdentityPage() {
                       )}
                     >
                       {persona.identity.valuesBySource[source][field] ?? (
-                        <span aria-label="Not available">—</span>
+                        <span aria-label={t('identity.notAvailable')}>—</span>
                       )}
                     </td>
                   ))}
@@ -167,7 +167,7 @@ export function IdentityPage() {
             <ComparisonCard
               key={field}
               mismatch={Boolean(mismatch)}
-              title={fieldNames[field]}
+              title={t(fieldNameKeys[field])}
               status={
                 <Status kind={mismatch ? 'danger' : 'success'}>
                   {mismatch
@@ -192,7 +192,7 @@ export function IdentityPage() {
                     <ComparisonRow
                       key={source}
                       source={
-                        <SourceMarker>{sourceNames[source]}</SourceMarker>
+                        <SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>
                       }
                       value={persona.identity.valuesBySource[source][field]}
                     />
@@ -209,11 +209,9 @@ export function IdentityPage() {
         >
           <span className="flex items-center gap-2 text-danger">
             <CircleDot />
-            <b>Name mismatch</b>
+            <b>{t('identity.nameMismatch')}</b>
           </span>
-          <p className="m-0 text-ink-muted">
-            May block your PF claim and delay Income Tax bank validation.
-          </p>
+          <p className="m-0 text-ink-muted">{t('identity.mismatchWarning')}</p>
           <span className="inline-flex items-center gap-2 font-bold whitespace-nowrap text-primary">
             {t('common.review')}
             <ArrowRight size={18} />
@@ -321,9 +319,9 @@ export function MismatchPage() {
     return (
       <Page width="narrow">
         <PageHeader
-          eyebrow="Financial identity"
-          title="This difference is no longer open"
-          subtitle="Return to the health check to see current values."
+          eyebrow={t('identity.noLongerOpenEyebrow')}
+          title={t('identity.noLongerOpenTitle')}
+          subtitle={t('identity.noLongerOpenSubtitle')}
           back="/identity"
         />
       </Page>
@@ -347,7 +345,7 @@ export function MismatchPage() {
       mode="journey"
     >
       <PageHeader
-        eyebrow="Financial identity · Correct and propagate"
+        eyebrow={t('identity.correctEyebrow')}
         title={
           step === 'result'
             ? t('identity.success')
@@ -367,11 +365,10 @@ export function MismatchPage() {
       {step === 'choose' && (
         <section>
           <IssueExplanation
-            status={<Status kind="danger">Blocking</Status>}
-            title="Connected records use four different versions"
+            status={<Status kind="danger">{t('identity.blocking')}</Status>}
+            title={t('identity.fourVersionsTitle')}
           >
-            Nagrik will treat your choice as canonical and send it to each
-            simulated destination.
+            {t('identity.fourVersionsBody')}
           </IssueExplanation>
           <ChoiceGroup legend={t('identity.canonical')}>
             {choices.map((choice) => (
@@ -389,14 +386,15 @@ export function MismatchPage() {
                 <span>
                   <strong>{choice}</strong>
                   <small>
-                    {
-                      sourceNames[
-                        (Object.entries(mismatch.valuesBySource).find(
-                          ([, v]) => v === choice,
-                        )?.[0] ?? 'AADHAAR') as IdentitySource
-                      ]
-                    }{' '}
-                    record
+                    {t('identity.recordFrom', {
+                      source: t(
+                        sourceNameKeys[
+                          (Object.entries(mismatch.valuesBySource).find(
+                            ([, v]) => v === choice,
+                          )?.[0] ?? 'AADHAAR') as IdentitySource
+                        ],
+                      ),
+                    })}
                   </small>
                 </span>
                 <Check />
@@ -405,7 +403,7 @@ export function MismatchPage() {
           </ChoiceGroup>
           <StickyActions status={t('common.saved')}>
             <Button onClick={() => setStep('review')}>
-              Review destinations
+              {t('identity.reviewDestinations')}
               <ArrowRight />
             </Button>
           </StickyActions>
@@ -414,14 +412,14 @@ export function MismatchPage() {
       {step === 'review' && (
         <section>
           <div className="mb-7.5 grid grid-cols-[1fr_auto_auto] items-center gap-4 border-y border-border py-3.5 max-[599px]:grid-cols-[1fr_auto]">
-            <span className="text-ink-muted">Canonical name</span>
+            <span className="text-ink-muted">{t('identity.canonicalName')}</span>
             <strong className="text-[1.25rem]">{value}</strong>
             <Button
               variant="text"
               className="max-[599px]:col-span-full max-[599px]:justify-self-start"
               onClick={() => setStep('choose')}
             >
-              Change
+              {t('identity.change')}
             </Button>
           </div>
           <h2>{t('identity.propagation')}</h2>
@@ -430,9 +428,12 @@ export function MismatchPage() {
               <DestinationRow
                 key={source}
                 index={`0${index + 1}`}
-                title={sourceNames[source]}
-                detail={`Replace “${mismatch.valuesBySource[source]}” with “${value}”`}
-                status={<Status kind="info">Will update</Status>}
+                title={t(sourceNameKeys[source])}
+                detail={t('identity.replaceValue', {
+                  from: mismatch.valuesBySource[source],
+                  to: value,
+                })}
+                status={<Status kind="info">{t('identity.willUpdate')}</Status>}
               />
             ))}
           </DestinationList>
@@ -441,15 +442,14 @@ export function MismatchPage() {
             tone="info"
             icon={<FileCheck2 />}
           >
-            This creates a local change receipt. No real system will be
-            contacted.
+            {t('identity.receiptNotice')}
           </Notice>
           <StickyActions>
             <Button
               variant="secondary"
               onClick={() => setStep('choose')}
             >
-              Back
+              {t('common.back')}
             </Button>
             <Button
               disabled={busy}
@@ -463,8 +463,8 @@ export function MismatchPage() {
       )}
       {step === 'progress' && (
         <ProgressState
-          title="Updating connected records"
-          description="Keeping the chosen name traceable across each destination."
+          title={t('identity.updatingTitle')}
+          description={t('identity.updatingDescription')}
         >
           <DestinationList animating>
             {sources.map((source, index) => (
@@ -478,8 +478,8 @@ export function MismatchPage() {
                     className="animate-spin"
                   />
                 }
-                title={sourceNames[source]}
-                detail="Propagation in progress"
+                title={t(sourceNameKeys[source])}
+                detail={t('identity.propagationInProgress')}
               />
             ))}
           </DestinationList>
@@ -488,11 +488,11 @@ export function MismatchPage() {
       {step === 'result' && (
         <section className="text-center">
           <OutcomeMark icon={<Check />} />
-          <Status kind="success">5 records updated</Status>
+          <Status kind="success">{t('identity.recordsUpdated')}</Status>
           <ReceiptCard>
             <ReceiptHead
               label={t('identity.receipt')}
-              value={change?.id ?? 'Saved change'}
+              value={change?.id ?? t('identity.savedChangeFallback')}
             />
             <ReceiptDetails
               rows={[
@@ -505,18 +505,18 @@ export function MismatchPage() {
                   value: change?.toValue ?? value,
                 },
                 {
-                  label: 'Completed',
+                  label: t('identity.completedLabel'),
                   value: change
                     ? formatDate(change.changedAt, i18n.language)
-                    : 'Saved',
+                    : t('identity.savedFallback'),
                 },
               ]}
             />
             {sources.map((source) => (
               <ReceiptRow
                 key={source}
-                label={<SourceMarker>{sourceNames[source]}</SourceMarker>}
-                status={<Status kind="success">Updated</Status>}
+                label={<SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>}
+                status={<Status kind="success">{t('identity.updatedStatus')}</Status>}
               />
             ))}
           </ReceiptCard>
@@ -532,7 +532,7 @@ export function MismatchPage() {
             wide
             to="/activity"
           >
-            View change in Activity
+            {t('identity.viewChangeActivity')}
           </ButtonLink>
         </section>
       )}
