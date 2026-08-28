@@ -132,7 +132,7 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(6);
+    expect(migrated.schemaVersion).toBe(7);
     expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
     expect(migrated.epfo.passbook.employers.length).toBeGreaterThan(0);
   });
@@ -147,16 +147,105 @@ describe('LocalAPIService vertical slice', () => {
     expect(result.destinations.every((item) => item.status === 'UPDATED')).toBe(
       true,
     );
-    expect(
-      Object.values(persona.identity.valuesBySource).every(
-        (source) => source.name === 'Rajesh Kumar',
-      ),
-    ).toBe(true);
+    expect(result.destinations.map((item) => item.source).sort()).toEqual([
+      'EPFO',
+      'INCOME_TAX',
+    ]);
+    expect(persona.identity.valuesBySource.EPFO.name).toBe('Rajesh Kumar');
+    expect(persona.identity.valuesBySource.INCOME_TAX.name).toBe(
+      'Rajesh Kumar',
+    );
+    expect(persona.identity.valuesBySource.PAN.name).toBe('Rajesh K');
+    expect(persona.identity.valuesBySource.BANK.name).toBe(
+      'Rajesh Kumar Sharma',
+    );
     expect(persona.actions[0].id).toBe('action-pf-ready');
     expect(
       (await service.validateClaim('rajesh', 'FINAL_SETTLEMENT')).ready,
     ).toBe(true);
     expect(persona.activity[0].kind).toBe('IDENTITY');
+  });
+
+  it('verifies and syncs a mismatch using the authoritative document without a caller-supplied value', async () => {
+    const result = await service.verifyAndSyncField({
+      personaId: 'rajesh',
+      mismatchId: 'mismatch-name',
+      otp: '123456',
+    });
+    expect(result.status).toBe('SUCCESS');
+    const persona = await service.getPersona('rajesh');
+    expect(persona.identity.valuesBySource.EPFO.name).toBe('Rajesh Kumar');
+    expect(persona.identity.valuesBySource.INCOME_TAX.name).toBe(
+      'Rajesh Kumar',
+    );
+    expect(persona.identity.valuesBySource.PAN.name).toBe('Rajesh K');
+    expect(persona.identity.valuesBySource.BANK.name).toBe(
+      'Rajesh Kumar Sharma',
+    );
+    expect(
+      persona.mismatches.find((item) => item.id === 'mismatch-name')?.status,
+    ).toBe('RESOLVED');
+  });
+
+  it('rejects verifyAndSyncField with an invalid OTP', async () => {
+    await expect(
+      service.verifyAndSyncField({
+        personaId: 'rajesh',
+        mismatchId: 'mismatch-name',
+        otp: '000000',
+      }),
+    ).rejects.toThrow('INVALID_OTP');
+  });
+
+  it('updates an authoritative document field, propagates it, and resolves the matching mismatch', async () => {
+    const result = await service.updateIdentityDocument({
+      personaId: 'rajesh',
+      source: 'AADHAAR',
+      fields: { name: 'Rajesh Kumar' },
+      declarationAccepted: true,
+      otp: '123456',
+    });
+    expect(result.canonical.name).toBe('Rajesh Kumar');
+    const persona = await service.getPersona('rajesh');
+    expect(persona.identity.valuesBySource.EPFO.name).toBe('Rajesh Kumar');
+    expect(persona.identity.valuesBySource.INCOME_TAX.name).toBe(
+      'Rajesh Kumar',
+    );
+    expect(persona.identity.valuesBySource.PAN.name).toBe('Rajesh K');
+    expect(persona.identity.valuesBySource.BANK.name).toBe(
+      'Rajesh Kumar Sharma',
+    );
+    expect(
+      persona.mismatches.find((item) => item.id === 'mismatch-name')?.status,
+    ).toBe('RESOLVED');
+  });
+
+  it('does not flag a mismatch when a non-authoritative document (PAN) diverges', async () => {
+    await service.updateIdentityDocument({
+      personaId: 'ananya',
+      source: 'PAN',
+      fields: { name: 'Ananya Sengupta' },
+      declarationAccepted: true,
+      otp: '123456',
+    });
+    const persona = await service.getPersona('ananya');
+    expect(
+      persona.mismatches.find((item) => item.field === 'name'),
+    ).toBeUndefined();
+    expect(persona.identity.valuesBySource.PAN.name).toBe('Ananya Sengupta');
+    expect(persona.identity.canonical.name).toBe('Ananya Sen');
+  });
+
+  it('rejects updateIdentityDocument without declaration or a valid OTP', async () => {
+    await expect(
+      service.updateIdentityDocument({
+        personaId: 'ananya',
+        source: 'BANK',
+        fields: { bankAccount: '•••• 9999' },
+        declarationAccepted: false,
+        otp: '123456',
+      }),
+    ).rejects.toThrow('IDENTITY_CONFIRMATION_REQUIRED');
   });
 
   it('submits unconditionally, prevents duplicate submission, and settles after a staged issue is rectified and resubmitted', async () => {
@@ -496,9 +585,63 @@ describe('LocalAPIService vertical slice', () => {
       JSON.stringify(legacy),
     );
     const migrated = await service.getPersona('rajesh');
-    expect(migrated.schemaVersion).toBe(6);
+    expect(migrated.schemaVersion).toBe(7);
     expect(migrated.identity.canonical.name).toBe('Rajesh Kumar');
     expect(migrated.tax?.assessmentYear).toBe('2026-27');
     expect(migrated.tax?.sources.salary.length).toBeGreaterThan(0);
+  });
+
+  it('migrates a version-six persona without discarding mismatches, identity changes, or backfilling new identity fields', async () => {
+    const legacy = structuredClone(PERSONA_SEEDS.rajesh) as unknown as {
+      schemaVersion: number;
+      identity: {
+        documents?: unknown;
+        canonical: Record<string, unknown>;
+      };
+      mismatches: unknown[];
+      identityChanges: unknown[];
+    };
+    legacy.schemaVersion = 6;
+    delete legacy.identity.documents;
+    delete legacy.identity.canonical.dateOfBirth;
+    legacy.mismatches = [
+      {
+        id: 'mismatch-name',
+        field: 'name',
+        valuesBySource: { AADHAAR: 'Rajesh Kumar', PAN: 'Rajesh K' },
+        severity: 'BLOCKING',
+        affectedServices: ['EPFO'],
+        status: 'OPEN',
+      },
+    ];
+    legacy.identityChanges = [
+      {
+        id: 'change-mismatch-mobile',
+        field: 'mobile',
+        fromValues: ['•••• ••9073'],
+        toValue: '•••• ••4210',
+        destinations: ['AADHAAR', 'PAN', 'BANK', 'EPFO', 'INCOME_TAX'],
+        destinationResults: [
+          { source: 'AADHAAR', status: 'UPDATED' },
+          { source: 'PAN', status: 'UPDATED' },
+          { source: 'BANK', status: 'UPDATED' },
+          { source: 'EPFO', status: 'UPDATED' },
+          { source: 'INCOME_TAX', status: 'UPDATED' },
+        ],
+        status: 'SUCCESS',
+        changedAt: '2026-08-01T00:00:00.000Z',
+      },
+    ];
+    localStorage.setItem(
+      'nagrik:persona:rajesh:state:v6',
+      JSON.stringify(legacy),
+    );
+    const migrated = await service.getPersona('rajesh');
+    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.mismatches).toHaveLength(1);
+    expect(migrated.mismatches[0].id).toBe('mismatch-name');
+    expect(migrated.identityChanges[0].id).toBe('change-mismatch-mobile');
+    expect(migrated.identity.documents.AADHAAR.maskedNumber).toBeTruthy();
+    expect(migrated.identity.canonical.dateOfBirth).toBeTruthy();
   });
 });

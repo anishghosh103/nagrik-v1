@@ -6,6 +6,7 @@ import type {
   EPFOProfile,
   GrievanceCase,
   GrievanceInput,
+  IdentityRecord,
   MockSession,
   Nominee,
   NominationRecord,
@@ -17,6 +18,8 @@ import type {
   PFTransferInput,
   PropagationResult,
   TransferValidation,
+  UpdateIdentityDocumentInput,
+  UserDocumentSource,
 } from '../types/domain';
 import type {
   FilingRoute,
@@ -50,6 +53,16 @@ interface AppState {
     value: string,
   ) => Promise<PropagationResult>;
   retryPropagation: (mismatchId: string) => Promise<PropagationResult>;
+  updateIdentityDocument: (
+    source: UserDocumentSource,
+    fields: UpdateIdentityDocumentInput['fields'],
+    declarationAccepted: boolean,
+    otp: string,
+  ) => Promise<IdentityRecord>;
+  verifyAndSyncField: (
+    mismatchId: string,
+    otp: string,
+  ) => Promise<PropagationResult>;
   validateClaim: () => Promise<ClaimValidation>;
   submitClaim: (amount: number, otp: string) => Promise<ClaimSubmission>;
   saveClaimDraft: (draft: PFClaim) => Promise<void>;
@@ -195,6 +208,54 @@ export const useAppStore = create<AppState>((set, get) => ({
           error instanceof Error && error.message === 'OFFLINE'
             ? 'errors.propagationOffline'
             : 'errors.retryFailed',
+      });
+      throw error;
+    }
+  },
+  updateIdentityDocument: async (source, fields, declarationAccepted, otp) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.updateIdentityDocument({
+        personaId: id,
+        source,
+        fields,
+        declarationAccepted,
+        otp,
+      });
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({
+        busy: false,
+        error:
+          error instanceof Error && error.message === 'OFFLINE'
+            ? 'errors.propagationOffline'
+            : 'errors.identityDocumentFailed',
+      });
+      throw error;
+    }
+  },
+  verifyAndSyncField: async (mismatchId, otp) => {
+    const id = get().session?.personaId;
+    if (!id) throw new Error('NO_SESSION');
+    set({ busy: true, error: null });
+    try {
+      const result = await apiService.verifyAndSyncField({
+        personaId: id,
+        mismatchId,
+        otp,
+      });
+      set({ persona: await apiService.getPersona(id), busy: false });
+      return result;
+    } catch (error) {
+      set({
+        busy: false,
+        error:
+          error instanceof Error && error.message === 'OFFLINE'
+            ? 'errors.propagationOffline'
+            : 'errors.propagationFailed',
       });
       throw error;
     }

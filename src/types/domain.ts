@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { taxRecordSchema, type TaxRecord } from './tax';
 
 export type PersonaId = 'ananya' | 'rajesh' | 'priya';
-export type IdentityField = 'name' | 'mobile' | 'bankAccount';
+export type IdentityField = 'name' | 'mobile' | 'bankAccount' | 'dateOfBirth';
 export type IdentitySource = 'AADHAAR' | 'PAN' | 'BANK' | 'EPFO' | 'INCOME_TAX';
+export type UserDocumentSource = 'AADHAAR' | 'PAN' | 'BANK';
 export type Severity = 'INFO' | 'WARNING' | 'BLOCKING';
 export type ClaimType = 'FINAL_SETTLEMENT';
 
@@ -16,6 +17,12 @@ export interface TaxpayerProfile {
   dateOfBirth?: string;
 }
 
+export interface IdentityDocumentNumbers {
+  AADHAAR: { maskedNumber: string };
+  PAN: { maskedNumber: string };
+  BANK: { maskedAccountNumber: string; ifsc: string };
+}
+
 export interface IdentityRecord {
   personaId: PersonaId;
   canonical: Record<IdentityField, string>;
@@ -23,6 +30,7 @@ export interface IdentityRecord {
     IdentitySource,
     Partial<Record<IdentityField, string>>
   >;
+  documents: IdentityDocumentNumbers;
   updatedAt: string;
 }
 
@@ -314,6 +322,27 @@ export interface RetryPropagationInput {
   mismatchId: string;
 }
 
+export interface UpdateIdentityDocumentInput {
+  personaId: PersonaId;
+  source: UserDocumentSource;
+  fields: Partial<{
+    name: string;
+    dateOfBirth: string;
+    mobile: string;
+    bankAccount: string;
+    maskedNumber: string;
+    ifsc: string;
+  }>;
+  declarationAccepted: boolean;
+  otp: string;
+}
+
+export interface VerifyAndSyncFieldInput {
+  personaId: PersonaId;
+  mismatchId: string;
+  otp: string;
+}
+
 export interface PropagationDestination {
   source: IdentitySource;
   status: 'UPDATED' | 'QUEUED' | 'FAILED';
@@ -424,6 +453,7 @@ const sourceValueSchema = z.object({
   name: z.string().optional(),
   mobile: z.string().optional(),
   bankAccount: z.string().optional(),
+  dateOfBirth: z.string().optional(),
 });
 
 export const personaSeedSchema = z.object({
@@ -443,6 +473,7 @@ export const personaSeedSchema = z.object({
       name: z.string(),
       mobile: z.string(),
       bankAccount: z.string(),
+      dateOfBirth: z.string(),
     }),
     valuesBySource: z.object({
       AADHAAR: sourceValueSchema,
@@ -450,6 +481,14 @@ export const personaSeedSchema = z.object({
       BANK: sourceValueSchema,
       EPFO: sourceValueSchema,
       INCOME_TAX: sourceValueSchema,
+    }),
+    documents: z.object({
+      AADHAAR: z.object({ maskedNumber: z.string() }),
+      PAN: z.object({ maskedNumber: z.string() }),
+      BANK: z.object({
+        maskedAccountNumber: z.string(),
+        ifsc: z.string(),
+      }),
     }),
     updatedAt: z.string(),
   }),
@@ -600,7 +639,7 @@ export const personaSeedSchema = z.object({
   mismatches: z.array(
     z.object({
       id: z.string(),
-      field: z.enum(['name', 'mobile', 'bankAccount']),
+      field: z.enum(['name', 'mobile', 'bankAccount', 'dateOfBirth']),
       valuesBySource: z.record(z.string(), z.string()),
       severity: z.enum(['INFO', 'WARNING', 'BLOCKING']),
       affectedServices: z.array(z.enum(['INCOME_TAX', 'EPFO'])),
@@ -610,7 +649,7 @@ export const personaSeedSchema = z.object({
   identityChanges: z.array(
     z.object({
       id: z.string(),
-      field: z.enum(['name', 'mobile', 'bankAccount']),
+      field: z.enum(['name', 'mobile', 'bankAccount', 'dateOfBirth']),
       fromValues: z.array(z.string()),
       toValue: z.string(),
       destinations: z.array(

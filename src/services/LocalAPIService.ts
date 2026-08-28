@@ -1,5 +1,9 @@
 import { cloneSeed } from '../data/personas';
-import { deriveActions } from '../rules/identity';
+import {
+  deriveActions,
+  FIELD_AUTHORITY,
+  IDENTITY_FIELDS,
+} from '../rules/identity';
 import type { APIService } from './APIService';
 import type {
   ClaimHistoryEntry,
@@ -9,6 +13,8 @@ import type {
   EPFOProfile,
   GrievanceCase,
   GrievanceInput,
+  IdentityField,
+  IdentityRecord,
   IdentitySource,
   MockSession,
   Nominee,
@@ -22,6 +28,8 @@ import type {
   PropagationResult,
   ResolveMismatchInput,
   RetryPropagationInput,
+  UpdateIdentityDocumentInput,
+  VerifyAndSyncFieldInput,
 } from '../types/domain';
 import { personaSeedSchema } from '../types/domain';
 import type {
@@ -32,17 +40,11 @@ import type {
   TaxRegime,
 } from '../types/tax';
 
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 const SESSION_KEY = 'nagrik:app:session';
 const keyFor = (id: PersonaId, version = SCHEMA_VERSION) =>
   `nagrik:persona:${id}:state:v${version}`;
-const destinations: IdentitySource[] = [
-  'AADHAAR',
-  'PAN',
-  'BANK',
-  'EPFO',
-  'INCOME_TAX',
-];
+const destinations: IdentitySource[] = ['EPFO', 'INCOME_TAX'];
 
 /** Constructor-only test seams. The production singleton is created without these options. */
 export interface LocalAPITestFailures {
@@ -190,6 +192,18 @@ export class LocalAPIService implements APIService {
       ...seed,
       ...legacy,
       schemaVersion: SCHEMA_VERSION,
+      identity: {
+        ...seed.identity,
+        ...legacy.identity,
+        canonical: {
+          ...seed.identity.canonical,
+          ...legacy.identity?.canonical,
+        },
+        valuesBySource: legacy.identity?.valuesBySource ?? {
+          ...seed.identity.valuesBySource,
+        },
+        documents: legacy.identity?.documents ?? seed.identity.documents,
+      },
       epfo: {
         ...seed.epfo,
         ...legacy.epfo,
@@ -241,7 +255,7 @@ export class LocalAPIService implements APIService {
         return data;
       }
     }
-    for (const version of [5, 4, 3, 2, 1]) {
+    for (const version of [6, 5, 4, 3, 2, 1]) {
       const legacyRaw = localStorage.getItem(keyFor(id, version));
       if (legacyRaw) {
         const migrated = await this.migrate(id, JSON.parse(legacyRaw));
@@ -533,6 +547,73 @@ export class LocalAPIService implements APIService {
     return structuredClone(seed.epfo.nomination);
   }
 
+  private propagateField(
+    seed: PersonaSeed,
+    field: IdentityField,
+    canonicalValue: string,
+  ): PropagationDestination[] {
+    const destinationResults: PropagationDestination[] = destinations.map(
+      (source) => ({
+        source,
+        status: this.failures.propagationOnce?.[source] ?? 'UPDATED',
+      }),
+    );
+    this.failures.propagationOnce = undefined;
+    for (const result of destinationResults)
+      if (result.status === 'UPDATED')
+        seed.identity.valuesBySource[result.source][field] = canonicalValue;
+    if (field === 'bankAccount')
+      seed.identity.documents.BANK.maskedAccountNumber = canonicalValue;
+    return destinationResults;
+  }
+
+  private syncKycRecord(
+    seed: PersonaSeed,
+    kind: 'AADHAAR' | 'PAN' | 'BANK',
+    maskedValue: string,
+    occurredAt: string,
+  ) {
+    const record = seed.epfo.kyc.find((item) => item.kind === kind);
+    if (!record) return;
+    record.maskedValue =
+      kind === 'BANK' ? `Account ending ${maskedValue.slice(-4)}` : maskedValue;
+    record.status = 'VALIDATED';
+    record.updatedAt = occurredAt;
+  }
+
+  private syncFieldMismatchState(seed: PersonaSeed, field: IdentityField) {
+    const canonicalValue = seed.identity.canonical[field];
+    const valuesBySource: Partial<Record<IdentitySource, string>> = {};
+    for (const source of destinations) {
+      const value = seed.identity.valuesBySource[source][field];
+      if (value !== undefined) valuesBySource[source] = value;
+    }
+    const conflicting = destinations.some(
+      (source) =>
+        valuesBySource[source] !== undefined &&
+        valuesBySource[source] !== canonicalValue,
+    );
+    const existing = seed.mismatches.find((item) => item.field === field);
+    if (!conflicting) {
+      if (existing) existing.status = 'RESOLVED';
+      return;
+    }
+    if (existing) {
+      existing.valuesBySource = valuesBySource;
+      existing.status = 'OPEN';
+      return;
+    }
+    seed.mismatches.unshift({
+      id: `mismatch-${field}`,
+      field,
+      valuesBySource,
+      severity:
+        field === 'name' || field === 'bankAccount' ? 'BLOCKING' : 'WARNING',
+      affectedServices: ['EPFO', 'INCOME_TAX'],
+      status: 'OPEN',
+    });
+  }
+
   async resolveMismatch(
     input: ResolveMismatchInput,
   ): Promise<PropagationResult> {
@@ -549,17 +630,11 @@ export class LocalAPIService implements APIService {
     ] as string[];
     seed.identity.canonical[mismatch.field] = input.canonicalValue;
     seed.identity.updatedAt = now;
-    const destinationResults: PropagationDestination[] = destinations.map(
-      (source) => ({
-        source,
-        status: this.failures.propagationOnce?.[source] ?? 'UPDATED',
-      }),
+    const destinationResults = this.propagateField(
+      seed,
+      mismatch.field,
+      input.canonicalValue,
     );
-    this.failures.propagationOnce = undefined;
-    for (const result of destinationResults)
-      if (result.status === 'UPDATED')
-        seed.identity.valuesBySource[result.source][mismatch.field] =
-          input.canonicalValue;
     const complete = destinationResults.every(
       (item) => item.status === 'UPDATED',
     );
@@ -613,6 +688,8 @@ export class LocalAPIService implements APIService {
       seed.identity.valuesBySource[result.source][change.field] =
         change.toValue;
     }
+    if (change.field === 'bankAccount')
+      seed.identity.documents.BANK.maskedAccountNumber = change.toValue;
     change.status = 'SUCCESS';
     change.changedAt = now;
     mismatch.status = 'RESOLVED';
@@ -637,6 +714,101 @@ export class LocalAPIService implements APIService {
       detail: 'activity.events.correctionDetail',
       status: 'COMPLETE',
       occurredAt,
+    });
+  }
+
+  async updateIdentityDocument(
+    input: UpdateIdentityDocumentInput,
+  ): Promise<IdentityRecord> {
+    await wait(320);
+    requireOnline();
+    if (!input.declarationAccepted || input.otp !== '123456')
+      throw new Error('IDENTITY_CONFIRMATION_REQUIRED');
+    const seed = await this.read(input.personaId);
+    const { source, fields } = input;
+    const now = new Date().toISOString();
+
+    if (source === 'AADHAAR' && fields.maskedNumber) {
+      seed.identity.documents.AADHAAR.maskedNumber = fields.maskedNumber;
+      seed.profile.maskedAadhaar = fields.maskedNumber;
+      this.syncKycRecord(seed, 'AADHAAR', fields.maskedNumber, now);
+    }
+    if (source === 'PAN' && fields.maskedNumber) {
+      seed.identity.documents.PAN.maskedNumber = fields.maskedNumber;
+      seed.profile.maskedPan = fields.maskedNumber;
+      this.syncKycRecord(seed, 'PAN', fields.maskedNumber, now);
+    }
+    if (source === 'BANK' && fields.ifsc)
+      seed.identity.documents.BANK.ifsc = fields.ifsc;
+
+    for (const field of IDENTITY_FIELDS) {
+      const value = fields[field];
+      if (value === undefined) continue;
+      const previousValue = seed.identity.valuesBySource[source][field];
+      if (FIELD_AUTHORITY[field] === source) {
+        seed.identity.canonical[field] = value;
+        this.propagateField(seed, field, value);
+        if (field === 'name') {
+          seed.profile.fullName = value;
+          seed.profile.firstName = value.split(' ')[0];
+        }
+        if (field === 'dateOfBirth') seed.profile.dateOfBirth = value;
+        if (source === 'BANK') this.syncKycRecord(seed, 'BANK', value, now);
+        seed.identityChanges.unshift({
+          id: `change-${field}-${now}`,
+          field,
+          fromValues: previousValue ? [previousValue] : [],
+          toValue: value,
+          destinations,
+          destinationResults: destinations.map((item) => ({
+            source: item,
+            status: 'UPDATED' as const,
+          })),
+          status: 'SUCCESS',
+          changedAt: now,
+        });
+      } else {
+        seed.identity.valuesBySource[source][field] = value;
+      }
+      this.syncFieldMismatchState(seed, field);
+    }
+
+    seed.identity.updatedAt = now;
+    seed.epfo.lastUpdatedAt = now;
+    seed.activity.unshift({
+      id: `act-identity-doc-${source.toLowerCase()}-${now}`,
+      kind: 'IDENTITY',
+      title: 'activity.events.documentUpdated',
+      detail: 'activity.events.documentUpdatedDetail',
+      values: { source },
+      status: 'COMPLETE',
+      occurredAt: now,
+    });
+    this.write(seed);
+    return structuredClone(seed.identity);
+  }
+
+  async verifyAndSyncField(
+    input: VerifyAndSyncFieldInput,
+  ): Promise<PropagationResult> {
+    await wait(200);
+    requireOnline();
+    if (input.otp !== '123456') throw new Error('INVALID_OTP');
+    const seed = await this.read(input.personaId);
+    const mismatch = seed.mismatches.find(
+      (item) => item.id === input.mismatchId,
+    );
+    if (!mismatch) throw new Error('MISMATCH_NOT_FOUND');
+    const authority = FIELD_AUTHORITY[mismatch.field];
+    const canonicalValue =
+      mismatch.field === 'bankAccount'
+        ? seed.identity.documents.BANK.maskedAccountNumber
+        : seed.identity.valuesBySource[authority][mismatch.field];
+    if (!canonicalValue) throw new Error('AUTHORITATIVE_VALUE_MISSING');
+    return this.resolveMismatch({
+      personaId: input.personaId,
+      mismatchId: input.mismatchId,
+      canonicalValue,
     });
   }
 
@@ -1437,6 +1609,7 @@ export class LocalAPIService implements APIService {
     localStorage.removeItem(keyFor(id, 2));
     localStorage.removeItem(keyFor(id, 1));
     localStorage.removeItem(keyFor(id, 5));
+    localStorage.removeItem(keyFor(id, 6));
     const seed = cloneSeed(id);
     seed.actions = deriveActions(seed);
     this.write(seed);

@@ -22,6 +22,8 @@ import type {
   ResolveMismatchInput,
   RetryPropagationInput,
   TransferValidation,
+  UpdateIdentityDocumentInput,
+  VerifyAndSyncFieldInput,
 } from '../types/domain';
 import type {
   FilingRoute,
@@ -48,6 +50,12 @@ export interface APIService {
   getMismatches(personaId: PersonaId): Promise<IdentityMismatch[]>;
   resolveMismatch(input: ResolveMismatchInput): Promise<PropagationResult>;
   retryPropagation(input: RetryPropagationInput): Promise<PropagationResult>;
+  updateIdentityDocument(
+    input: UpdateIdentityDocumentInput,
+  ): Promise<IdentityRecord>;
+  verifyAndSyncField(
+    input: VerifyAndSyncFieldInput,
+  ): Promise<PropagationResult>;
   getEPFOProfile(personaId: PersonaId): Promise<EPFOProfile>;
   getPassbook(personaId: PersonaId): Promise<PassbookSnapshot>;
   refreshPassbook(personaId: PersonaId): Promise<PassbookSnapshot>;

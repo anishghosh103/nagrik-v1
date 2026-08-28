@@ -1,16 +1,16 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ArrowRight,
   Check,
   CheckCircle2,
-  CircleDot,
   FileCheck2,
   Fingerprint,
   Landmark,
   LoaderCircle,
+  Pencil,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAppStore } from '../../app/store';
 import { cn } from '../../components/cn';
 import {
@@ -22,27 +22,34 @@ import {
   SourceMarker,
   Status,
 } from '../../components/ui';
-import { ChoiceGroup, ChoiceCard } from '../../components/forms';
+import {
+  DeclarationCheck,
+  FieldLabel,
+  OtpInput,
+  ValidationAlert,
+} from '../../components/forms';
 import {
   IssueExplanation,
   Notice,
   OutcomeMark,
   ProgressState,
   StepProgress,
-  StickyActions,
 } from '../../components/patterns';
 import { formatDate } from '../../components/formatters';
-import { identityHealth } from '../../rules/identity';
-import type { IdentityField, IdentitySource } from '../../types/domain';
+import {
+  FIELD_AUTHORITY,
+  IDENTITY_FIELDS,
+  identityHealth,
+} from '../../rules/identity';
+import type {
+  IdentityField,
+  IdentitySource,
+  PersonaSeed,
+  UserDocumentSource,
+} from '../../types/domain';
 
-const sources: IdentitySource[] = [
-  'AADHAAR',
-  'PAN',
-  'BANK',
-  'EPFO',
-  'INCOME_TAX',
-];
-const fields: IdentityField[] = ['name', 'mobile', 'bankAccount'];
+const documentSources: UserDocumentSource[] = ['AADHAAR', 'PAN', 'BANK'];
+const connectedServices: IdentitySource[] = ['EPFO', 'INCOME_TAX'];
 const sourceNameKeys: Record<IdentitySource, string> = {
   AADHAAR: 'identity.sourceAadhaar',
   PAN: 'identity.sourcePan',
@@ -54,13 +61,79 @@ const fieldNameKeys: Record<IdentityField, string> = {
   name: 'identity.fieldName',
   mobile: 'identity.fieldMobile',
   bankAccount: 'identity.fieldBankAccount',
+  dateOfBirth: 'identity.fieldDateOfBirth',
 };
+const documentTitleKeys: Record<UserDocumentSource, string> = {
+  AADHAAR: 'identity.documentAadhaar',
+  PAN: 'identity.documentPan',
+  BANK: 'identity.documentBank',
+};
+
+type DocumentFieldKey =
+  'maskedNumber' | 'name' | 'dateOfBirth' | 'mobile' | 'bankAccount' | 'ifsc';
+
+interface DocumentFieldConfig {
+  key: DocumentFieldKey;
+  labelKey: string;
+  type: 'text' | 'date' | 'tel';
+}
+
+const documentFieldConfigs: Record<UserDocumentSource, DocumentFieldConfig[]> =
+  {
+    AADHAAR: [
+      {
+        key: 'maskedNumber',
+        labelKey: 'identity.aadhaarNumberLabel',
+        type: 'text',
+      },
+      { key: 'name', labelKey: 'identity.fieldName', type: 'text' },
+      {
+        key: 'dateOfBirth',
+        labelKey: 'identity.fieldDateOfBirth',
+        type: 'date',
+      },
+      { key: 'mobile', labelKey: 'identity.fieldMobile', type: 'tel' },
+    ],
+    PAN: [
+      {
+        key: 'maskedNumber',
+        labelKey: 'identity.panNumberLabel',
+        type: 'text',
+      },
+    ],
+    BANK: [
+      {
+        key: 'bankAccount',
+        labelKey: 'identity.accountNumberLabel',
+        type: 'text',
+      },
+      { key: 'ifsc', labelKey: 'identity.ifscLabel', type: 'text' },
+    ],
+  };
+
+function getDocumentFieldValue(
+  persona: PersonaSeed,
+  source: UserDocumentSource,
+  key: DocumentFieldKey,
+): string {
+  if (key === 'maskedNumber')
+    return persona.identity.documents[source as 'AADHAAR' | 'PAN'].maskedNumber;
+  if (key === 'ifsc') return persona.identity.documents.BANK.ifsc;
+  return persona.identity.valuesBySource[source][key] ?? '';
+}
+
+function isServiceSynced(persona: PersonaSeed, source: IdentitySource) {
+  return IDENTITY_FIELDS.every((field) => {
+    const value = persona.identity.valuesBySource[source][field];
+    return value === undefined || value === persona.identity.canonical[field];
+  });
+}
 
 export function IdentityPage() {
   const { t, i18n } = useTranslation();
   const persona = useAppStore((state) => state.persona);
   if (!persona) return null;
-  const openMismatch = persona.mismatches.find(
+  const openMismatches = persona.mismatches.filter(
     (item) => item.status !== 'RESOLVED',
   );
   const health = identityHealth(persona);
@@ -92,261 +165,329 @@ export function IdentityPage() {
             <b>{t('identity.connectedRecords')}</b>
           </span>
         </div>
-        <Status kind={openMismatch ? 'danger' : 'success'}>
-          {openMismatch ? t('identity.attention') : t('identity.consistent')}
+        <Status kind={openMismatches.length > 0 ? 'danger' : 'success'}>
+          {openMismatches.length > 0
+            ? t('identity.attention')
+            : t('identity.consistent')}
         </Status>
       </section>
-      <div
-        className="overflow-x-auto rounded-[var(--radius-sheet)] border border-border bg-surface max-[599px]:hidden"
-        role="region"
-        aria-label={t('identity.comparisonRegion')}
-        tabIndex={0}
-      >
-        <table className="w-full border-collapse [min-width:780px]">
-          <caption className="absolute -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap [clip:rect(0,_0,_0,_0)]">
-            {t('identity.tableCaption')}
-          </caption>
-          <thead>
-            <tr>
-              <th className="border-b border-border bg-surface-muted px-3.5 py-4.5 text-left align-top text-[0.78rem]">
-                {t('identity.field')}
-              </th>
-              {sources.map((source) => (
-                <th
-                  key={source}
-                  className="border-b border-border bg-surface-muted px-3.5 py-4.5 text-left align-top text-[0.78rem]"
-                >
-                  <SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((field) => {
-              const mismatch = persona.mismatches.find(
-                (item) => item.field === field && item.status !== 'RESOLVED',
+      <div className="grid items-start gap-7 min-[900px]:grid-cols-[1fr_340px]">
+        <div>
+          <h2 className="mt-0 mb-3.5 text-[0.78rem] tracking-[0.1em] text-ink-muted uppercase">
+            {t('identity.documentsTitle')}
+          </h2>
+          <div className="grid gap-4">
+            {documentSources.map((source) => (
+              <DocumentCard
+                key={source}
+                source={source}
+                persona={persona}
+              />
+            ))}
+          </div>
+          <h2 className="mt-7.5 mb-3.5 text-[0.78rem] tracking-[0.1em] text-ink-muted uppercase">
+            {t('identity.connectedServices')}
+          </h2>
+          <div className="overflow-hidden rounded-[var(--radius-sheet)] border border-border bg-surface">
+            {connectedServices.map((source) => {
+              const synced = isServiceSynced(persona, source);
+              const firstIssue = openMismatches.find(
+                (item) => item.valuesBySource[source] !== undefined,
               );
               return (
-                <tr
-                  key={field}
-                  className={cn(mismatch && 'bg-[#fff7ef]')}
+                <a
+                  key={source}
+                  href={firstIssue ? `#alert-${firstIssue.field}` : undefined}
+                  className={cn(
+                    'flex items-center justify-between gap-3 border-b border-border px-4.5 py-3.5 no-underline last:border-b-0',
+                    !firstIssue && 'pointer-events-none',
+                  )}
                 >
-                  <th className="w-37.5 border-b border-border px-3.5 py-4.5 text-left align-top">
-                    {t(fieldNameKeys[field])}
-                    {mismatch && (
-                      <div className="mt-1">
-                        <Status kind="danger">{t('identity.attention')}</Status>
-                      </div>
-                    )}
-                  </th>
-                  {sources.map((source) => {
-                    const fieldValue =
-                      persona.identity.valuesBySource[source][field];
-                    return (
-                      <td
-                        key={source}
-                        className={cn(
-                          'border-b border-border px-3.5 py-4.5 text-left align-top',
-                          mismatch && 'font-[650] text-danger',
-                        )}
-                      >
-                        {fieldValue ? (
-                          field === 'name' ? (
-                            fieldValue
-                          ) : (
-                            <span
-                              aria-label={t('common.maskedAccessible', {
-                                label: t(fieldNameKeys[field]),
-                                digits: fieldValue.slice(-4),
-                              })}
-                            >
-                              {fieldValue}
-                            </span>
-                          )
-                        ) : (
-                          <span aria-label={t('identity.notAvailable')}>—</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
+                  <SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>
+                  <Status kind={synced ? 'success' : 'danger'}>
+                    {synced
+                      ? t('identity.connectedServiceSynced')
+                      : t('identity.connectedServiceNeedsSync')}
+                  </Status>
+                </a>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-      <div className="hidden max-[599px]:grid max-[599px]:gap-3">
-        {fields.map((field) => {
-          const mismatch = persona.mismatches.find(
-            (item) => item.field === field && item.status !== 'RESOLVED',
-          );
-          return (
-            <ComparisonCard
-              key={field}
-              mismatch={Boolean(mismatch)}
-              title={t(fieldNameKeys[field])}
-              status={
-                <Status kind={mismatch ? 'danger' : 'success'}>
-                  {mismatch
-                    ? t('identity.attention')
-                    : t('identity.consistent')}
-                </Status>
-              }
-              action={
-                mismatch && (
-                  <ArrowLink
-                    className="mt-4"
-                    to={`/identity/mismatch/${mismatch.id}`}
-                  >
-                    {t('common.review')}
-                  </ArrowLink>
-                )
-              }
+          </div>
+        </div>
+        <div>
+          <h2 className="mt-0 mb-3.5 text-[0.78rem] tracking-[0.1em] text-ink-muted uppercase">
+            {t('identity.alertsTitle')}
+          </h2>
+          {openMismatches.length === 0 ? (
+            <Notice
+              tone="success"
+              icon={<CheckCircle2 />}
+              title={t('identity.success')}
             >
-              {sources.map((source) => {
-                const fieldValue =
-                  persona.identity.valuesBySource[source][field];
-                if (!fieldValue) return null;
+              <p className="m-0">{t('identity.successBody')}</p>
+              {persona.identityChanges[0] && (
+                <small className="text-ink-muted">
+                  {t('common.lastUpdated')}{' '}
+                  {formatDate(
+                    persona.identityChanges[0].changedAt,
+                    i18n.language,
+                  )}
+                </small>
+              )}
+            </Notice>
+          ) : (
+            <div className="grid gap-3">
+              {openMismatches.map((mismatch) => {
+                const authority = FIELD_AUTHORITY[mismatch.field];
                 return (
-                  <ComparisonRow
-                    key={source}
-                    source={
-                      <SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>
-                    }
-                    value={
-                      field === 'name' ? (
-                        fieldValue
-                      ) : (
-                        <span
-                          aria-label={t('common.maskedAccessible', {
-                            label: t(fieldNameKeys[field]),
-                            digits: fieldValue.slice(-4),
-                          })}
-                        >
-                          {fieldValue}
-                        </span>
-                      )
-                    }
-                  />
+                  <div
+                    key={mismatch.id}
+                    id={`alert-${mismatch.field}`}
+                    className={cn(
+                      'rounded-[var(--radius-sheet)] border border-border bg-surface p-4',
+                      'border-l-4',
+                      mismatch.severity === 'BLOCKING'
+                        ? 'border-l-danger'
+                        : 'border-l-warning',
+                    )}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <strong>{t(fieldNameKeys[mismatch.field])}</strong>
+                      <Status
+                        kind={
+                          mismatch.severity === 'BLOCKING'
+                            ? 'danger'
+                            : 'warning'
+                        }
+                      >
+                        {t('identity.attention')}
+                      </Status>
+                    </div>
+                    <p className="mt-0 mb-3 text-[0.86rem] text-ink-muted">
+                      {t('identity.authorityBody', {
+                        source: t(sourceNameKeys[authority]),
+                      })}
+                    </p>
+                    <ArrowLink to={`/identity/mismatch/${mismatch.id}`}>
+                      {t('identity.verifyAndSync')}
+                    </ArrowLink>
+                  </div>
                 );
               })}
-            </ComparisonCard>
-          );
-        })}
-      </div>
-      {openMismatch ? (
-        <Link
-          className="mt-6.5 grid grid-cols-[160px_1fr_auto] items-center gap-4.5 border-b border-danger py-5.5 px-1 no-underline max-[599px]:grid-cols-1 max-[599px]:gap-2.25"
-          to={`/identity/mismatch/${openMismatch.id}`}
-        >
-          <span className="flex items-center gap-2 text-danger">
-            <CircleDot />
-            <b>{t('identity.nameMismatch')}</b>
-          </span>
-          <p className="m-0 text-ink-muted">{t('identity.mismatchWarning')}</p>
-          <span className="inline-flex items-center gap-2 font-bold whitespace-nowrap text-primary">
-            {t('common.review')}
-            <ArrowRight size={18} />
-          </span>
-        </Link>
-      ) : (
-        <Notice
-          tone="success"
-          icon={<CheckCircle2 />}
-          title={t('identity.success')}
-          actions={
-            <ButtonLink
-              variant="secondary"
-              to="/epfo/claim"
-            >
-              {t('identity.viewPf')}
-              <ArrowRight />
-            </ButtonLink>
-          }
-        >
-          <p className="m-0">{t('identity.successBody')}</p>
-          {persona.identityChanges[0] && (
-            <small className="text-ink-muted">
-              {t('common.lastUpdated')}{' '}
-              {formatDate(persona.identityChanges[0].changedAt, i18n.language)}
-            </small>
+            </div>
           )}
-        </Notice>
-      )}
+        </div>
+      </div>
     </Page>
   );
 }
 
-function ComparisonCard({
-  mismatch,
-  title,
-  status,
-  children,
-  action,
+function DocumentCard({
+  source,
+  persona,
 }: {
-  mismatch: boolean;
-  title: ReactNode;
-  status: ReactNode;
-  children: ReactNode;
-  action?: ReactNode;
+  source: UserDocumentSource;
+  persona: PersonaSeed;
 }) {
+  const { t } = useTranslation();
+  const updateIdentityDocument = useAppStore(
+    (state) => state.updateIdentityDocument,
+  );
+  const busy = useAppStore((state) => state.busy);
+  const configs = documentFieldConfigs[source];
+  const [phase, setPhase] = useState<'view' | 'details' | 'otp'>('view');
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState<{ synced: boolean } | null>(null);
+
+  function startEditing() {
+    const initial: Record<string, string> = {};
+    for (const config of configs)
+      initial[config.key] = getDocumentFieldValue(persona, source, config.key);
+    setDraft(initial);
+    setDeclarationAccepted(false);
+    setOtp('');
+    setError('');
+    setSaved(null);
+    setPhase('details');
+  }
+
+  function continueToOtp() {
+    if (!declarationAccepted) {
+      setError(t('identity.declarationRequired'));
+      return;
+    }
+    setError('');
+    setPhase('otp');
+  }
+
+  async function verifyAndSave() {
+    if (otp !== '123456') {
+      setError(t('epfo.claim.otpDeclarationError'));
+      return;
+    }
+    const fields: Record<string, string> = {};
+    for (const config of configs) {
+      const value = draft[config.key];
+      if (value !== getDocumentFieldValue(persona, source, config.key))
+        fields[config.key] = value;
+    }
+    const synced = Object.keys(fields).some(
+      (key) => FIELD_AUTHORITY[key as IdentityField] === source,
+    );
+    try {
+      await updateIdentityDocument(source, fields, declarationAccepted, otp);
+      setPhase('view');
+      setSaved({ synced });
+    } catch {
+      setError(t('epfo.claim.otpDeclarationError'));
+    }
+  }
+
   return (
-    <section
-      className={cn(
-        'rounded-[var(--radius-sheet)] border-t border-r border-b border-border bg-surface p-4',
-        mismatch
-          ? 'border-l-4 border-l-danger bg-[#fff8f1]'
-          : 'border-l border-l-border',
-      )}
-    >
+    <section className="rounded-[var(--radius-sheet)] border border-border bg-surface p-4.5">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="m-0 text-[1.1rem]">{title}</h2>
-        {status}
+        <h3 className="m-0 text-[1.05rem]">{t(documentTitleKeys[source])}</h3>
+        {phase === 'view' && (
+          <Button
+            variant="text"
+            size="compact"
+            onClick={startEditing}
+          >
+            <Pencil size={16} />
+            {t('identity.editDocument')}
+          </Button>
+        )}
       </div>
-      {children}
-      {action}
+      {phase === 'details' && (
+        <div>
+          {configs.map((config) => (
+            <div key={config.key}>
+              <FieldLabel htmlFor={`${source}-${config.key}`}>
+                {t(config.labelKey)}
+              </FieldLabel>
+              <input
+                id={`${source}-${config.key}`}
+                type={config.type}
+                value={draft[config.key] ?? ''}
+                onChange={(event) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    [config.key]: event.target.value,
+                  }))
+                }
+                className="h-11 w-full rounded-[9px] border border-border bg-surface px-3 py-2"
+              />
+            </div>
+          ))}
+          <div className="mt-4">
+            <DeclarationCheck
+              checked={declarationAccepted}
+              onChange={setDeclarationAccepted}
+            >
+              {t('identity.editDeclaration', {
+                document: t(documentTitleKeys[source]),
+              })}
+            </DeclarationCheck>
+          </div>
+          {error && <ValidationAlert>{error}</ValidationAlert>}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setPhase('view')}
+            >
+              {t('identity.cancelEdit')}
+            </Button>
+            <Button onClick={continueToOtp}>
+              {t('identity.continueToVerify')}
+            </Button>
+          </div>
+        </div>
+      )}
+      {phase === 'otp' && (
+        <div>
+          <p className="mt-0 mb-4 text-[0.86rem] text-ink-muted">
+            {t('identity.otpSentBody', {
+              document: t(documentTitleKeys[source]),
+            })}
+          </p>
+          <FieldLabel
+            htmlFor={`${source}-otp`}
+            hint={t('identity.otpHint')}
+          >
+            {t('identity.otp')}
+          </FieldLabel>
+          <OtpInput
+            id={`${source}-otp`}
+            value={otp}
+            onChange={setOtp}
+            autoFocus
+          />
+          {error && <ValidationAlert>{error}</ValidationAlert>}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setOtp('');
+                setError('');
+                setPhase('details');
+              }}
+            >
+              {t('common.back')}
+            </Button>
+            <Button
+              disabled={busy}
+              onClick={() => void verifyAndSave()}
+            >
+              {t('identity.verifyAndSave')}
+            </Button>
+          </div>
+        </div>
+      )}
+      {phase === 'view' && (
+        <>
+          <dl className="m-0 grid gap-2.5">
+            {configs.map((config) => (
+              <div
+                key={config.key}
+                className="flex items-center justify-between gap-3 border-b border-border pb-2.5 last:border-b-0 last:pb-0"
+              >
+                <dt className="text-ink-muted">{t(config.labelKey)}</dt>
+                <dd className="m-0 font-[650]">
+                  {getDocumentFieldValue(persona, source, config.key) || '—'}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {saved && (
+            <p className="mt-3 mb-0 text-[0.82rem] text-success">
+              {t('identity.editSaved')}
+              {saved.synced && <> · {t('identity.editAlsoSynced')}</>}
+            </p>
+          )}
+        </>
+      )}
     </section>
   );
 }
 
-function ComparisonRow({
-  source,
-  value,
-}: {
-  source: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex justify-between gap-3 border-b border-border py-2.25">
-      {source}
-      <span>{value}</span>
-    </div>
-  );
-}
-
-type Step = 'choose' | 'review' | 'progress' | 'result';
+type Step = 'review' | 'progress' | 'result';
 
 export function MismatchPage() {
   const { mismatchId = '' } = useParams();
   const { t, i18n } = useTranslation();
-  const { persona, busy, resolveMismatch } = useAppStore();
+  const { persona, busy, verifyAndSyncField } = useAppStore();
   const mismatch = persona?.mismatches.find((item) => item.id === mismatchId);
   const change = persona?.identityChanges.find(
     (item) => item.field === mismatch?.field,
   );
   const [step, setStep] = useState<Step>(
-    mismatch?.status === 'RESOLVED' ? 'result' : 'choose',
+    mismatch?.status === 'RESOLVED' ? 'result' : 'review',
   );
-  const choices = useMemo(
-    () =>
-      mismatch
-        ? [...new Set(Object.values(mismatch.valuesBySource).filter(Boolean))]
-        : [],
-    [mismatch],
-  );
-  const [value, setValue] = useState(
-    choices[0] ?? persona?.identity.canonical.name ?? '',
-  );
+  const [otp, setOtp] = useState('');
+  const [error, setError] = useState('');
   if (!persona || !mismatch)
     return (
       <Page width="narrow">
@@ -359,18 +500,29 @@ export function MismatchPage() {
       </Page>
     );
 
-  async function propagate() {
+  const authority = FIELD_AUTHORITY[mismatch.field];
+  const canonicalValue =
+    mismatch.field === 'bankAccount'
+      ? persona.identity.documents.BANK.maskedAccountNumber
+      : (persona.identity.valuesBySource[authority][mismatch.field] ?? '');
+
+  async function verify() {
+    if (otp !== '123456') {
+      setError(t('epfo.claim.otpDeclarationError'));
+      return;
+    }
     setStep('progress');
+    setError('');
     try {
-      await resolveMismatch(mismatchId, value);
+      await verifyAndSyncField(mismatchId, otp);
       setStep('result');
     } catch {
       setStep('review');
+      setError(t('epfo.claim.otpDeclarationError'));
     }
   }
 
-  const stepNumber =
-    step === 'choose' ? 1 : step === 'review' ? 2 : step === 'progress' ? 3 : 4;
+  const stepNumber = step === 'review' ? 1 : step === 'progress' ? 2 : 3;
   return (
     <Page
       width="narrow"
@@ -381,91 +533,50 @@ export function MismatchPage() {
         title={
           step === 'result'
             ? t('identity.success')
-            : t('identity.mismatchTitle')
+            : t('identity.authorityTitle', {
+                source: t(sourceNameKeys[authority]),
+              })
         }
         subtitle={
           step === 'result'
             ? t('identity.successBody')
-            : t('identity.mismatchSubtitle')
+            : t('identity.authorityBody', {
+                source: t(sourceNameKeys[authority]),
+              })
         }
         back="/identity"
       />
       <StepProgress
         current={stepNumber}
-        total={4}
+        total={3}
       />
-      {step === 'choose' && (
-        <section>
-          <IssueExplanation
-            status={<Status kind="danger">{t('identity.blocking')}</Status>}
-            title={t('identity.fourVersionsTitle')}
-          >
-            {t('identity.fourVersionsBody')}
-          </IssueExplanation>
-          <ChoiceGroup legend={t('identity.canonical')}>
-            {choices.map((choice) => (
-              <ChoiceCard
-                key={choice}
-                selected={value === choice}
-              >
-                <input
-                  type="radio"
-                  name="canonical"
-                  value={choice}
-                  checked={value === choice}
-                  onChange={(e) => setValue(e.target.value)}
-                />
-                <span>
-                  <strong>{choice}</strong>
-                  <small>
-                    {t('identity.recordFrom', {
-                      source: t(
-                        sourceNameKeys[
-                          (Object.entries(mismatch.valuesBySource).find(
-                            ([, v]) => v === choice,
-                          )?.[0] ?? 'AADHAAR') as IdentitySource
-                        ],
-                      ),
-                    })}
-                  </small>
-                </span>
-                <Check />
-              </ChoiceCard>
-            ))}
-          </ChoiceGroup>
-          <StickyActions status={t('common.saved')}>
-            <Button onClick={() => setStep('review')}>
-              {t('identity.reviewDestinations')}
-              <ArrowRight />
-            </Button>
-          </StickyActions>
-        </section>
-      )}
       {step === 'review' && (
         <section>
-          <div className="mb-7.5 grid grid-cols-[1fr_auto_auto] items-center gap-4 border-y border-border py-3.5 max-[599px]:grid-cols-[1fr_auto]">
-            <span className="text-ink-muted">
-              {t('identity.canonicalName')}
-            </span>
-            <strong className="text-[1.25rem]">{value}</strong>
-            <Button
-              variant="text"
-              className="max-[599px]:col-span-full max-[599px]:justify-self-start"
-              onClick={() => setStep('choose')}
-            >
-              {t('identity.change')}
-            </Button>
-          </div>
+          <IssueExplanation
+            tone={mismatch.severity === 'BLOCKING' ? 'danger' : 'warning'}
+            status={
+              <Status
+                kind={mismatch.severity === 'BLOCKING' ? 'danger' : 'warning'}
+              >
+                {t('identity.blocking')}
+              </Status>
+            }
+            title={t(fieldNameKeys[mismatch.field])}
+          >
+            {t('identity.authorityBody', {
+              source: t(sourceNameKeys[authority]),
+            })}
+          </IssueExplanation>
           <h2>{t('identity.propagation')}</h2>
           <DestinationList>
-            {sources.map((source, index) => (
+            {connectedServices.map((source, index) => (
               <DestinationRow
                 key={source}
                 index={`0${index + 1}`}
                 title={t(sourceNameKeys[source])}
                 detail={t('identity.replaceValue', {
-                  from: mismatch.valuesBySource[source],
-                  to: value,
+                  from: mismatch.valuesBySource[source] ?? '—',
+                  to: canonicalValue,
                 })}
                 status={<Status kind="info">{t('identity.willUpdate')}</Status>}
               />
@@ -478,21 +589,26 @@ export function MismatchPage() {
           >
             {t('identity.receiptNotice')}
           </Notice>
-          <StickyActions>
-            <Button
-              variant="secondary"
-              onClick={() => setStep('choose')}
-            >
-              {t('common.back')}
-            </Button>
-            <Button
-              disabled={busy}
-              onClick={() => void propagate()}
-            >
-              {t('identity.confirm')}
-              <ArrowRight />
-            </Button>
-          </StickyActions>
+          <FieldLabel
+            htmlFor="verify-otp"
+            hint={t('identity.otpHint')}
+          >
+            {t('identity.otp')}
+          </FieldLabel>
+          <OtpInput
+            id="verify-otp"
+            value={otp}
+            onChange={setOtp}
+          />
+          {error && <ValidationAlert>{error}</ValidationAlert>}
+          <Button
+            disabled={busy}
+            className="mt-4 w-full"
+            onClick={() => void verify()}
+          >
+            {t('identity.confirm')}
+            <ArrowRight />
+          </Button>
         </section>
       )}
       {step === 'progress' && (
@@ -501,7 +617,7 @@ export function MismatchPage() {
           description={t('identity.updatingDescription')}
         >
           <DestinationList animating>
-            {sources.map((source, index) => (
+            {connectedServices.map((source, index) => (
               <DestinationRow
                 key={source}
                 style={{ animationDelay: `${index * 90}ms` }}
@@ -536,7 +652,7 @@ export function MismatchPage() {
                 },
                 {
                   label: t('identity.changedTo'),
-                  value: change?.toValue ?? value,
+                  value: change?.toValue ?? canonicalValue,
                 },
                 {
                   label: t('identity.completedLabel'),
@@ -546,7 +662,7 @@ export function MismatchPage() {
                 },
               ]}
             />
-            {sources.map((source) => (
+            {connectedServices.map((source) => (
               <ReceiptRow
                 key={source}
                 label={<SourceMarker>{t(sourceNameKeys[source])}</SourceMarker>}

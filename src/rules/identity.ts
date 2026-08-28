@@ -1,5 +1,24 @@
-import type { ActionItem, PersonaSeed } from '../types/domain';
+import type {
+  ActionItem,
+  IdentityField,
+  PersonaSeed,
+  UserDocumentSource,
+} from '../types/domain';
 import { isEscalationEligible } from './grievances';
+
+export const FIELD_AUTHORITY: Record<IdentityField, UserDocumentSource> = {
+  name: 'AADHAAR',
+  dateOfBirth: 'AADHAAR',
+  mobile: 'AADHAAR',
+  bankAccount: 'BANK',
+};
+
+export const IDENTITY_FIELDS: IdentityField[] = [
+  'name',
+  'dateOfBirth',
+  'mobile',
+  'bankAccount',
+];
 
 export function deriveActions(seed: PersonaSeed): ActionItem[] {
   const notice = seed.tax?.draft?.notices.find(
