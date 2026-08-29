@@ -177,6 +177,7 @@ export function DeductionsSection({
       <Notice
         tone="neutral"
         title={t('tax.deductions.regimeNoteTitle')}
+        className="mt-2"
       >
         {t('tax.deductions.regimeNoteBody')}
       </Notice>

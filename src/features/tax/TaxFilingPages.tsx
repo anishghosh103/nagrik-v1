@@ -16,6 +16,7 @@ import {
   ValidationAlert,
 } from '../../components/forms';
 import {
+  Notice,
   OutcomeMark,
   ProgressState,
   ReferenceBand,
@@ -45,7 +46,7 @@ export function TaxFilingPages({
   const persona = useAppStore((state) => state.persona);
   const fileReturn = useAppStore((state) => state.fileReturn);
   const verifyReturn = useAppStore((state) => state.verifyReturn);
-  const { draft, loading } = useReturnDraft();
+  const { draft, loading, error, retry } = useReturnDraft();
   const filedReturn = persona?.tax?.filedReturns[0];
   const [step, setStep] = useState<Step>(
     filedReturn
@@ -68,6 +69,23 @@ export function TaxFilingPages({
           title={t('tax.status.none')}
           subtitle={t('tax.status.noneHelp')}
           back="/tax"
+        />
+      </Page>
+    );
+
+  if (step === 'declare' && error)
+    return (
+      <Page width="narrow">
+        <PageHeader
+          eyebrow={t('tax.declare.eyebrow')}
+          title={t('tax.declare.title')}
+          subtitle={t('tax.declare.subtitle')}
+          back="/tax/file"
+        />
+        <Notice
+          tone="warning"
+          title={t('tax.entry.error')}
+          actions={<Button onClick={retry}>{t('common.retry')}</Button>}
         />
       </Page>
     );

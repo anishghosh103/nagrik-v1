@@ -20,6 +20,7 @@ export const taxEn = {
   },
   entry: {
     loading: 'Loading your return…',
+    error: 'We could not load your return. Please try again.',
   },
   wizardNav: {
     eyebrow: 'Income Tax · Filing',
@@ -640,6 +641,7 @@ export const taxHi = {
   },
   entry: {
     loading: 'आपका रिटर्न लोड हो रहा है…',
+    error: 'हम आपका रिटर्न लोड नहीं कर सके। कृपया फिर से प्रयास करें।',
   },
   wizardNav: {
     eyebrow: 'आयकर · फाइलिंग',
@@ -1233,6 +1235,7 @@ export const taxBn = {
   },
   entry: {
     loading: 'আপনার রিটার্ন লোড হচ্ছে…',
+    error: 'আমরা আপনার রিটার্ন লোড করতে পারিনি। আবার চেষ্টা করুন।',
   },
   wizardNav: {
     eyebrow: 'আয়কর · দাখিল',

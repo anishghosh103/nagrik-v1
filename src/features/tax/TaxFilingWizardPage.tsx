@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
 import { Button, Page, PageHeader } from '../../components/ui';
 import {
+  Notice,
   ProgressState,
   StepProgress,
   StickyActions,
@@ -39,7 +40,8 @@ export function TaxFilingWizardPage() {
   const saveTaxDraft = useAppStore((state) => state.saveTaxDraft);
   const validateReturn = useAppStore((state) => state.validateReturn);
   const compareRegimes = useAppStore((state) => state.compareRegimes);
-  const { draft, sources, loading, setDraft } = useReturnDraft();
+  const { draft, sources, loading, error, retry, setDraft } =
+    useReturnDraft();
   const [rules, setRules] = useState<TaxRulesConfig | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[] | null>(null);
   const [comparison, setComparison] = useState<RegimeComparison | null>(null);
@@ -74,6 +76,23 @@ export function TaxFilingWizardPage() {
     }, 500);
     return () => window.clearTimeout(timer);
   }, [draft, saveTaxDraft, validateReturn, compareRegimes, setDraft]);
+
+  if (error)
+    return (
+      <Page width="narrow">
+        <PageHeader
+          eyebrow={t('tax.wizardNav.eyebrow')}
+          title={t('tax.wizardNav.title')}
+          subtitle={t('tax.wizardNav.subtitle')}
+          back="/tax"
+        />
+        <Notice
+          tone="warning"
+          title={t('tax.entry.error')}
+          actions={<Button onClick={retry}>{t('common.retry')}</Button>}
+        />
+      </Page>
+    );
 
   if (loading || !draft || !rules || !sources)
     return <ProgressState title={t('tax.entry.loading')} />;

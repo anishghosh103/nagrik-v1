@@ -697,6 +697,73 @@ const priya: PersonaSeed = {
     nomination: { status: 'NOT_STARTED', nominees: [], updatedAt: baseTime },
     lastUpdatedAt: baseTime,
   },
+  tax: {
+    assessmentYear: '2026-27',
+    rulesVersion: TAX_RULES_VERSION,
+    sources: {
+      assessmentYear: '2026-27',
+      capturedAt: baseTime,
+      salary: [
+        {
+          id: 'tax-p-salary-1',
+          employerName: 'Whitefield Software Labs',
+          employerTan: 'BLRW67890D',
+          grossSalary: 880000,
+          salarySection17_1: 880000,
+          perquisites17_2: 0,
+          profitsInLieu17_3: 0,
+          exemptAllowances: 16000,
+          professionalTax: 2400,
+          employerNps80CCD2: 0,
+          tdsDeducted: 41000,
+          source: 'FORM16',
+          reviewed: true,
+        },
+      ],
+      otherSources: [
+        {
+          id: 'tax-p-other-1',
+          category: 'SAVINGS_INTEREST',
+          payerName: 'ICICI Bank',
+          maskedReference: '•••• 7714',
+          amount: 4100,
+          tdsDeducted: 0,
+          source: 'AIS',
+          reviewed: true,
+        },
+      ],
+      bankAccounts: [
+        {
+          id: 'tax-p-bank-1',
+          bankName: 'ICICI Bank',
+          maskedAccountNumber: '•••• 7714',
+          ifsc: 'ICIC0000512',
+          accountType: 'SAVINGS',
+          validationStatus: 'VALIDATED',
+          panLinked: true,
+        },
+      ],
+      suggestedDeductions: [
+        {
+          id: 'tax-p-ded-1',
+          section: '80C',
+          label: 'tax.deductions.ppf',
+          amount: 60000,
+          source: 'FORM16',
+        },
+        {
+          id: 'tax-p-ded-2',
+          section: '80D',
+          label: 'tax.deductions.healthInsurance',
+          amount: 14000,
+          source: 'FORM16',
+        },
+      ],
+    },
+    draft: null,
+    filedReturns: [],
+    refundScenario: 'STANDARD',
+  },
   mismatches: [
     {
       id: 'mismatch-name',

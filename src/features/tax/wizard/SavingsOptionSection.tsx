@@ -1,9 +1,9 @@
 import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { SectionHeading } from '../../../components/ui';
+import { formatMoney } from '../../../components/formatters';
 import { ChoiceCard, ChoiceGroup } from '../../../components/forms';
 import { Notice, ReviewList, ReviewRow } from '../../../components/patterns';
-import { formatMoney } from '../../../components/formatters';
+import { SectionHeading } from '../../../components/ui';
 import { oldRegimeAvailableForBusiness } from '../../../rules/tax';
 import type {
   RegimeComparison,
@@ -72,6 +72,7 @@ export function SavingsOptionSection({
           <Notice
             tone="success"
             title={t('tax.savingsOption.recommendationTitle')}
+            className="my-2"
           >
             {outcomeLabel(
               comparison[comparison.recommended === 'NEW' ? 'new' : 'old'],

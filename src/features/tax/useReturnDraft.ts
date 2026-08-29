@@ -15,36 +15,50 @@ export function useReturnDraft() {
   const [draft, setDraft] = useState<ReturnDraft | null>(null);
   const [sources, setSources] = useState<TaxSourceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
     void (async () => {
-      const [loadedSources, existing] = await Promise.all([
-        getTaxSources(),
-        getExistingReturnDraft(),
-      ]);
-      if (!active) return;
-      setSources(loadedSources);
-      if (existing) {
-        setDraft(existing);
-        setLoading(false);
-        return;
-      }
-      const rules = await getTaxRules(ASSESSMENT_YEAR);
-      if (active) {
-        setDraft(createDraftFromSources(loadedSources, rules));
-        setLoading(false);
+      setLoading(true);
+      setError(null);
+      try {
+        const [loadedSources, existing] = await Promise.all([
+          getTaxSources(),
+          getExistingReturnDraft(),
+        ]);
+        if (!active) return;
+        setSources(loadedSources);
+        if (existing) {
+          setDraft(existing);
+          return;
+        }
+        const rules = await getTaxRules(ASSESSMENT_YEAR);
+        if (active) {
+          setDraft(createDraftFromSources(loadedSources, rules));
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'UNKNOWN_ERROR');
+        }
+      } finally {
+        if (active) setLoading(false);
       }
     })();
     return () => {
       active = false;
     };
-  }, [getExistingReturnDraft, getTaxSources, getTaxRules]);
+  }, [getExistingReturnDraft, getTaxSources, getTaxRules, attempt]);
 
   async function save(next: ReturnDraft) {
     setDraft(next);
     await saveTaxDraft(next);
   }
 
-  return { draft, sources, loading, save, setDraft };
+  function retry() {
+    setAttempt((value) => value + 1);
+  }
+
+  return { draft, sources, loading, error, retry, save, setDraft };
 }

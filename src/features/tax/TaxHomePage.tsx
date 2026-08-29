@@ -1,6 +1,7 @@
 import { ArrowRight, FileSearch, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../app/store';
+import { Notice } from '../../components/patterns';
 import {
   ButtonLink,
   Page,
@@ -8,7 +9,6 @@ import {
   SectionHeading,
   Status,
 } from '../../components/ui';
-import { Notice } from '../../components/patterns';
 
 export function TaxHomePage() {
   const { t } = useTranslation();
@@ -75,7 +75,10 @@ export function TaxHomePage() {
             }
           />
           <p className="text-ink-muted">{t('tax.home.startSubtitle')}</p>
-          <ButtonLink to="/tax/file">
+          <ButtonLink
+            to="/tax/file"
+            className="mt-2"
+          >
             {tax?.draft
               ? t('tax.home.continueAction')
               : t('tax.home.startAction')}

@@ -207,7 +207,7 @@ export function AmountContext({
   meta?: ReactNode;
 }) {
   return (
-    <div className="grid border-y border-border py-4.5">
+    <div className="grid border-t border-border py-4.5">
       <span className="text-ink-muted">{label}</span>
       <strong className="text-[2.2rem] [font-variant-numeric:tabular-nums]">
         {amount}
@@ -245,7 +245,7 @@ export function ReviewRow({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4.5 border-b border-border py-3.5 max-[599px]:items-start">
+    <div className="flex items-center justify-between gap-4.5 not-last:border-b border-border py-3.5 max-[599px]:items-start">
       <span className="text-ink-muted">{label}</span>
       <strong className="text-right">{value}</strong>
       {action}
@@ -270,7 +270,7 @@ export function RuleGroup({
 }) {
   return (
     <section>
-      <h3 className="text-[0.78rem] tracking-[0.1em] text-ink-muted uppercase">
+      <h3 className="text-[0.78rem] tracking-[0.1em] text-ink-muted uppercase mb-2">
         {title}
       </h3>
       {children}

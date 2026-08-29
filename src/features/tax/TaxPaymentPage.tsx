@@ -29,12 +29,35 @@ export function TaxPaymentPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const compareRegimes = useAppStore((state) => state.compareRegimes);
-  const { draft, loading, save } = useReturnDraft();
+  const {
+    draft,
+    loading,
+    error: draftError,
+    retry: retryDraft,
+    save,
+  } = useReturnDraft();
   const [challanNumber, setChallanNumber] = useState('');
   const [paidOn, setPaidOn] = useState('');
   const [error, setError] = useState('');
   const [paying, setPaying] = useState(false);
   const [complete, setComplete] = useState(false);
+
+  if (draftError)
+    return (
+      <Page width="narrow">
+        <PageHeader
+          eyebrow={t('tax.wizardNav.eyebrow')}
+          title={t('tax.wizardNav.title')}
+          subtitle={t('tax.wizardNav.subtitle')}
+          back="/tax"
+        />
+        <Notice
+          tone="warning"
+          title={t('tax.entry.error')}
+          actions={<Button onClick={retryDraft}>{t('common.retry')}</Button>}
+        />
+      </Page>
+    );
 
   if (loading || !draft)
     return <ProgressState title={t('tax.entry.loading')} />;
